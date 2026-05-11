@@ -1,0 +1,451 @@
+// EventHene database schema
+// Premium event ticketing, registration & attendance platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  ORGANIZER
+  STAFF
+  ATTENDEE
+}
+
+enum EventStatus {
+  DRAFT
+  PENDING_APPROVAL
+  EDITS_REQUESTED
+  PUBLISHED
+  REJECTED
+  PAUSED
+  ENDED
+  CANCELLED
+}
+
+enum EventType {
+  PAID
+  FREE
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+enum TicketStatus {
+  PENDING_PAYMENT
+  PAID
+  TICKET_ISSUED
+  REGISTERED
+  ATTENDED
+  NOT_ATTENDED
+  CANCELLED
+  REFUNDED
+}
+
+enum FieldType {
+  TEXT
+  EMAIL
+  PHONE
+  SELECT
+  NUMBER
+  DATE
+  TEXTAREA
+}
+
+enum FieldKey {
+  FULL_NAME
+  PHONE
+  EMAIL
+  GENDER
+  CITY
+  ADDRESS
+  ORGANIZATION
+  AGE_RANGE
+  EMERGENCY_CONTACT
+  CUSTOM
+}
+
+enum PromoTier {
+  BASIC_BOOST
+  FEATURED
+  HOMEPAGE_SPOTLIGHT
+  CATEGORY_FEATURE
+}
+
+enum PromoStatus {
+  PENDING
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum InquiryStatus {
+  OPEN
+  CONTACTED
+  WON
+  LOST
+}
+
+enum ServiceType {
+  SOCIAL_MEDIA
+  GRAPHIC_DESIGN
+  LIVESTREAM
+  PHOTOGRAPHY
+  MEDIA_COVERAGE
+  MARKETING
+}
+
+enum PaymentProvider {
+  PAYSTACK
+  STRIPE
+  MANUAL
+}
+
+// ============================================================
+// MODELS
+// ============================================================
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String   @unique
+  phone     String?  @unique
+  fullName  String?
+  imageUrl  String?
+  role      UserRole @default(ATTENDEE)
+  country   String?
+  currency  String?
+  timezone  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organizer        Organizer?
+  orders           Order[]
+  staffEvents      EventStaff[]
+  scans            ScanLog[]
+  adminActions     AdminLog[]
+  supportTickets   SupportTicket[]
+}
+
+model Organizer {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName     String
+  slug            String   @unique
+  logoUrl         String?
+  bio             String?  @db.Text
+  website         String?
+  phoneVerified   Boolean  @default(false)
+  paystackSubacct String?
+  stripeAccountId String?
+  isSuspended     Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  events           Event[]
+  promotions       Promotion[]
+  serviceInquiries ServiceInquiry[]
+}
+
+model Event {
+  id              String      @id @default(cuid())
+  organizerId     String
+  organizer       Organizer   @relation(fields: [organizerId], references: [id])
+  title           String
+  slug            String      @unique
+  shortCode       String
+  description     String      @db.Text
+  category        String
+  venue           String
+  city            String?
+  country         String
+  currency        String
+  timezone        String
+  startsAt        DateTime
+  endsAt          DateTime
+  bookingOpensAt  DateTime
+  bookingClosesAt DateTime
+  flyerUrl        String?
+  bannerUrl       String?
+  type            EventType   @default(PAID)
+  status          EventStatus @default(DRAFT)
+  buyerPaysFee    Boolean     @default(true)
+  adminNote       String?     @db.Text
+  rejectionReason String?
+  publishedAt     DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  ticketTypes    TicketType[]
+  attendeeFields AttendeeField[]
+  orders         Order[]
+  attendees      Attendee[]
+  tickets        Ticket[]
+  staff          EventStaff[]
+  promotions     Promotion[]
+  scans          ScanLog[]
+  reviews        Review[]
+
+  @@index([status, startsAt])
+  @@index([organizerId])
+  @@index([category, status])
+}
+
+model TicketType {
+  id         String  @id @default(cuid())
+  eventId    String
+  event      Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name       String
+  priceMinor Int
+  quantity   Int
+  sold       Int     @default(0)
+  notes      String?
+  isActive   Boolean @default(true)
+  sortOrder  Int     @default(0)
+
+  tickets Ticket[]
+
+  @@index([eventId])
+}
+
+model AttendeeField {
+  id        String    @id @default(cuid())
+  eventId   String
+  event     Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  key       FieldKey
+  label     String
+  type      FieldType
+  required  Boolean   @default(false)
+  options   String[]
+  sortOrder Int       @default(0)
+}
+
+model Order {
+  id                String          @id @default(cuid())
+  eventId           String
+  event             Event           @relation(fields: [eventId], references: [id])
+  buyerUserId       String?
+  buyerUser         User?           @relation(fields: [buyerUserId], references: [id])
+  buyerEmail        String
+  buyerPhone        String?
+  buyerName         String
+  subtotalMinor     Int
+  platformFeeMinor  Int
+  processorFeeMinor Int
+  totalMinor        Int
+  currency          String
+  status            OrderStatus     @default(PENDING)
+  provider          PaymentProvider?
+  providerRef       String?
+  draftPayload      Json?
+  paidAt            DateTime?
+  refundedAt        DateTime?
+  createdAt         DateTime        @default(now())
+
+  attendees Attendee[]
+  tickets   Ticket[]
+
+  @@index([eventId, status])
+  @@index([providerRef])
+  @@index([buyerEmail])
+}
+
+model Attendee {
+  id                String   @id @default(cuid())
+  eventId           String
+  event             Event    @relation(fields: [eventId], references: [id])
+  orderId           String?
+  order             Order?   @relation(fields: [orderId], references: [id])
+  fullName          String
+  email             String?
+  phone             String?
+  gender            String?
+  city              String?
+  address           String?
+  organization      String?
+  ageRange          String?
+  emergencyContact  String?
+  customAnswers     Json?
+  createdAt         DateTime @default(now())
+
+  tickets Ticket[]
+
+  @@index([eventId])
+  @@index([email])
+}
+
+model Ticket {
+  id              String       @id @default(cuid())
+  eventId         String
+  event           Event        @relation(fields: [eventId], references: [id])
+  ticketTypeId    String
+  ticketType      TicketType   @relation(fields: [ticketTypeId], references: [id])
+  attendeeId      String
+  attendee        Attendee     @relation(fields: [attendeeId], references: [id])
+  orderId         String?
+  order           Order?       @relation(fields: [orderId], references: [id])
+  visibleRef      String       @unique
+  qrToken         String       @unique
+  qrTokenHash     String       @unique
+  status          TicketStatus @default(PENDING_PAYMENT)
+  issuedAt        DateTime?
+  usedAt          DateTime?
+  scannedByUserId String?
+  pdfUrl          String?
+  createdAt       DateTime     @default(now())
+
+  scans ScanLog[]
+
+  @@index([eventId, status])
+  @@index([visibleRef])
+}
+
+model ScanLog {
+  id           String   @id @default(cuid())
+  ticketId     String?
+  ticket       Ticket?  @relation(fields: [ticketId], references: [id])
+  eventId      String
+  event        Event    @relation(fields: [eventId], references: [id])
+  scannedById  String
+  scannedBy    User     @relation(fields: [scannedById], references: [id])
+  result       String
+  ip           String?
+  userAgent    String?  @db.Text
+  createdAt    DateTime @default(now())
+
+  @@index([eventId, createdAt])
+  @@index([ticketId])
+}
+
+model EventStaff {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([eventId, userId])
+}
+
+model Promotion {
+  id          String      @id @default(cuid())
+  eventId     String
+  event       Event       @relation(fields: [eventId], references: [id])
+  organizerId String
+  organizer   Organizer   @relation(fields: [organizerId], references: [id])
+  tier        PromoTier
+  country     String
+  priceMinor  Int
+  currency    String
+  status      PromoStatus @default(PENDING)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  providerRef String?
+  createdAt   DateTime    @default(now())
+
+  @@index([status, endsAt])
+  @@index([eventId])
+}
+
+model PromoPrice {
+  id         String    @id @default(cuid())
+  country    String
+  tier       PromoTier
+  priceMinor Int
+  currency   String
+  durationDays Int     @default(7)
+  isActive   Boolean   @default(true)
+
+  @@unique([country, tier])
+}
+
+model ServiceInquiry {
+  id            String        @id @default(cuid())
+  organizerId   String?
+  organizer     Organizer?    @relation(fields: [organizerId], references: [id])
+  eventId       String?
+  contactName   String
+  contactEmail  String
+  contactPhone  String?
+  serviceType   ServiceType
+  budgetMinor   Int?
+  currency      String?
+  preferredDate DateTime?
+  message       String        @db.Text
+  status        InquiryStatus @default(OPEN)
+  adminNote     String?       @db.Text
+  createdAt     DateTime      @default(now())
+
+  @@index([status, createdAt])
+}
+
+model SupportTicket {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  email     String
+  subject   String
+  body      String   @db.Text
+  status    String   @default("OPEN")
+  adminNote String?  @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([status, createdAt])
+}
+
+model Complaint {
+  id            String   @id @default(cuid())
+  reporterEmail String
+  eventId       String?
+  organizerId   String?
+  body          String   @db.Text
+  status        String   @default("OPEN")
+  adminNote     String?  @db.Text
+  createdAt     DateTime @default(now())
+
+  @@index([status, createdAt])
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  eventId     String
+  event       Event    @relation(fields: [eventId], references: [id])
+  rating      Int
+  body        String?  @db.Text
+  authorName  String
+  authorEmail String
+  isApproved  Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@index([eventId])
+}
+
+model AdminLog {
+  id        String   @id @default(cuid())
+  actorId   String
+  actor     User     @relation(fields: [actorId], references: [id])
+  action    String
+  target    String
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([actorId, createdAt])
+}

@@ -1,0 +1,40 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body { background: #FAFAF7; color: #0F0E13; font-family: Inter, system-ui, sans-serif; }
+  ::selection { background: #4B1E78; color: #fff; }
+}
+
+@layer components {
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed; }
+  .btn-primary { @apply btn bg-primary text-white px-5 py-3 hover:bg-primary-600 shadow-sm hover:shadow-lift; }
+  .btn-secondary { @apply btn bg-surface-2 text-ink px-5 py-3 hover:bg-border; }
+  .btn-ghost { @apply btn text-ink px-3 py-2 hover:bg-surface-2; }
+  .btn-danger { @apply btn bg-danger/10 text-danger px-4 py-2 hover:bg-danger/20; }
+  .btn-gold { @apply btn bg-gold-gradient text-ink px-5 py-3 font-semibold shadow-sm hover:shadow-lift; }
+
+  .input { @apply w-full rounded-xl border border-border bg-white px-4 py-3 text-ink placeholder:text-ink-muted/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition; }
+  .label { @apply block text-sm font-medium text-ink mb-1.5; }
+  .help { @apply text-xs text-ink-muted mt-1; }
+  .err { @apply text-xs text-danger mt-1; }
+
+  .card { @apply bg-surface border border-border rounded-2xl shadow-card; }
+  .chip { @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium; }
+  .chip-success { @apply chip bg-success/10 text-success; }
+  .chip-warning { @apply chip bg-warning/10 text-warning; }
+  .chip-danger { @apply chip bg-danger/10 text-danger; }
+  .chip-info { @apply chip bg-info/10 text-info; }
+  .chip-muted { @apply chip bg-surface-2 text-ink-muted; }
+
+  .h-display { @apply font-display tracking-tight; }
+}
+
+.prose-eh { @apply text-ink leading-relaxed; }
+.prose-eh p { @apply mb-3; }
+.prose-eh h2 { @apply font-display text-2xl mt-6 mb-2; }
+.prose-eh h3 { @apply font-display text-xl mt-4 mb-2; }
+.prose-eh ul { @apply list-disc pl-6 mb-3; }
