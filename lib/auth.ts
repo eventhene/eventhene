@@ -16,6 +16,15 @@ export class UnauthorizedError extends Error {
   }
 }
 
+/** Emails that get SUPER_ADMIN on first sign-up (or on next sign-in if already an ATTENDEE). */
+function getBootstrapAdminEmails(): string[] {
+  const raw = process.env.BOOTSTRAP_ADMIN_EMAILS ?? "";
+  return raw
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+}
+
 /**
  * Get the current DB user (synced from Clerk).
  * Returns null if not signed in.
@@ -24,17 +33,31 @@ export async function getCurrentUser() {
   const { userId } = auth();
   if (!userId) return null;
   let user = await db.user.findUnique({ where: { clerkId: userId } });
+  const bootstrapAdmins = getBootstrapAdminEmails();
+
   if (!user) {
     // Lazy-sync user from Clerk if webhook hasn't fired yet
     const clerkUser = await clerkCurrentUser();
     if (!clerkUser) return null;
+    const email = (clerkUser.emailAddresses[0]?.emailAddress ?? `${clerkUser.id}@noemail.local`).toLowerCase();
+    const isBootstrapAdmin = bootstrapAdmins.includes(email);
     user = await db.user.create({
       data: {
         clerkId: clerkUser.id,
-        email: clerkUser.emailAddresses[0]?.emailAddress ?? `${clerkUser.id}@noemail.local`,
+        email,
         fullName: [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") || null,
-        imageUrl: clerkUser.imageUrl
+        imageUrl: clerkUser.imageUrl,
+        role: isBootstrapAdmin ? "SUPER_ADMIN" : "ATTENDEE"
       }
+    });
+  } else if (
+    bootstrapAdmins.includes(user.email.toLowerCase()) &&
+    user.role !== "SUPER_ADMIN"
+  ) {
+    // Auto-promote bootstrap admins on next access
+    user = await db.user.update({
+      where: { id: user.id },
+      data: { role: "SUPER_ADMIN" }
     });
   }
   return user;
