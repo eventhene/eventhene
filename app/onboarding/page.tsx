@@ -1,24 +1,31 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { db } from "@/lib/db";
-import { requireUser } from "@/lib/auth";
+import { requireUserOrRedirect } from "@/lib/auth";
 import { OnboardingForm } from "@/components/onboarding/OnboardingForm";
+import { Logo } from "@/components/Logo";
 
-export const metadata = { title: "Welcome to EventHene" };
+export const metadata = { title: "Welcome" };
 
 export default async function OnboardingPage() {
-  const user = await requireUser();
+  const user = await requireUserOrRedirect("/onboarding");
   const existing = await db.organizer.findUnique({ where: { userId: user.id } });
   if (existing) redirect("/dashboard");
+
   return (
-    <div className="min-h-screen bg-bg flex items-center justify-center p-6">
-      <div className="max-w-xl w-full">
-        <div className="text-center mb-8">
-          <h1 className="h-display text-4xl mb-2">Welcome to EventHene <span className="text-accent">♛</span></h1>
-          <p className="text-ink-muted">Let's set up your organizer profile in under a minute.</p>
+    <div className="min-h-screen flex items-center justify-center p-6 bg-paper">
+      <div className="max-w-md w-full">
+        <div className="text-center mb-10">
+          <Logo />
+          <h1 className="h-section mt-8">Welcome, {user.fullName?.split(" ")[0] || "friend"}.</h1>
+          <p className="text-ink-muted mt-2">Let's set up your organizer profile.</p>
         </div>
-        <div className="card p-6">
-          <OnboardingForm />
+        <div className="card p-7">
+          <OnboardingForm defaultCountry={user.country || "GH"} />
         </div>
+        <p className="text-center text-xs text-ink-muted mt-6">
+          <Link href="/api/auth/sign-out" className="underline">Sign out</Link>
+        </p>
       </div>
     </div>
   );

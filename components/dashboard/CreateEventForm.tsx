@@ -170,8 +170,8 @@ export function CreateEventForm({
   return (
     <form onSubmit={onSubmit} className="space-y-6">
       {/* SECTION: Basics */}
-      <section className="card p-6 space-y-4">
-        <h2 className="h-display text-xl">Basics</h2>
+      <section className="card p-7 space-y-5">
+        <h2 className="font-display text-2xl">Basics</h2>
         <div>
           <label className="label">Event title</label>
           <input required value={title} onChange={(e) => setTitle(e.target.value)} className="input" placeholder="DJ Kay Birthday Bash" />
@@ -186,10 +186,10 @@ export function CreateEventForm({
           <div>
             <label className="label">Event type</label>
             <div className="flex gap-2">
-              <button type="button" onClick={() => setType("PAID")} className={type === "PAID" ? "btn-primary flex-1" : "btn-secondary flex-1"}>Paid</button>
-              <button type="button" onClick={() => setType("FREE")} className={type === "FREE" ? "btn-primary flex-1" : "btn-secondary flex-1"}>Free</button>
+              <button type="button" onClick={() => setType("PAID")} className={`btn-md flex-1 ${type === "PAID" ? "btn-primary" : "btn-ghost"}`}>Paid</button>
+              <button type="button" onClick={() => setType("FREE")} className={`btn-md flex-1 ${type === "FREE" ? "btn-primary" : "btn-ghost"}`}>Free</button>
             </div>
-            {type === "FREE" && <p className="help text-warning">Free events are reviewed by EventHene before going live.</p>}
+            {type === "FREE" && <p className="help text-sky">Free events are reviewed by EventHene before going live.</p>}
           </div>
         </div>
         <div>
@@ -204,8 +204,8 @@ export function CreateEventForm({
       </section>
 
       {/* SECTION: When & Where */}
-      <section className="card p-6 space-y-4">
-        <h2 className="h-display text-xl">When & where</h2>
+      <section className="card p-7 space-y-5">
+        <h2 className="font-display text-2xl">When and where</h2>
         <div className="grid md:grid-cols-2 gap-4">
           <div>
             <label className="label">Venue</label>
@@ -242,8 +242,8 @@ export function CreateEventForm({
       </section>
 
       {/* SECTION: Tickets */}
-      <section className="card p-6 space-y-4">
-        <h2 className="h-display text-xl">Tickets</h2>
+      <section className="card p-7 space-y-5">
+        <h2 className="font-display text-2xl">Tickets</h2>
         {tickets.map((t, i) => (
           <div key={i} className="grid grid-cols-12 gap-2 items-end">
             <div className="col-span-4">
@@ -262,7 +262,7 @@ export function CreateEventForm({
             </div>
             <div className="col-span-2 flex">
               {tickets.length > 1 && (
-                <button type="button" onClick={() => removeTicket(i)} className="btn-danger text-sm w-full">Remove</button>
+                <button type="button" onClick={() => removeTicket(i)} className="btn-danger btn-sm w-full">Remove</button>
               )}
             </div>
             <div className="col-span-12">
@@ -271,18 +271,18 @@ export function CreateEventForm({
             </div>
           </div>
         ))}
-        <button type="button" onClick={addTicket} className="btn-secondary">+ Add ticket type</button>
+        <button type="button" onClick={addTicket} className="btn-ghost btn-md">+ Add ticket type</button>
         {type === "PAID" && (
           <div className="flex items-center gap-2 pt-4 border-t border-border">
             <input id="bpf" type="checkbox" checked={buyerPaysFee} onChange={(e) => setBuyerPaysFee(e.target.checked)} />
-            <label htmlFor="bpf" className="text-sm">Buyer pays the platform fee (recommended — you receive the full ticket price)</label>
+            <label htmlFor="bpf" className="text-sm">Buyer pays the platform fee (recommended, you receive the full ticket price)</label>
           </div>
         )}
       </section>
 
       {/* SECTION: Attendee fields */}
-      <section className="card p-6 space-y-4">
-        <h2 className="h-display text-xl">Attendee details to collect</h2>
+      <section className="card p-7 space-y-5">
+        <h2 className="font-display text-2xl">Attendee details to collect</h2>
         <p className="text-sm text-ink-muted">Choose what info you want from each ticket holder.</p>
         <div className="flex flex-wrap gap-2">
           {FIELD_OPTIONS.map((opt) => {
@@ -292,7 +292,7 @@ export function CreateEventForm({
                 key={opt.key}
                 type="button"
                 onClick={() => toggleField(opt)}
-                className={`chip ${active ? "bg-primary text-white" : "bg-surface-2 text-ink"} cursor-pointer`}
+                className={`chip ${active ? "chip-ink" : "chip-outline"} cursor-pointer`}
               >
                 {active ? "✓" : "+"} {opt.label}
               </button>
@@ -314,11 +314,12 @@ export function CreateEventForm({
         )}
       </section>
 
-      {err && <div className="rounded-xl bg-danger/10 text-danger p-4 text-sm">{err}</div>}
+      {err && <div className="rounded-xl bg-crimson/5 border border-crimson/20 text-crimson text-sm px-4 py-3">{err}</div>}
 
       <div className="flex gap-3">
-        <button type="submit" disabled={busy} className="btn-primary flex-1 justify-center text-base py-4">
-          {busy ? "Publishing…" : type === "FREE" ? "Submit for review" : "Publish event"}
+        <button type="submit" disabled={busy} className="btn-primary btn-xl flex-1">
+          {busy && <span className="spinner" />}
+          {busy ? "Publishing..." : type === "FREE" ? "Submit for review" : "Publish event"}
         </button>
       </div>
       <p className="text-xs text-ink-muted text-center">

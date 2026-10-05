@@ -117,31 +117,67 @@ enum PaymentProvider {
   MANUAL
 }
 
+enum SmsStatus {
+  QUEUED
+  SENDING
+  SENT
+  FAILED
+  PARTIAL
+}
+
+enum SmsRecipientStatus {
+  PENDING
+  SENT
+  DELIVERED
+  FAILED
+}
+
 // ============================================================
-// MODELS
+// AUTH
 // ============================================================
 
 model User {
-  id        String   @id @default(cuid())
-  clerkId   String   @unique
-  email     String   @unique
-  phone     String?  @unique
-  fullName  String?
-  imageUrl  String?
-  role      UserRole @default(ATTENDEE)
-  country   String?
-  currency  String?
-  timezone  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(cuid())
+  email         String   @unique
+  phone         String?  @unique
+  passwordHash  String
+  fullName      String?
+  imageUrl      String?
+  role          UserRole @default(ATTENDEE)
+  country       String?
+  currency      String?
+  timezone      String?
+  emailVerified Boolean  @default(false)
+  phoneVerified Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  organizer        Organizer?
-  orders           Order[]
-  staffEvents      EventStaff[]
-  scans            ScanLog[]
-  adminActions     AdminLog[]
-  supportTickets   SupportTicket[]
+  organizer      Organizer?
+  orders         Order[]
+  staffEvents    EventStaff[]
+  scans          ScanLog[]
+  adminActions   AdminLog[]
+  supportTickets SupportTicket[]
+  sessions       Session[]
 }
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  userAgent String?  @db.Text
+  ip        String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ============================================================
+// ORGANIZATIONS + EVENTS
+// ============================================================
 
 model Organizer {
   id              String   @id @default(cuid())
@@ -156,12 +192,14 @@ model Organizer {
   paystackSubacct String?
   stripeAccountId String?
   isSuspended     Boolean  @default(false)
+  smsCredits      Int      @default(0)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   events           Event[]
   promotions       Promotion[]
   serviceInquiries ServiceInquiry[]
+  smsCampaigns     SmsCampaign[]
 }
 
 model Event {
@@ -202,6 +240,7 @@ model Event {
   promotions     Promotion[]
   scans          ScanLog[]
   reviews        Review[]
+  smsCampaigns   SmsCampaign[]
 
   @@index([status, startsAt])
   @@index([organizerId])
@@ -238,11 +277,11 @@ model AttendeeField {
 }
 
 model Order {
-  id                String          @id @default(cuid())
+  id                String           @id @default(cuid())
   eventId           String
-  event             Event           @relation(fields: [eventId], references: [id])
+  event             Event            @relation(fields: [eventId], references: [id])
   buyerUserId       String?
-  buyerUser         User?           @relation(fields: [buyerUserId], references: [id])
+  buyerUser         User?            @relation(fields: [buyerUserId], references: [id])
   buyerEmail        String
   buyerPhone        String?
   buyerName         String
@@ -251,13 +290,13 @@ model Order {
   processorFeeMinor Int
   totalMinor        Int
   currency          String
-  status            OrderStatus     @default(PENDING)
+  status            OrderStatus      @default(PENDING)
   provider          PaymentProvider?
   providerRef       String?
   draftPayload      Json?
   paidAt            DateTime?
   refundedAt        DateTime?
-  createdAt         DateTime        @default(now())
+  createdAt         DateTime         @default(now())
 
   attendees Attendee[]
   tickets   Ticket[]
@@ -268,27 +307,28 @@ model Order {
 }
 
 model Attendee {
-  id                String   @id @default(cuid())
-  eventId           String
-  event             Event    @relation(fields: [eventId], references: [id])
-  orderId           String?
-  order             Order?   @relation(fields: [orderId], references: [id])
-  fullName          String
-  email             String?
-  phone             String?
-  gender            String?
-  city              String?
-  address           String?
-  organization      String?
-  ageRange          String?
-  emergencyContact  String?
-  customAnswers     Json?
-  createdAt         DateTime @default(now())
+  id               String   @id @default(cuid())
+  eventId          String
+  event            Event    @relation(fields: [eventId], references: [id])
+  orderId          String?
+  order            Order?   @relation(fields: [orderId], references: [id])
+  fullName         String
+  email            String?
+  phone            String?
+  gender           String?
+  city             String?
+  address          String?
+  organization     String?
+  ageRange         String?
+  emergencyContact String?
+  customAnswers    Json?
+  createdAt        DateTime @default(now())
 
   tickets Ticket[]
 
   @@index([eventId])
   @@index([email])
+  @@index([phone])
 }
 
 model Ticket {
@@ -318,17 +358,17 @@ model Ticket {
 }
 
 model ScanLog {
-  id           String   @id @default(cuid())
-  ticketId     String?
-  ticket       Ticket?  @relation(fields: [ticketId], references: [id])
-  eventId      String
-  event        Event    @relation(fields: [eventId], references: [id])
-  scannedById  String
-  scannedBy    User     @relation(fields: [scannedById], references: [id])
-  result       String
-  ip           String?
-  userAgent    String?  @db.Text
-  createdAt    DateTime @default(now())
+  id          String   @id @default(cuid())
+  ticketId    String?
+  ticket      Ticket?  @relation(fields: [ticketId], references: [id])
+  eventId     String
+  event       Event    @relation(fields: [eventId], references: [id])
+  scannedById String
+  scannedBy   User     @relation(fields: [scannedById], references: [id])
+  result      String
+  ip          String?
+  userAgent   String?  @db.Text
+  createdAt   DateTime @default(now())
 
   @@index([eventId, createdAt])
   @@index([ticketId])
@@ -366,16 +406,70 @@ model Promotion {
 }
 
 model PromoPrice {
-  id         String    @id @default(cuid())
-  country    String
-  tier       PromoTier
-  priceMinor Int
-  currency   String
-  durationDays Int     @default(7)
-  isActive   Boolean   @default(true)
+  id           String    @id @default(cuid())
+  country      String
+  tier         PromoTier
+  priceMinor   Int
+  currency     String
+  durationDays Int       @default(7)
+  isActive     Boolean   @default(true)
 
   @@unique([country, tier])
 }
+
+// ============================================================
+// SMS (Hubtel)
+// ============================================================
+
+model SmsCampaign {
+  id             String      @id @default(cuid())
+  organizerId    String
+  organizer      Organizer   @relation(fields: [organizerId], references: [id])
+  eventId        String?
+  event          Event?      @relation(fields: [eventId], references: [id])
+  name           String
+  senderId       String
+  message        String      @db.Text
+  audience       String      // ALL | ATTENDED | NOT_ATTENDED | TICKET_TYPE:<id> | CUSTOM
+  totalRecipients Int        @default(0)
+  totalSent      Int         @default(0)
+  totalFailed    Int         @default(0)
+  totalDelivered Int         @default(0)
+  status         SmsStatus   @default(QUEUED)
+  scheduledFor   DateTime?
+  startedAt      DateTime?
+  completedAt    DateTime?
+  createdById    String
+  createdAt      DateTime    @default(now())
+
+  recipients SmsRecipient[]
+
+  @@index([organizerId, createdAt])
+  @@index([eventId])
+  @@index([status])
+}
+
+model SmsRecipient {
+  id          String             @id @default(cuid())
+  campaignId  String
+  campaign    SmsCampaign        @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  phone       String
+  name        String?
+  attendeeId  String?
+  status      SmsRecipientStatus @default(PENDING)
+  providerRef String?
+  errorText   String?
+  sentAt      DateTime?
+  deliveredAt DateTime?
+  createdAt   DateTime           @default(now())
+
+  @@index([campaignId, status])
+  @@index([phone])
+}
+
+// ============================================================
+// SUPPORT, SERVICES, REVIEWS, LOGS
+// ============================================================
 
 model ServiceInquiry {
   id            String        @id @default(cuid())

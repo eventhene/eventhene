@@ -19,7 +19,7 @@ export function FreeEventCard({ event }: { event: any }) {
     await fetch(`/api/admin/events/${event.id}/request-edits`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ note })
+      body: JSON.stringify({ note }),
     });
     router.refresh();
   }
@@ -28,35 +28,40 @@ export function FreeEventCard({ event }: { event: any }) {
     await fetch(`/api/admin/events/${event.id}/reject`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ reason: note })
+      body: JSON.stringify({ reason: note }),
     });
     router.refresh();
   }
 
   return (
-    <div className="card p-5">
-      <div className="flex justify-between mb-2">
-        <h2 className="h-display text-xl">{event.title}</h2>
-        <span className="chip-warning">{event.status.replace("_", " ")}</span>
+    <div className="card p-6">
+      <div className="flex items-start justify-between gap-4 mb-3">
+        <div>
+          <h2 className="h-card">{event.title}</h2>
+          <p className="text-sm text-ink-muted mt-1">
+            by <strong>{event.organizer.displayName}</strong> · {event.venue} · {new Date(event.startsAt).toLocaleString()}
+          </p>
+        </div>
+        <span className="chip-sky shrink-0">{event.status.replace("_", " ")}</span>
       </div>
-      <p className="text-sm text-ink-muted mb-3">
-        by <strong>{event.organizer.displayName}</strong> · {event.venue} · {new Date(event.startsAt).toLocaleString()}
-      </p>
-      <p className="text-sm whitespace-pre-wrap mb-3">{event.description}</p>
-      <div className="text-xs text-ink-muted mb-4">
-        {event.ticketTypes.length} ticket type(s) · total capacity{" "}
+      <p className="text-sm whitespace-pre-wrap text-ink-muted mb-4">{event.description}</p>
+      <div className="text-xs text-ink-muted mb-5">
+        {event.ticketTypes.length} ticket type{event.ticketTypes.length === 1 ? "" : "s"} · total capacity{" "}
         {event.ticketTypes.reduce((s: number, t: any) => s + t.quantity, 0)}
       </div>
 
       {!mode && (
         <div className="flex flex-wrap gap-2">
-          <button onClick={approve} disabled={busy} className="btn-primary text-sm">✓ Approve</button>
-          <button onClick={() => setMode("edits")} className="btn-secondary text-sm">✏️ Request edits</button>
-          <button onClick={() => setMode("reject")} className="btn-danger text-sm">✗ Reject</button>
+          <button onClick={approve} disabled={busy} className="btn-primary btn-md">
+            {busy && <span className="spinner" />}
+            Approve
+          </button>
+          <button onClick={() => setMode("edits")} className="btn-ghost btn-md">Request edits</button>
+          <button onClick={() => setMode("reject")} className="btn-danger btn-md">Reject</button>
         </div>
       )}
       {mode && (
-        <div className="space-y-2">
+        <div className="space-y-3">
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
@@ -68,11 +73,12 @@ export function FreeEventCard({ event }: { event: any }) {
             <button
               onClick={mode === "edits" ? requestEdits : reject}
               disabled={busy || !note}
-              className={mode === "edits" ? "btn-primary text-sm" : "btn-danger text-sm"}
+              className={mode === "edits" ? "btn-primary btn-md" : "btn-danger btn-md"}
             >
+              {busy && <span className="spinner" />}
               Confirm {mode === "edits" ? "request" : "reject"}
             </button>
-            <button onClick={() => setMode(null)} className="btn-ghost text-sm">Cancel</button>
+            <button onClick={() => setMode(null)} className="btn-ghost btn-md">Cancel</button>
           </div>
         </div>
       )}

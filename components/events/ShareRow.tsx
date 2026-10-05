@@ -15,17 +15,17 @@ export function ShareRow({ url, title }: { url: string; title: string }) {
   }
 
   const buttons = [
-    { label: "WhatsApp", href: `https://wa.me/?text=${txt}%20${enc}`, emoji: "💬" },
-    { label: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${enc}`, emoji: "📘" },
-    { label: "X", href: `https://twitter.com/intent/tweet?text=${txt}&url=${enc}`, emoji: "𝕏" },
-    { label: "Telegram", href: `https://t.me/share/url?url=${enc}&text=${txt}`, emoji: "✈️" },
-    { label: "Email", href: `mailto:?subject=${txt}&body=${enc}`, emoji: "✉️" }
+    { label: "WhatsApp", href: `https://wa.me/?text=${txt}%20${enc}` },
+    { label: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${enc}` },
+    { label: "X", href: `https://twitter.com/intent/tweet?text=${txt}&url=${enc}` },
+    { label: "Telegram", href: `https://t.me/share/url?url=${enc}&text=${txt}` },
+    { label: "Email", href: `mailto:?subject=${txt}&body=${enc}` },
   ];
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <button onClick={copyLink} className="btn-secondary text-sm">
-        {copied ? "✓ Copied" : "🔗 Copy link"}
+    <div className="flex flex-wrap items-center gap-1.5">
+      <button onClick={copyLink} className="btn-primary btn-sm">
+        {copied ? "✓ Copied" : "Copy link"}
       </button>
       {buttons.map((b) => (
         <a
@@ -33,9 +33,9 @@ export function ShareRow({ url, title }: { url: string; title: string }) {
           href={b.href}
           target="_blank"
           rel="noopener noreferrer"
-          className="btn-ghost text-sm"
+          className="btn-ghost btn-sm"
         >
-          <span>{b.emoji}</span> {b.label}
+          {b.label}
         </a>
       ))}
     </div>

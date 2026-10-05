@@ -1,17 +1,32 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+// Light middleware: just checks the session cookie exists for protected routes.
+// Full session validation (DB lookup) happens in the actual page/handler.
 
-const isProtectedRoute = createRouteMatcher([
-  "/dashboard(.*)",
-  "/admin(.*)",
-  "/me(.*)",
-  "/onboarding(.*)",
-  "/scan(.*)"
-]);
+import { NextResponse, type NextRequest } from "next/server";
 
-export default clerkMiddleware((auth, req) => {
-  if (isProtectedRoute(req)) auth().protect();
-});
+const PROTECTED_PREFIXES = [
+  "/dashboard",
+  "/admin",
+  "/me",
+  "/onboarding",
+  "/scan",
+];
+
+export function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+
+  const isProtected = PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"));
+  if (!isProtected) return NextResponse.next();
+
+  const hasSession = req.cookies.has("eh_session");
+  if (!hasSession) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/sign-in";
+    url.searchParams.set("next", pathname);
+    return NextResponse.redirect(url);
+  }
+  return NextResponse.next();
+}
 
 export const config = {
-  matcher: ["/((?!.+\\.[\\w]+$|_next).*)", "/", "/(api|trpc)(.*)"]
+  matcher: ["/((?!_next|.*\\..*).*)"],
 };

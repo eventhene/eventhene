@@ -7,17 +7,24 @@ export default async function FreeEventQueue() {
   const events = await db.event.findMany({
     where: { status: { in: ["PENDING_APPROVAL", "EDITS_REQUESTED"] } },
     include: { organizer: true, ticketTypes: true },
-    orderBy: { createdAt: "asc" }
+    orderBy: { createdAt: "asc" },
   });
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <h1 className="h-display text-3xl mb-2">Free event queue</h1>
-      <p className="text-ink-muted text-sm mb-6">
-        {events.length} event{events.length === 1 ? "" : "s"} awaiting review.
-      </p>
+    <div className="space-y-6">
+      <div>
+        <p className="text-sm text-ink-muted">Admin · Moderation</p>
+        <h1 className="h-section mt-1">Free event queue</h1>
+        <p className="text-ink-muted mt-2">
+          {events.length} event{events.length === 1 ? "" : "s"} awaiting review.
+        </p>
+      </div>
+
       {events.length === 0 ? (
-        <div className="card p-8 text-center text-ink-muted">All clear. Long live the king. ♛</div>
+        <div className="card p-16 text-center">
+          <div className="text-5xl mb-4">♛</div>
+          <p className="text-ink-muted">All clear. Long live the king.</p>
+        </div>
       ) : (
         <div className="space-y-4">
           {events.map((e) => (

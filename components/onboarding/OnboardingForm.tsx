@@ -9,15 +9,15 @@ const COUNTRIES = [
   { code: "KE", name: "Kenya", currency: "KES", tz: "Africa/Nairobi" },
   { code: "ZA", name: "South Africa", currency: "ZAR", tz: "Africa/Johannesburg" },
   { code: "US", name: "United States", currency: "USD", tz: "America/New_York" },
-  { code: "GB", name: "United Kingdom", currency: "GBP", tz: "Europe/London" }
+  { code: "GB", name: "United Kingdom", currency: "GBP", tz: "Europe/London" },
 ];
 
-export function OnboardingForm() {
+export function OnboardingForm({ defaultCountry = "GH" }: { defaultCountry?: string }) {
   const router = useRouter();
+  const [displayName, setDisplayName] = useState("");
+  const [country, setCountry] = useState(defaultCountry);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [displayName, setDisplayName] = useState("");
-  const [country, setCountry] = useState("GH");
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -32,14 +32,13 @@ export function OnboardingForm() {
           displayName,
           country,
           currency: c.currency,
-          timezone: c.tz
-        })
+          timezone: c.tz,
+        }),
       });
-      if (!res.ok) {
-        const d = await res.json();
-        throw new Error(d.error || "Setup failed");
-      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Setup failed");
       router.push("/dashboard");
+      router.refresh();
     } catch (e: any) {
       setErr(e.message);
       setBusy(false);
@@ -54,10 +53,10 @@ export function OnboardingForm() {
           required
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
-          placeholder="DJ Kay Live, Praise Tower Church, etc."
+          placeholder="DJ Kay Live, Praise Tower, etc."
           className="input"
         />
-        <p className="help">This is what attendees see on your event pages.</p>
+        <p className="help">The name attendees see on your event pages.</p>
       </div>
       <div>
         <label className="label">Country</label>
@@ -69,9 +68,12 @@ export function OnboardingForm() {
           ))}
         </select>
       </div>
-      {err && <p className="err">{err}</p>}
-      <button disabled={busy} className="btn-primary w-full justify-center">
-        {busy ? "Setting up…" : "Continue to dashboard"}
+
+      {err && <div className="rounded-xl bg-crimson/5 border border-crimson/20 text-crimson text-sm px-4 py-3">{err}</div>}
+
+      <button type="submit" disabled={busy} className="btn-primary btn-lg w-full">
+        {busy && <span className="spinner" />}
+        {busy ? "Setting up..." : "Continue"}
       </button>
     </form>
   );
