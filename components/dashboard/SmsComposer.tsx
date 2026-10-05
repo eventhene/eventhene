@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface Props {
   eventId: string;
@@ -13,51 +14,63 @@ interface Props {
 const TEMPLATES = [
   {
     name: "Registration confirmation",
-    text: "Hi {name}, you're confirmed for {event} on {date} at {venue}. Ref: {ref}. See you there! - EventHene",
+    text: "Hi {name}, you're confirmed for {event} on {date} at {venue}. Ref: {ref}. See you there. - EventHene",
   },
   {
     name: "Day-before reminder",
-    text: "Hi {name}, reminder: {event} is tomorrow at {venue}. Doors open per schedule. Show your QR at the gate. Ref: {ref}.",
+    text: "Hi {name}, reminder: {event} is tomorrow at {venue}. Show your QR at the gate. Ref: {ref}.",
   },
   {
     name: "Thank-you after event",
-    text: "Thanks for coming to {event}, {name}! We hope you had a great time. Stay tuned for the next one.",
+    text: "Thanks for coming to {event}, {name}. We hope you had a great time. Stay tuned for the next one.",
   },
 ];
 
 export function SmsComposer({ eventId, eventTitle, ticketTypes, totals }: Props) {
   const router = useRouter();
   const [name, setName] = useState("");
-  const [senderId, setSenderId] = useState("EVENTHENE");
   const [audience, setAudience] = useState("ALL");
+  const [singlePhone, setSinglePhone] = useState("");
   const [message, setMessage] = useState("");
-  const [preview, setPreview] = useState<{ count: number; sample: any[] } | null>(null);
+  const [preview, setPreview] = useState<any>(null);
   const [previewing, setPreviewing] = useState(false);
   const [sending, setSending] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  const effectiveAudience = useMemo(() => {
+    if (audience === "PHONE") return singlePhone ? `PHONE:${singlePhone.trim()}` : "PHONE:";
+    return audience;
+  }, [audience, singlePhone]);
+
   useEffect(() => {
     let cancelled = false;
-    async function run() {
+    const t = setTimeout(async () => {
       setPreviewing(true);
       try {
-        const res = await fetch(`/api/events/${eventId}/sms?audience=${encodeURIComponent(audience)}`);
+        const url = `/api/events/${eventId}/sms?audience=${encodeURIComponent(effectiveAudience)}&message=${encodeURIComponent(message)}`;
+        const res = await fetch(url);
         const data = await res.json();
         if (!cancelled) setPreview(data);
       } finally {
         if (!cancelled) setPreviewing(false);
       }
-    }
-    run();
-    return () => { cancelled = true; };
-  }, [eventId, audience]);
+    }, 250);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [eventId, effectiveAudience, message]);
 
-  const smsCount = Math.ceil(Math.max(1, message.length) / 160);
-  const charsLeft = 160 * smsCount - message.length;
+  const seg = preview?.segments;
+  const estCredits = preview?.estimatedCredits ?? 0;
+  const balance = preview?.balance ?? 0;
+  const senderIdUsed = preview?.senderId ?? "EventHene";
+  const notEnough = estCredits > balance;
 
   async function send() {
     if (!message || !name) return;
+    if (notEnough) {
+      setErr(`Not enough credits. You need ${estCredits}, have ${balance}. Ask an admin to grant more.`);
+      return;
+    }
     setErr(null);
     setSuccess(null);
     setSending(true);
@@ -65,7 +78,7 @@ export function SmsComposer({ eventId, eventTitle, ticketTypes, totals }: Props)
       const res = await fetch(`/api/events/${eventId}/sms`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name, senderId, message, audience, runNow: true }),
+        body: JSON.stringify({ name, message, audience: effectiveAudience }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Send failed");
@@ -82,7 +95,7 @@ export function SmsComposer({ eventId, eventTitle, ticketTypes, totals }: Props)
 
   return (
     <div className="grid lg:grid-cols-[1.3fr,1fr] gap-6">
-      {/* composer */}
+      {/* ---------- composer ---------- */}
       <div className="card p-6 space-y-5">
         <div className="grid md:grid-cols-2 gap-4">
           <div>
@@ -95,15 +108,14 @@ export function SmsComposer({ eventId, eventTitle, ticketTypes, totals }: Props)
             />
           </div>
           <div>
-            <label className="label">Sender ID</label>
-            <input
-              value={senderId}
-              onChange={(e) => setSenderId(e.target.value.toUpperCase().slice(0, 11))}
-              className="input"
-              placeholder="EVENTHENE"
-              maxLength={11}
-            />
-            <p className="help">Max 11 characters. Must be approved by Hubtel for live traffic.</p>
+            <label className="label">Sending as</label>
+            <div className="input flex items-center justify-between font-mono text-sm">
+              <span>{senderIdUsed}</span>
+              <Link href="/dashboard/sms" className="text-xs text-royal-2 hover:underline">
+                Change
+              </Link>
+            </div>
+            <p className="help">Request a custom Sender ID on your SMS page.</p>
           </div>
         </div>
 
@@ -113,19 +125,32 @@ export function SmsComposer({ eventId, eventTitle, ticketTypes, totals }: Props)
             <option value="ALL">All attendees ({totals.all})</option>
             <option value="ATTENDED">Attended only ({totals.attended})</option>
             <option value="NOT_ATTENDED">Not attended yet</option>
+            <option value="GENDER:Male">Attendees - Male</option>
+            <option value="GENDER:Female">Attendees - Female</option>
             {ticketTypes.map((t) => (
               <option key={t.id} value={`TICKET_TYPE:${t.id}`}>
                 Ticket type: {t.name}
               </option>
             ))}
+            <option value="PHONE">A single phone number</option>
           </select>
+          {audience === "PHONE" && (
+            <input
+              value={singlePhone}
+              onChange={(e) => setSinglePhone(e.target.value)}
+              placeholder="e.g. 0247123456"
+              className="input mt-3"
+            />
+          )}
         </div>
 
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="label mb-0">Message</label>
             <span className="text-[11px] text-ink-muted font-mono">
-              {message.length} chars · {smsCount} SMS {charsLeft >= 0 ? `(${charsLeft} left)` : ""}
+              {seg
+                ? `${seg.charCount} chars - ${seg.segments} seg - ${seg.encoding}`
+                : "..."}
             </span>
           </div>
           <textarea
@@ -136,7 +161,7 @@ export function SmsComposer({ eventId, eventTitle, ticketTypes, totals }: Props)
             placeholder="Hi {name}, your ticket for {event} is confirmed. Ref: {ref}. See you on {date}."
           />
           <p className="help">
-            Use <code className="font-mono">{"{name}"}</code>, <code className="font-mono">{"{ref}"}</code>, <code className="font-mono">{"{event}"}</code>, <code className="font-mono">{"{date}"}</code>, <code className="font-mono">{"{venue}"}</code> for personalization.
+            Use <code className="font-mono">{"{name}"}</code>, <code className="font-mono">{"{ref}"}</code>, <code className="font-mono">{"{event}"}</code>, <code className="font-mono">{"{date}"}</code>, <code className="font-mono">{"{venue}"}</code>. Emoji and non-ASCII are stripped. "https://" is removed from links.
           </p>
         </div>
 
@@ -161,26 +186,30 @@ export function SmsComposer({ eventId, eventTitle, ticketTypes, totals }: Props)
 
         <button
           onClick={send}
-          disabled={sending || !message || !name || !preview?.count}
+          disabled={sending || !message || !name || !preview?.count || notEnough}
           className="btn-primary btn-lg w-full"
         >
           {sending && <span className="spinner" />}
-          {sending ? "Sending..." : `Send to ${preview?.count ?? 0} recipient${preview?.count === 1 ? "" : "s"}`}
+          {sending
+            ? "Sending..."
+            : notEnough
+              ? `Need ${estCredits - balance} more credit${estCredits - balance === 1 ? "" : "s"}`
+              : `Send to ${preview?.count ?? 0} recipient${preview?.count === 1 ? "" : "s"}`}
         </button>
       </div>
 
-      {/* preview */}
+      {/* ---------- preview panel ---------- */}
       <div className="space-y-6">
         <div className="card p-6">
           <p className="label">Preview</p>
           <div className="rounded-2xl bg-canvas text-white p-5">
             <div className="flex items-center justify-between text-xs text-white/50 mb-3">
-              <span className="font-mono">{senderId || "SENDER"}</span>
+              <span className="font-mono">{senderIdUsed}</span>
               <span>now</span>
             </div>
             <p className="text-sm leading-relaxed whitespace-pre-wrap">
-              {message
-                ? message
+              {preview?.sanitized
+                ? preview.sanitized
                     .replace(/\{name\}/gi, "Worship")
                     .replace(/\{ref\}/gi, "WOR-DJKAY-4134123")
                     .replace(/\{event\}/gi, eventTitle)
@@ -192,32 +221,36 @@ export function SmsComposer({ eventId, eventTitle, ticketTypes, totals }: Props)
         </div>
 
         <div className="card p-6">
-          <p className="label">Audience summary</p>
-          {previewing ? (
-            <p className="text-ink-muted text-sm">Loading...</p>
-          ) : preview ? (
-            <>
-              <p className="font-display text-4xl">{preview.count}</p>
-              <p className="text-sm text-ink-muted mb-4">
-                recipients with valid phone numbers
-              </p>
-              {preview.sample.length > 0 && (
-                <div className="text-xs text-ink-muted space-y-1 font-mono">
-                  {preview.sample.map((r) => (
-                    <div key={r.phone} className="flex justify-between gap-2">
-                      <span className="truncate">{r.name}</span>
-                      <span>{r.phone}</span>
-                    </div>
-                  ))}
-                  {preview.count > preview.sample.length && (
-                    <p className="text-ink-faint">+ {preview.count - preview.sample.length} more</p>
-                  )}
+          <p className="label">Delivery</p>
+          <div className="grid grid-cols-2 gap-3">
+            <Metric label="Recipients" value={previewing ? "..." : (preview?.count ?? 0).toString()} />
+            <Metric label="Segments/msg" value={seg?.segments?.toString() ?? "1"} />
+            <Metric label="Credits needed" value={estCredits.toString()} />
+            <Metric label="Your balance" value={balance.toString()} tint={notEnough ? "warn" : "ink"} />
+          </div>
+          {preview?.sample?.length > 0 && (
+            <div className="mt-4 text-xs text-ink-muted space-y-1 font-mono">
+              <p className="text-[10px] uppercase tracking-widest text-ink-faint mb-2">First few</p>
+              {preview.sample.map((r: any) => (
+                <div key={r.phone} className="flex justify-between gap-2">
+                  <span className="truncate">{r.name ?? r.phone}</span>
+                  <span>{r.phone}</span>
                 </div>
-              )}
-            </>
-          ) : null}
+              ))}
+            </div>
+          )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function Metric({ label, value, tint }: { label: string; value: string; tint?: "ink" | "warn" }) {
+  const cls = tint === "warn" ? "text-crimson" : "text-ink";
+  return (
+    <div className="rounded-xl bg-surface-2 p-3">
+      <p className="text-[10px] uppercase tracking-widest text-ink-muted">{label}</p>
+      <p className={`font-display text-2xl ${cls}`}>{value}</p>
     </div>
   );
 }

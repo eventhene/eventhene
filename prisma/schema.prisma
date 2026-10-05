@@ -132,6 +132,21 @@ enum SmsRecipientStatus {
   FAILED
 }
 
+enum SenderIdStatus {
+  NONE
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum SmsTxnKind {
+  GRANT
+  PURCHASE
+  DEDUCT
+  REFUND
+  ADJUST
+}
+
 // ============================================================
 // AUTH
 // ============================================================
@@ -192,7 +207,18 @@ model Organizer {
   paystackSubacct String?
   stripeAccountId String?
   isSuspended     Boolean  @default(false)
-  smsCredits      Int      @default(0)
+
+  // SMS billing
+  smsBalance         Int           @default(0)  // in segments
+  smsFrozen          Boolean       @default(false)
+
+  // Custom Sender ID (approval flow)
+  senderId           String?
+  senderIdStatus     SenderIdStatus @default(NONE)
+  senderIdNote       String?       @db.Text
+  senderIdApprovedAt DateTime?
+  senderIdApprovedBy String?
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -200,6 +226,7 @@ model Organizer {
   promotions       Promotion[]
   serviceInquiries ServiceInquiry[]
   smsCampaigns     SmsCampaign[]
+  smsTransactions  SmsTransaction[]
 }
 
 model Event {
@@ -422,31 +449,51 @@ model PromoPrice {
 // ============================================================
 
 model SmsCampaign {
-  id             String      @id @default(cuid())
-  organizerId    String
-  organizer      Organizer   @relation(fields: [organizerId], references: [id])
-  eventId        String?
-  event          Event?      @relation(fields: [eventId], references: [id])
-  name           String
-  senderId       String
-  message        String      @db.Text
-  audience       String      // ALL | ATTENDED | NOT_ATTENDED | TICKET_TYPE:<id> | CUSTOM
-  totalRecipients Int        @default(0)
-  totalSent      Int         @default(0)
-  totalFailed    Int         @default(0)
-  totalDelivered Int         @default(0)
-  status         SmsStatus   @default(QUEUED)
-  scheduledFor   DateTime?
-  startedAt      DateTime?
-  completedAt    DateTime?
-  createdById    String
-  createdAt      DateTime    @default(now())
+  id              String      @id @default(cuid())
+  organizerId     String
+  organizer       Organizer   @relation(fields: [organizerId], references: [id])
+  eventId         String?
+  event           Event?      @relation(fields: [eventId], references: [id])
+  name            String
+  senderId        String      // sender name used on this campaign
+  message         String      @db.Text
+  audience        String
+  segmentsPer     Int         @default(1)  // segments per message
+  creditsCharged  Int         @default(0)  // total credits deducted
+  totalRecipients Int         @default(0)
+  totalSent       Int         @default(0)
+  totalFailed     Int         @default(0)
+  totalDelivered  Int         @default(0)
+  status          SmsStatus   @default(QUEUED)
+  scheduledFor    DateTime?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdById     String
+  createdAt       DateTime    @default(now())
 
-  recipients SmsRecipient[]
+  recipients   SmsRecipient[]
+  transactions SmsTransaction[]
 
   @@index([organizerId, createdAt])
   @@index([eventId])
   @@index([status])
+}
+
+model SmsTransaction {
+  id            String       @id @default(cuid())
+  organizerId   String
+  organizer     Organizer    @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  kind          SmsTxnKind
+  amount        Int          // positive for grant/purchase/refund, negative for deduct
+  balanceAfter  Int
+  note          String?
+  actorId       String?      // user who performed the action
+  campaignId    String?
+  campaign      SmsCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  createdAt     DateTime     @default(now())
+
+  @@index([organizerId, createdAt])
+  @@index([campaignId])
 }
 
 model SmsRecipient {

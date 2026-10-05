@@ -17,6 +17,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <NavLink href="/admin/free-events">Free event queue</NavLink>
           <NavLink href="/admin/events">All events</NavLink>
           <NavLink href="/admin/organizers">Organizers</NavLink>
+          <NavLink href="/admin/sms">SMS and Sender IDs</NavLink>
           <NavLink href="/admin/services">Service inquiries</NavLink>
           <NavLink href="/admin/support">Support</NavLink>
           <div className="mt-6 mb-2 text-[10px] text-ink-faint uppercase tracking-widest px-3">Account</div>

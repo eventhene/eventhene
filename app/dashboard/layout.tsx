@@ -20,6 +20,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <NavLink href="/dashboard/events">Events</NavLink>
           <NavLink href="/dashboard/events/new" accent>Create event</NavLink>
           <div className="mt-6 mb-2 text-[10px] text-ink-faint uppercase tracking-widest px-3">Tools</div>
+          <NavLink href="/dashboard/sms">SMS</NavLink>
           <NavLink href="/scan">Scanner</NavLink>
           <NavLink href="/dashboard/staff">Scanner staff</NavLink>
           <NavLink href="/dashboard/services">Services</NavLink>

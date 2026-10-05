@@ -1,120 +1,116 @@
 // Hubtel SMS integration.
 // Docs: https://developers.hubtel.com/reference/sendmessage
 //
-// Hubtel uses HTTP Basic auth with Client ID + Client Secret.
-// Endpoint: https://sms.hubtel.com/v1/messages/send
+// GET https://sms.hubtel.com/v1/messages/send
+//   ?clientid=...&clientsecret=...&from=...&to=...&content=...
+// All credentials read from env, never hardcoded.
 
-const BASE = "https://smsc.hubtel.com/v1/messages/send";
+import { normalizeGhPhone } from "./phone";
+import { sanitizeSmsContent } from "./sanitize";
 
-export interface HubtelSendResult {
+const BASE = "https://sms.hubtel.com/v1/messages/send";
+
+export interface HubtelCreds {
+  id: string;
+  secret: string;
+}
+
+export interface HubtelResult {
   ok: boolean;
+  to: string;
   messageId?: string;
   rate?: number;
   balance?: number;
-  errorText?: string;
+  error?: string;
   status?: number;
 }
 
-export interface SendSmsInput {
-  to: string;         // E.164 preferred, e.g. +233244123456
-  from: string;       // Sender ID, e.g. "EVENTHENE" or your approved short code
-  content: string;
-}
-
-function getCreds(): { id: string; secret: string } | null {
-  const id = process.env.HUBTEL_CLIENT_ID;
-  const secret = process.env.HUBTEL_CLIENT_SECRET;
+export function getHubtelCreds(): HubtelCreds | null {
+  const id = process.env.HUBTEL_CLIENT_ID?.trim();
+  const secret = process.env.HUBTEL_CLIENT_SECRET?.trim();
   if (!id || !secret) return null;
   return { id, secret };
 }
 
-function basicAuth(id: string, secret: string): string {
-  return "Basic " + Buffer.from(`${id}:${secret}`).toString("base64");
-}
-
-export function normalizeGhPhone(raw: string): string {
-  // Return E.164 (+233…) when input looks like a Ghana number; otherwise just strip non-digits.
-  const digits = raw.replace(/[^\d+]/g, "");
-  if (digits.startsWith("+")) return digits;
-  if (digits.startsWith("00")) return "+" + digits.slice(2);
-  if (digits.startsWith("233")) return "+" + digits;
-  if (digits.startsWith("0") && digits.length === 10) return "+233" + digits.slice(1);
-  // Fallback: assume local Ghana if 9 digits
-  if (digits.length === 9) return "+233" + digits;
-  return digits;
-}
-
-/** Send one SMS via Hubtel. Returns parsed result (never throws for provider errors). */
-export async function sendHubtelSms({ to, from, content }: SendSmsInput): Promise<HubtelSendResult> {
-  const creds = getCreds();
-  if (!creds) {
-    return { ok: false, errorText: "HUBTEL_CLIENT_ID / HUBTEL_CLIENT_SECRET missing" };
-  }
-  const url = new URL(BASE);
-  url.searchParams.set("clientsecret", creds.secret);
-  url.searchParams.set("clientid", creds.id);
-  url.searchParams.set("from", from);
-  url.searchParams.set("to", to);
-  url.searchParams.set("content", content);
-
-  try {
-    const res = await fetch(url.toString(), {
-      method: "GET",
-      headers: { Authorization: basicAuth(creds.id, creds.secret) },
-      cache: "no-store",
-    });
-    const text = await res.text();
-    let json: any = {};
-    try { json = JSON.parse(text); } catch { /* non-JSON */ }
-
-    // Hubtel typical success: { status: 0, messageId, rate, ...}
-    const status = typeof json.status === "number" ? json.status : -1;
-    const ok = res.ok && (status === 0 || status === 1);
-    return {
-      ok,
-      status: res.status,
-      messageId: json.messageId || json.MessageId,
-      rate: json.rate,
-      balance: json.balance,
-      errorText: ok ? undefined : (json.statusDescription || json.Message || text.slice(0, 200)),
-    };
-  } catch (e: any) {
-    return { ok: false, errorText: e?.message || "network_error" };
-  }
+export function getPlatformSenderId(): string {
+  // Default fallback used when an organizer has no approved custom Sender ID.
+  const raw = process.env.HUBTEL_SENDER_ID || "EventHene";
+  return raw.replace(/[^A-Za-z0-9]/g, "").slice(0, 11) || "EventHene";
 }
 
 /**
- * Send many messages with light throttling.
- * Returns per-recipient result in the same order as `inputs`.
+ * Send one SMS via Hubtel.
+ * Never throws. Always returns a HubtelResult with `ok` + `to` set.
  */
-export async function sendHubtelBatch(
-  inputs: SendSmsInput[],
-  opts: { concurrency?: number; delayMs?: number } = {}
-): Promise<HubtelSendResult[]> {
-  const concurrency = opts.concurrency ?? 4;
-  const delay = opts.delayMs ?? 60;
-  const results: HubtelSendResult[] = new Array(inputs.length);
-  let idx = 0;
-  async function worker() {
-    while (idx < inputs.length) {
-      const i = idx++;
-      results[i] = await sendHubtelSms(inputs[i]);
-      if (delay) await new Promise((r) => setTimeout(r, delay));
-    }
+export async function sendSMS(
+  to: string,
+  content: string,
+  senderId?: string
+): Promise<HubtelResult> {
+  const normalized = normalizeGhPhone(to);
+  if (!normalized) {
+    return { ok: false, to, error: "invalid_phone" };
   }
-  await Promise.all(Array.from({ length: Math.min(concurrency, inputs.length) }, worker));
+  const safeContent = sanitizeSmsContent(content);
+  if (!safeContent) {
+    return { ok: false, to: normalized, error: "empty_content" };
+  }
+  const from = (senderId || getPlatformSenderId()).replace(/[^A-Za-z0-9]/g, "").slice(0, 11);
+  if (!from) {
+    return { ok: false, to: normalized, error: "invalid_sender" };
+  }
+
+  const creds = getHubtelCreds();
+  if (!creds) {
+    return { ok: false, to: normalized, error: "hubtel_not_configured" };
+  }
+
+  const url = new URL(BASE);
+  url.searchParams.set("clientid", creds.id);
+  url.searchParams.set("clientsecret", creds.secret);
+  url.searchParams.set("from", from);
+  url.searchParams.set("to", normalized);
+  url.searchParams.set("content", safeContent);
+
+  try {
+    const res = await fetch(url.toString(), { method: "GET", cache: "no-store" });
+    const text = await res.text();
+    let body: any = {};
+    try { body = JSON.parse(text); } catch { /* non-JSON */ }
+
+    // Hubtel success envelope: { status: 0, messageId, rate, balance, ... }
+    const providerStatus = typeof body.status === "number" ? body.status : -1;
+    const ok = res.ok && (providerStatus === 0 || providerStatus === 1);
+
+    return {
+      ok,
+      to: normalized,
+      status: res.status,
+      messageId: body.messageId ?? body.MessageId,
+      rate: body.rate,
+      balance: body.balance,
+      error: ok ? undefined : (body.statusDescription || body.Message || text.slice(0, 200) || `http_${res.status}`),
+    };
+  } catch (e: any) {
+    return { ok: false, to: normalized, error: e?.message || "network_error" };
+  }
+}
+
+/** Send sequentially. Simple, deterministic, respects provider rate limits. */
+export async function sendSMSBatch(
+  recipients: Array<{ to: string; content: string }>,
+  senderId?: string,
+  opts: { delayMs?: number } = {}
+): Promise<HubtelResult[]> {
+  const delay = opts.delayMs ?? 60;
+  const results: HubtelResult[] = [];
+  for (const r of recipients) {
+    results.push(await sendSMS(r.to, r.content, senderId));
+    if (delay) await new Promise((res) => setTimeout(res, delay));
+  }
   return results;
 }
 
-/** Simple personalization: swap {name}, {ref}, {event}, {date}, {venue}. */
-export function renderTemplate(
-  template: string,
-  vars: { name?: string; ref?: string; event?: string; date?: string; venue?: string }
-): string {
-  return template
-    .replace(/\{name\}/gi, vars.name ?? "")
-    .replace(/\{ref\}/gi, vars.ref ?? "")
-    .replace(/\{event\}/gi, vars.event ?? "")
-    .replace(/\{date\}/gi, vars.date ?? "")
-    .replace(/\{venue\}/gi, vars.venue ?? "");
-}
+// Re-exports for callers
+export { normalizeGhPhone } from "./phone";
+export { sanitizeSmsContent, renderTemplate } from "./sanitize";
