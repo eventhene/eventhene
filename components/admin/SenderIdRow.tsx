@@ -13,6 +13,7 @@ export function SenderIdRow({ organizer }: { organizer: any }) {
     setBusy("approve");
     await fetch(`/api/admin/sender-ids/${organizer.id}`, {
       method: "POST",
+      credentials: "include",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ action: "APPROVE", note: note || undefined }),
     });
@@ -24,6 +25,7 @@ export function SenderIdRow({ organizer }: { organizer: any }) {
     setBusy("reject");
     await fetch(`/api/admin/sender-ids/${organizer.id}`, {
       method: "POST",
+      credentials: "include",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ action: "REJECT", note }),
     });

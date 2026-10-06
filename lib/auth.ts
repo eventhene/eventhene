@@ -127,7 +127,7 @@ export async function signUpUser(input: {
   country?: string;
   currency?: string;
   timezone?: string;
-}): Promise<User> {
+}) {
   const email = input.email.trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     throw new Error("Enter a valid email address.");
@@ -154,11 +154,11 @@ export async function signUpUser(input: {
     },
   });
 
-  await createSessionFromRequest(user.id);
-  return user;
+  const sessionInfo = await createSessionFromRequest(user.id);
+  return { user, sessionInfo };
 }
 
-export async function signInUser(input: { email: string; password: string }): Promise<User> {
+export async function signInUser(input: { email: string; password: string }) {
   const email = input.email.trim().toLowerCase();
   const user = await db.user.findUnique({ where: { email } });
   if (!user) throw new Error("No account with that email. Try signing up.");
@@ -166,17 +166,17 @@ export async function signInUser(input: { email: string; password: string }): Pr
   const ok = await verifyPassword(input.password, user.passwordHash);
   if (!ok) throw new Error("Incorrect password.");
 
-  await createSessionFromRequest(user.id);
-  return user;
+  const sessionInfo = await createSessionFromRequest(user.id);
+  return { user, sessionInfo };
 }
 
 export async function signOutUser(): Promise<void> {
   await destroySession();
 }
 
-async function createSessionFromRequest(userId: string): Promise<void> {
+async function createSessionFromRequest(userId: string) {
   const h = headers();
-  await createSession(userId, {
+  return createSession(userId, {
     ip: h.get("x-forwarded-for") ?? undefined,
     userAgent: h.get("user-agent") ?? undefined,
   });

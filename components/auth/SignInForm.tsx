@@ -18,6 +18,7 @@ export function SignInForm({ next }: { next?: string }) {
     try {
       const res = await fetch("/api/auth/sign-in", {
         method: "POST",
+        credentials: "include",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ email, password }),
       });

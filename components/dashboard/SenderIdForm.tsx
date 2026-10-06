@@ -32,6 +32,7 @@ export function SenderIdForm({
     try {
       const res = await fetch("/api/organizers/me/sender-id", {
         method: "POST",
+        credentials: "include",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ senderId: sanitized }),
       });

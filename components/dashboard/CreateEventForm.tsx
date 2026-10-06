@@ -151,6 +151,7 @@ export function CreateEventForm({
 
       const res = await fetch("/api/events", {
         method: "POST",
+        credentials: "include",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(payload)
       });

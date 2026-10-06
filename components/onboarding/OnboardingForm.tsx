@@ -27,6 +27,7 @@ export function OnboardingForm({ defaultCountry = "GH" }: { defaultCountry?: str
     try {
       const res = await fetch("/api/organizers", {
         method: "POST",
+        credentials: "include",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           displayName,

@@ -31,6 +31,7 @@ export function Scanner({ eventId, eventTitle }: { eventId: string; eventTitle: 
     try {
       const r = await fetch("/api/tickets/validate", {
         method: "POST",
+        credentials: "include",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ qr: value, eventId }),
       });

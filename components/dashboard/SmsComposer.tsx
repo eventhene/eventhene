@@ -49,7 +49,7 @@ export function SmsComposer({ eventId, eventTitle, ticketTypes, totals }: Props)
       setPreviewing(true);
       try {
         const url = `/api/events/${eventId}/sms?audience=${encodeURIComponent(effectiveAudience)}&message=${encodeURIComponent(message)}`;
-        const res = await fetch(url);
+        const res = await fetch(url, { credentials: "include" });
         const data = await res.json();
         if (!cancelled) setPreview(data);
       } finally {
@@ -77,6 +77,7 @@ export function SmsComposer({ eventId, eventTitle, ticketTypes, totals }: Props)
     try {
       const res = await fetch(`/api/events/${eventId}/sms`, {
         method: "POST",
+        credentials: "include",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ name, message, audience: effectiveAudience }),
       });

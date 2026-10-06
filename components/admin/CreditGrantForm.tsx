@@ -33,6 +33,7 @@ export function CreditGrantForm({ organizers }: Props) {
     try {
       const res = await fetch("/api/admin/sms/credits", {
         method: "POST",
+        credentials: "include",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ organizerId: orgId, amount: n, kind, note: note || undefined }),
       });
@@ -55,6 +56,7 @@ export function CreditGrantForm({ organizers }: Props) {
     try {
       await fetch("/api/admin/sms/freeze", {
         method: "POST",
+        credentials: "include",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ organizerId: selected.id, frozen: !selected.frozen }),
       });

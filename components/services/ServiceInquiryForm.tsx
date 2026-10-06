@@ -22,6 +22,7 @@ export function ServiceInquiryForm({
     try {
       const res = await fetch("/api/services/inquiries", {
         method: "POST",
+        credentials: "include",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           serviceType,

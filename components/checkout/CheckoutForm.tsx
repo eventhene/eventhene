@@ -83,6 +83,7 @@ export function CheckoutForm({ event, items }: { event: Event; items: Item[] }) 
 
       const res = await fetch("/api/orders", {
         method: "POST",
+        credentials: "include",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           eventId: event.id,

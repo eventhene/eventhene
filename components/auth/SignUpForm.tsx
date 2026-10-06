@@ -30,6 +30,7 @@ export function SignUpForm({ next }: { next?: string }) {
     try {
       const res = await fetch("/api/auth/sign-up", {
         method: "POST",
+        credentials: "include",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           fullName,

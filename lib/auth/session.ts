@@ -47,15 +47,17 @@ export async function createSession(userId: string, meta: { ip?: string; userAge
     .setExpirationTime(`${SESSION_DAYS}d`)
     .sign(getSecret());
 
-  cookies().set(COOKIE_NAME, jwt, {
+  const cookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    sameSite: "lax" as const,
     path: "/",
     expires: expiresAt,
-  });
+  };
 
-  return session;
+  try { cookies().set(COOKIE_NAME, jwt, cookieOptions); } catch {}
+
+  return { session, jwt, cookieName: COOKIE_NAME, cookieOptions };
 }
 
 export async function destroySession() {
