@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CheckCircle, Mail, Ticket, Smartphone } from "lucide-react";
 import { db } from "@/lib/db";
 import { formatMinorAmount } from "@/lib/utils";
 
@@ -42,10 +43,10 @@ export default async function OrderSuccessPage({ params }: { params: { id: strin
       {order.status === "PAID" && order.tickets.length > 0 && (
         <>
           <div className="text-center mb-10">
-            <div className="w-16 h-16 rounded-full bg-emerald/10 flex items-center justify-center text-emerald text-3xl mx-auto mb-6">
-              ♛
+            <div className="w-16 h-16 rounded-full bg-emerald/10 flex items-center justify-center text-emerald mx-auto mb-6">
+              <CheckCircle className="w-8 h-8" />
             </div>
-            <h1 className="h-section">Long live the king.</h1>
+            <h1 className="h-section">You're all set.</h1>
             <p className="text-ink-muted mt-3">
               Your ticket{order.tickets.length > 1 ? "s are" : " is"} confirmed and sent to <strong className="text-ink">{order.buyerEmail}</strong>.
             </p>
@@ -79,9 +80,9 @@ export default async function OrderSuccessPage({ params }: { params: { id: strin
           <div className="card p-6 text-sm">
             <p className="font-semibold mb-3">What's next?</p>
             <ul className="space-y-2 text-ink-muted">
-              <li>📧 Check your email for the ticket PDF (also check spam)</li>
-              <li>🎟️ Save your reference: <span className="font-mono text-ink">{order.tickets[0]?.visibleRef}</span></li>
-              <li>📱 Show the QR at the gate - that's your seat</li>
+              <li className="flex items-start gap-2"><Mail className="w-4 h-4 text-accent mt-0.5 shrink-0" /> Check your email for the ticket PDF (also check spam)</li>
+              <li className="flex items-start gap-2"><Ticket className="w-4 h-4 text-accent mt-0.5 shrink-0" /> Save your reference: <span className="font-mono text-ink">{order.tickets[0]?.visibleRef}</span></li>
+              <li className="flex items-start gap-2"><Smartphone className="w-4 h-4 text-accent mt-0.5 shrink-0" /> Show the QR at the gate - that's your entry</li>
             </ul>
           </div>
 

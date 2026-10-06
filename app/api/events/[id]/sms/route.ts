@@ -15,7 +15,7 @@ const Body = z.object({
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const { user, event } = await requireEventOwner(params.id);
-    const { organizer } = await requireOrganizer();
+    const { organizer } = await requireOrganizer(req);
     const data = Body.parse(await req.json());
 
     const campaign = await createCampaign({
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const { user, event } = await requireEventOwner(params.id);
-    const { organizer } = await requireOrganizer();
+    const { organizer } = await requireOrganizer(req);
     const url = new URL(req.url);
     const audience = url.searchParams.get("audience") || "ALL";
     const draftMessage = url.searchParams.get("message") || "";

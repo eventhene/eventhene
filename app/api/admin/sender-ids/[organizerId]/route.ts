@@ -10,7 +10,7 @@ const Body = z.object({
 
 export async function POST(req: NextRequest, { params }: { params: { organizerId: string } }) {
   try {
-    const admin = await requireRole(["ADMIN", "SUPER_ADMIN"]);
+    const admin = await requireRole(["ADMIN", "SUPER_ADMIN"], req);
     const data = Body.parse(await req.json());
 
     const org = await db.organizer.findUnique({ where: { id: params.organizerId } });

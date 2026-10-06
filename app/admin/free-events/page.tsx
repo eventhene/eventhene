@@ -1,3 +1,4 @@
+import { CheckCircle } from "lucide-react";
 import { db } from "@/lib/db";
 import { FreeEventCard } from "@/components/admin/FreeEventCard";
 
@@ -22,8 +23,8 @@ export default async function FreeEventQueue() {
 
       {events.length === 0 ? (
         <div className="card p-16 text-center">
-          <div className="text-5xl mb-4">♛</div>
-          <p className="text-ink-muted">All clear. Long live the king.</p>
+          <CheckCircle className="w-12 h-12 text-emerald mx-auto mb-4" />
+          <p className="text-ink-muted font-semibold">All clear. No events pending review.</p>
         </div>
       ) : (
         <div className="space-y-4">

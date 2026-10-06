@@ -99,7 +99,12 @@ async function verifySessionJwt(raw: string) {
 }
 
 export async function readSession() {
-  let raw = cookies().get(COOKIE_NAME)?.value;
+  let raw: string | undefined;
+
+  // Method 1: cookies() helper (works in Server Components, sometimes fails in Route Handlers)
+  try { raw = cookies().get(COOKIE_NAME)?.value; } catch {}
+
+  // Method 2: parse raw Cookie header (more reliable in Route Handlers on Vercel)
   if (!raw) {
     try {
       const cookieHeader = headers().get("cookie") || "";
@@ -107,6 +112,7 @@ export async function readSession() {
       if (match) raw = match[1];
     } catch {}
   }
+
   if (!raw) return null;
   return verifySessionJwt(raw);
 }

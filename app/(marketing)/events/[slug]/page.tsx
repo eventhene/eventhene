@@ -67,7 +67,7 @@ export default async function EventPage({ params }: { params: { slug: string } }
             ) : (
               <div className="w-full h-full bg-aurora flex items-center justify-center text-white p-10 text-center">
                 <div>
-                  <p className="text-xs text-accent uppercase tracking-[0.35em] mb-3">Event · Hene ♛</p>
+                  <p className="text-xs text-accent uppercase tracking-[0.35em] mb-3">EventHene</p>
                   <h2 className="font-display text-4xl">{event.title}</h2>
                 </div>
               </div>
@@ -77,10 +77,10 @@ export default async function EventPage({ params }: { params: { slug: string } }
         </div>
 
         <div className="space-y-6">
-          <div className="flex items-center gap-2">
-            <span className="chip-outline">{event.category}</span>
-            {event.type === "FREE" && <span className="chip-gold">Free registration</span>}
-            {isPast && <span className="chip-outline">Past event</span>}
+          <div className="flex items-center gap-3 text-xs font-bold uppercase tracking-widest">
+            <span className="text-ink-muted">{event.category}</span>
+            {event.type === "FREE" && <span className="text-accent">Free registration</span>}
+            {isPast && <span className="text-crimson">Past event</span>}
           </div>
           <h1 className="h-hero text-balance">{event.title}</h1>
 

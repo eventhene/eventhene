@@ -17,7 +17,7 @@ function generateCode(): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const admin = await requireRole(["ADMIN", "SUPER_ADMIN"]);
+    const admin = await requireRole(["ADMIN", "SUPER_ADMIN"], req);
     const data = CreateBody.parse(await req.json());
     const code = (data.code || generateCode()).toUpperCase().replace(/\s/g, "");
 
@@ -43,9 +43,9 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    await requireRole(["ADMIN", "SUPER_ADMIN"]);
+    await requireRole(["ADMIN", "SUPER_ADMIN"], req);
     const coupons = await db.coupon.findMany({
       orderBy: { createdAt: "desc" },
       take: 100,

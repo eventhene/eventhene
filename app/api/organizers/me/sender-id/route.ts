@@ -10,7 +10,7 @@ const Body = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const { organizer, user } = await requireOrganizer();
+    const { organizer, user } = await requireOrganizer(req);
     const data = Body.parse(await req.json());
     const check = validateSenderIdFormat(data.senderId);
     if (!check.ok) {
@@ -46,9 +46,9 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const { organizer } = await requireOrganizer();
+    const { organizer } = await requireOrganizer(req);
     return NextResponse.json({
       senderId: organizer.senderId,
       status: organizer.senderIdStatus,

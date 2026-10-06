@@ -13,7 +13,7 @@ const Body = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const admin = await requireRole(["ADMIN", "SUPER_ADMIN"]);
+    const admin = await requireRole(["ADMIN", "SUPER_ADMIN"], req);
     const data = Body.parse(await req.json());
 
     const result = await grantCredits({

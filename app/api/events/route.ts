@@ -46,7 +46,7 @@ const CreateEventBody = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const { organizer } = await requireOrganizer();
+    const { organizer } = await requireOrganizer(req);
     const body = CreateEventBody.parse(await req.json());
 
     if (body.endsAt <= body.startsAt) {

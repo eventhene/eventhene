@@ -197,6 +197,14 @@
     background: currentColor;
   }
 
+  .chip, .chip-outline, .chip-gold, .chip-ink, .chip-crimson {
+    @apply inline-block text-xs font-bold uppercase tracking-widest;
+  }
+  .chip-outline { color: var(--ink-muted); }
+  .chip-gold { color: var(--accent); }
+  .chip-ink { color: var(--ink); }
+  .chip-crimson { color: var(--crimson); }
+
   .hr-soft { @apply w-full h-px bg-[color:var(--border)]; }
   .hr-dark { @apply w-full h-px bg-white/10; }
 

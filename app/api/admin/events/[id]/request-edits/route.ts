@@ -8,7 +8,7 @@ const Body = z.object({ note: z.string().min(2).max(2000) });
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const admin = await requireRole(["ADMIN", "SUPER_ADMIN"]);
+    const admin = await requireRole(["ADMIN", "SUPER_ADMIN"], req);
     const { note } = Body.parse(await req.json());
     const event = await db.event.findUnique({
       where: { id: params.id },

@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    await requireRole(["ADMIN", "SUPER_ADMIN"]);
+    await requireRole(["ADMIN", "SUPER_ADMIN"], req);
     const pending = await db.organizer.findMany({
       where: { senderIdStatus: { in: ["PENDING", "APPROVED", "REJECTED"] } },
       include: { user: { select: { email: true, fullName: true } } },

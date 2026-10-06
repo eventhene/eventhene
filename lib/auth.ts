@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { db } from "./db";
 import type { User, UserRole } from "@prisma/client";
-import { readSession, createSession, destroySession } from "./auth/session";
+import { readSession, readSessionFromRequest, createSession, destroySession } from "./auth/session";
 import { hashPassword, verifyPassword, validatePasswordStrength } from "./auth/password";
 
 export class ForbiddenError extends Error {
@@ -22,12 +22,11 @@ export class UnauthorizedError extends Error {
   }
 }
 
-/** Returns the current signed-in user, or null. */
-export async function getCurrentUser(): Promise<User | null> {
-  const sess = await readSession();
+/** Returns the current signed-in user, or null. Pass req for reliable cookie reading in Route Handlers. */
+export async function getCurrentUser(req?: { cookies: { get(name: string): { value: string } | undefined } }): Promise<User | null> {
+  const sess = req ? await readSessionFromRequest(req) : await readSession();
   if (!sess) return null;
 
-  // Auto-promote bootstrap admins (owner emails from env).
   const bootstrapAdmins = getBootstrapAdminEmails();
   if (
     bootstrapAdmins.includes(sess.user.email.toLowerCase()) &&
@@ -41,8 +40,8 @@ export async function getCurrentUser(): Promise<User | null> {
   return sess.user;
 }
 
-export async function requireUser(): Promise<User> {
-  const user = await getCurrentUser();
+export async function requireUser(req?: { cookies: { get(name: string): { value: string } | undefined } }): Promise<User> {
+  const user = await getCurrentUser(req);
   if (!user) throw new UnauthorizedError();
   return user;
 }
@@ -57,23 +56,23 @@ export async function requireUserOrRedirect(returnTo?: string): Promise<User> {
   return user;
 }
 
-export async function requireRole(role: UserRole | UserRole[]): Promise<User> {
-  const user = await requireUser();
+export async function requireRole(role: UserRole | UserRole[], req?: { cookies: { get(name: string): { value: string } | undefined } }): Promise<User> {
+  const user = await requireUser(req);
   const roles = Array.isArray(role) ? role : [role];
   if (!roles.includes(user.role)) throw new ForbiddenError();
   return user;
 }
 
-export async function requireOrganizer() {
-  const user = await requireUser();
+export async function requireOrganizer(req?: { cookies: { get(name: string): { value: string } | undefined } }) {
+  const user = await requireUser(req);
   const organizer = await db.organizer.findUnique({ where: { userId: user.id } });
   if (!organizer) throw new ForbiddenError("No organizer profile");
   if (organizer.isSuspended) throw new ForbiddenError("Organizer account is suspended");
   return { user, organizer };
 }
 
-export async function requireEventOwner(eventId: string) {
-  const user = await requireUser();
+export async function requireEventOwner(eventId: string, req?: { cookies: { get(name: string): { value: string } | undefined } }) {
+  const user = await requireUser(req);
   const event = await db.event.findUnique({
     where: { id: eventId },
     include: { organizer: true },
@@ -85,8 +84,8 @@ export async function requireEventOwner(eventId: string) {
   return { user, event };
 }
 
-export async function requireScannerForEvent(eventId: string) {
-  const user = await requireUser();
+export async function requireScannerForEvent(eventId: string, req?: { cookies: { get(name: string): { value: string } | undefined } }) {
+  const user = await requireUser(req);
   if (user.role === "ADMIN" || user.role === "SUPER_ADMIN") {
     const event = await db.event.findUniqueOrThrow({ where: { id: eventId } });
     return { user, event };

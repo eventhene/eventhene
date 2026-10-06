@@ -3,9 +3,9 @@ import { db } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
 import { sendEmail, freeEventApprovedEmail } from "@/lib/email";
 
-export async function POST(_: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const admin = await requireRole(["ADMIN", "SUPER_ADMIN"]);
+    const admin = await requireRole(["ADMIN", "SUPER_ADMIN"], req);
     const event = await db.event.findUnique({
       where: { id: params.id },
       include: { organizer: { include: { user: true } } }
