@@ -1,17 +1,21 @@
 import type { EventStatus } from "@prisma/client";
 
-const MAP: Record<string, { label: string; cls: string }> = {
-  DRAFT: { label: "Draft", cls: "chip-outline" },
-  PENDING_APPROVAL: { label: "In review", cls: "chip-sky" },
-  EDITS_REQUESTED: { label: "Edits needed", cls: "chip-sky" },
-  PUBLISHED: { label: "Live", cls: "chip-emerald" },
-  REJECTED: { label: "Rejected", cls: "chip-crimson" },
-  PAUSED: { label: "Paused", cls: "chip-outline" },
-  ENDED: { label: "Ended", cls: "chip-outline" },
-  CANCELLED: { label: "Cancelled", cls: "chip-crimson" },
+const MAP: Record<string, { label: string; color: string }> = {
+  DRAFT: { label: "Draft", color: "text-ink-muted" },
+  PENDING_APPROVAL: { label: "In review", color: "text-sky" },
+  EDITS_REQUESTED: { label: "Edits needed", color: "text-sky" },
+  PUBLISHED: { label: "Live", color: "text-emerald" },
+  REJECTED: { label: "Rejected", color: "text-crimson" },
+  PAUSED: { label: "Paused", color: "text-ink-muted" },
+  ENDED: { label: "Ended", color: "text-ink-muted" },
+  CANCELLED: { label: "Cancelled", color: "text-crimson" },
 };
 
 export function StatusChip({ status }: { status: EventStatus | string }) {
-  const m = MAP[status] || { label: String(status), cls: "chip-outline" };
-  return <span className={m.cls}>{m.label}</span>;
+  const m = MAP[status] || { label: String(status), color: "text-ink-muted" };
+  return (
+    <span className={`status-dot ${m.color}`}>
+      {m.label}
+    </span>
+  );
 }

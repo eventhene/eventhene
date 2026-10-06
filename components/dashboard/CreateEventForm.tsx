@@ -67,6 +67,9 @@ export function CreateEventForm({
   const [flyerUrl, setFlyerUrl] = useState("");
   const [type, setType] = useState<"PAID" | "FREE">("PAID");
   const [buyerPaysFee, setBuyerPaysFee] = useState(true);
+  const [couponCode, setCouponCode] = useState("");
+  const [couponValid, setCouponValid] = useState<boolean | null>(null);
+  const [couponMsg, setCouponMsg] = useState("");
   const [tickets, setTickets] = useState<TicketRow[]>([
     { name: "Regular", priceMajor: "0", quantity: "100", notes: "" }
   ]);
@@ -82,6 +85,19 @@ export function CreateEventForm({
     setCountry(code);
     setCurrency(c.currency);
     setTimezone(c.tz);
+  }
+
+  async function validateCoupon() {
+    if (!couponCode.trim()) return;
+    try {
+      const res = await fetch(`/api/coupons/validate?code=${encodeURIComponent(couponCode.trim())}`, { credentials: "include" });
+      const data = await res.json();
+      setCouponValid(data.valid);
+      setCouponMsg(data.valid ? "Coupon accepted - your event will publish instantly" : data.reason || "Invalid code");
+    } catch {
+      setCouponValid(false);
+      setCouponMsg("Could not verify coupon");
+    }
   }
 
   function addTicket() {
@@ -131,6 +147,7 @@ export function CreateEventForm({
         flyerUrl: flyerUrl || undefined,
         type,
         buyerPaysFee,
+        couponCode: couponCode.trim() || undefined,
         ticketTypes: tickets.map((t, idx) => ({
           name: t.name.trim(),
           priceMinor: type === "FREE" ? 0 : Math.round(parseFloat(t.priceMajor || "0") * 100),
@@ -175,7 +192,7 @@ export function CreateEventForm({
         <h2 className="font-display text-2xl">Basics</h2>
         <div>
           <label className="label">Event title</label>
-          <input required value={title} onChange={(e) => setTitle(e.target.value)} className="input" placeholder="DJ Kay Birthday Bash" />
+          <input required value={title} onChange={(e) => setTitle(e.target.value)} className="input" placeholder="Fire Conference 2026" />
         </div>
         <div className="grid md:grid-cols-2 gap-4">
           <div>
@@ -210,7 +227,7 @@ export function CreateEventForm({
         <div className="grid md:grid-cols-2 gap-4">
           <div>
             <label className="label">Venue</label>
-            <input required value={venue} onChange={(e) => setVenue(e.target.value)} className="input" placeholder="Front Back, East Legon" />
+            <input required value={venue} onChange={(e) => setVenue(e.target.value)} className="input" placeholder="Christ Temple, East Legon" />
           </div>
           <div>
             <label className="label">City (optional)</label>
@@ -293,7 +310,7 @@ export function CreateEventForm({
                 key={opt.key}
                 type="button"
                 onClick={() => toggleField(opt)}
-                className={`chip ${active ? "chip-ink" : "chip-outline"} cursor-pointer`}
+                className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition cursor-pointer ${active ? "bg-ink text-white border-ink" : "bg-white text-ink-muted border-border hover:border-ink/30"}`}
               >
                 {active ? "✓" : "+"} {opt.label}
               </button>
@@ -315,16 +332,38 @@ export function CreateEventForm({
         )}
       </section>
 
-      {err && <div className="rounded-xl bg-crimson/5 border border-crimson/20 text-crimson text-sm px-4 py-3">{err}</div>}
+      {/* SECTION: Coupon code */}
+      {type === "FREE" && (
+        <section className="card p-7 space-y-4">
+          <h2 className="font-extrabold text-xl tracking-tight">Have a coupon code?</h2>
+          <p className="text-sm text-ink-muted">Enter a coupon code to publish your event instantly without waiting for review.</p>
+          <div className="flex gap-2">
+            <input
+              value={couponCode}
+              onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponValid(null); setCouponMsg(""); }}
+              className="input flex-1"
+              placeholder="EH-XXXXXXXX"
+            />
+            <button type="button" onClick={validateCoupon} className="btn-ghost btn-md" disabled={!couponCode.trim()}>
+              Verify
+            </button>
+          </div>
+          {couponMsg && (
+            <p className={`text-sm font-semibold ${couponValid ? "text-emerald" : "text-crimson"}`}>{couponMsg}</p>
+          )}
+        </section>
+      )}
+
+      {err && <div className="rounded-xl bg-crimson/5 border border-crimson/20 text-crimson text-sm px-4 py-3 font-semibold">{err}</div>}
 
       <div className="flex gap-3">
         <button type="submit" disabled={busy} className="btn-primary btn-xl flex-1">
           {busy && <span className="spinner" />}
-          {busy ? "Publishing..." : type === "FREE" ? "Submit for review" : "Publish event"}
+          {busy ? "Publishing..." : (type === "FREE" && !couponValid) ? "Submit for review" : "Publish event"}
         </button>
       </div>
-      <p className="text-xs text-ink-muted text-center">
-        {type === "FREE" ? "Free events go live after a quick review (usually under 24 hours)." : "Paid events publish instantly."}
+      <p className="text-xs text-ink-muted text-center font-medium">
+        {type === "FREE" && !couponValid ? "Free events go live after a quick review (usually under 24 hours)." : "Your event will publish instantly."}
       </p>
     </form>
   );

@@ -11,7 +11,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="min-h-screen bg-paper">
       <aside className="fixed left-0 top-0 h-screen w-64 border-r border-border bg-surface hidden md:flex flex-col p-5">
         <Logo size="sm" />
-        <span className="chip-crimson w-fit mt-6 mb-6">Admin</span>
+        <p className="text-xs font-bold text-crimson uppercase tracking-widest mt-6 mb-6">Admin</p>
         <nav className="flex flex-col gap-0.5 text-sm">
           <NavLink href="/admin">Overview</NavLink>
           <NavLink href="/admin/free-events">Free event queue</NavLink>

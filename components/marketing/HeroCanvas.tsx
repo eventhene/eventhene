@@ -11,7 +11,7 @@ export function HeroCanvas() {
         transition={{ duration: 1.4, ease: "easeOut" }}
         className="absolute -top-40 -right-20 w-[640px] h-[640px] rounded-full"
         style={{
-          background: "radial-gradient(circle at 30% 30%, rgba(255,207,82,0.55), transparent 60%)",
+          background: "radial-gradient(circle at 30% 30%, rgba(212,168,83,0.5), transparent 60%)",
           filter: "blur(40px)",
         }}
       />
@@ -21,25 +21,24 @@ export function HeroCanvas() {
         transition={{ duration: 1.6, ease: "easeOut", delay: 0.2 }}
         className="absolute top-20 -left-32 w-[520px] h-[520px] rounded-full"
         style={{
-          background: "radial-gradient(circle at 70% 50%, rgba(74,45,168,0.75), transparent 60%)",
+          background: "radial-gradient(circle at 70% 50%, rgba(184,134,11,0.5), transparent 60%)",
           filter: "blur(60px)",
         }}
       />
       <motion.div
         initial={{ opacity: 0 }}
-        animate={{ opacity: 0.5 }}
+        animate={{ opacity: 0.4 }}
         transition={{ duration: 2 }}
         className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full"
         style={{
-          background: "radial-gradient(ellipse at center, rgba(14,143,107,0.5), transparent 60%)",
+          background: "radial-gradient(ellipse at center, rgba(14,143,107,0.4), transparent 60%)",
           filter: "blur(70px)",
         }}
       />
       <motion.div
         className="absolute inset-0"
         style={{
-          background:
-            "linear-gradient(180deg, transparent 0%, transparent 60%, rgba(10,10,11,0.5) 100%)",
+          background: "linear-gradient(180deg, transparent 0%, transparent 60%, rgba(17,17,17,0.5) 100%)",
         }}
       />
     </div>

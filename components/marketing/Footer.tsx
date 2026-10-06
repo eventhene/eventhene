@@ -7,8 +7,8 @@ export function Footer() {
       <div className="section py-20 grid md:grid-cols-[1.3fr,1fr,1fr,1fr] gap-10">
         <div>
           <Logo invert size="lg" />
-          <p className="mt-5 text-white/60 max-w-xs text-sm leading-relaxed">
-            Premium event registration, ticketing, bulk SMS and attendance tracking. Built in Ghana. Ready for the continent.
+          <p className="mt-5 text-white/50 max-w-xs text-sm leading-relaxed font-medium">
+            Event registration, ticketing, bulk SMS and attendance tracking. Built in Ghana. Ready for the continent.
           </p>
           <div className="mt-6 flex gap-2">
             <Link href="/sign-up" className="btn-gold btn-md">Start free</Link>
@@ -34,9 +34,9 @@ export function Footer() {
         ]} />
       </div>
       <div className="hr-dark" />
-      <div className="section flex flex-col sm:flex-row items-center justify-between gap-2 py-6 text-xs text-white/50">
-        <span>© {new Date().getFullYear()} EventHene. Long live the king.</span>
-        <span className="font-mono tracking-widest">MADE IN GHANA</span>
+      <div className="section flex flex-col sm:flex-row items-center justify-between gap-2 py-6 text-xs text-white/40 font-semibold">
+        <span>&copy; {new Date().getFullYear()} EventHene</span>
+        <span className="tracking-widest uppercase">Made in Ghana</span>
       </div>
     </footer>
   );
@@ -45,11 +45,11 @@ export function Footer() {
 function FooterCol({ title, links }: { title: string; links: { href: string; label: string }[] }) {
   return (
     <div>
-      <p className="text-xs text-white/40 uppercase tracking-widest mb-4">{title}</p>
+      <p className="text-xs text-white/40 uppercase tracking-widest font-semibold mb-4">{title}</p>
       <ul className="space-y-2.5 text-sm">
         {links.map((l) => (
           <li key={l.href}>
-            <Link href={l.href} className="text-white/70 hover:text-white transition">{l.label}</Link>
+            <Link href={l.href} className="text-white/60 hover:text-white transition font-medium">{l.label}</Link>
           </li>
         ))}
       </ul>

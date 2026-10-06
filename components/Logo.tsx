@@ -20,14 +20,14 @@ export function Logo({ href = "/", invert = false, size = "md", className }: Log
     <Wrapper
       {...props}
       className={cn(
-        "inline-flex items-center gap-2 font-display font-semibold tracking-tightest leading-none",
+        "inline-flex items-center gap-2 font-extrabold tracking-tightest leading-none",
         sizes[size],
         invert ? "text-white" : "text-ink",
         className
       )}
     >
-      <CrownMark className={cn("h-[1.1em] w-auto", invert ? "text-accent" : "text-royal-2")} />
-      <span>Event<span className={invert ? "text-white/70" : "text-ink-muted"}>hene</span></span>
+      <CrownMark className={cn("h-[1.1em] w-auto", "text-accent")} />
+      <span>Event<span className={invert ? "text-white/60" : "text-ink-muted"}>hene</span></span>
     </Wrapper>
   );
 }

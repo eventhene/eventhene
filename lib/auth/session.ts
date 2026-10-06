@@ -2,7 +2,7 @@
 // No Clerk, no third-party auth lock-in. Full control.
 
 import { SignJWT, jwtVerify } from "jose";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import crypto from "crypto";
 import { db } from "@/lib/db";
 
@@ -73,9 +73,7 @@ export async function destroySession() {
   jar.delete(COOKIE_NAME);
 }
 
-export async function readSession() {
-  const raw = cookies().get(COOKIE_NAME)?.value;
-  if (!raw) return null;
+async function verifySessionJwt(raw: string) {
   try {
     const { payload } = await jwtVerify(raw, getSecret());
     const uid = (payload as any).uid as string;
@@ -98,4 +96,23 @@ export async function readSession() {
   } catch {
     return null;
   }
+}
+
+export async function readSession() {
+  let raw = cookies().get(COOKIE_NAME)?.value;
+  if (!raw) {
+    try {
+      const cookieHeader = headers().get("cookie") || "";
+      const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${COOKIE_NAME}=([^;]*)`));
+      if (match) raw = match[1];
+    } catch {}
+  }
+  if (!raw) return null;
+  return verifySessionJwt(raw);
+}
+
+export async function readSessionFromRequest(req: { cookies: { get(name: string): { value: string } | undefined } }) {
+  const raw = req.cookies.get(COOKIE_NAME)?.value;
+  if (!raw) return null;
+  return verifySessionJwt(raw);
 }

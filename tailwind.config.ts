@@ -35,9 +35,9 @@ export default {
         sky: "var(--sky)",
       },
       fontFamily: {
-        display: ["Instrument Serif", "Fraunces", "Georgia", "serif"],
-        sans: ["Geist", "system-ui", "sans-serif"],
-        mono: ["Geist Mono", "ui-monospace", "monospace"],
+        display: ["Inter", "system-ui", "sans-serif"],
+        sans: ["Inter", "system-ui", "sans-serif"],
+        mono: ["ui-monospace", "Cascadia Code", "monospace"],
       },
       borderRadius: {
         sm: "10px",

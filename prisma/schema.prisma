@@ -174,6 +174,7 @@ model User {
   adminActions   AdminLog[]
   supportTickets SupportTicket[]
   sessions       Session[]
+  couponsCreated Coupon[]       @relation("CouponCreator")
 }
 
 model Session {
@@ -254,6 +255,7 @@ model Event {
   buyerPaysFee    Boolean     @default(true)
   adminNote       String?     @db.Text
   rejectionReason String?
+  couponCode      String?
   publishedAt     DateTime?
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
@@ -577,6 +579,20 @@ model Review {
   createdAt   DateTime @default(now())
 
   @@index([eventId])
+}
+
+model Coupon {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  note      String?
+  maxUses   Int       @default(1)
+  usedCount Int       @default(0)
+  expiresAt DateTime?
+  createdBy String
+  creator   User      @relation("CouponCreator", fields: [createdBy], references: [id])
+  createdAt DateTime  @default(now())
+
+  @@index([code])
 }
 
 model AdminLog {

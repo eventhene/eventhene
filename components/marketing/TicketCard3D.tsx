@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { motion, useMotionValue, useSpring } from "framer-motion";
 import type { MouseEvent } from "react";
 
 interface TicketCard3DProps {
@@ -10,19 +10,19 @@ interface TicketCard3DProps {
 
 const VARIANTS = {
   regular: {
-    gradient: "linear-gradient(135deg, #2A1A4E 0%, #0A0A0B 100%)",
+    gradient: "linear-gradient(135deg, #1C1917 0%, #111111 100%)",
     tier: "Regular",
-    priceLabel: "GHS 150",
+    priceLabel: "Free",
   },
   vip: {
-    gradient: "linear-gradient(135deg, #4A2DA8 0%, #2A1A4E 60%, #FFCF52 180%)",
+    gradient: "linear-gradient(135deg, #B8860B 0%, #1C1917 80%)",
     tier: "VIP",
-    priceLabel: "GHS 350",
+    priceLabel: "GHS 200",
   },
   vvip: {
-    gradient: "linear-gradient(135deg, #0A0A0B 0%, #4A2DA8 100%)",
+    gradient: "linear-gradient(135deg, #111111 0%, #D4A853 180%)",
     tier: "VVIP",
-    priceLabel: "GHS 800",
+    priceLabel: "GHS 500",
   },
 };
 
@@ -56,49 +56,45 @@ export function TicketCard3D({ variant, featured }: TicketCard3DProps) {
         transformStyle: "preserve-3d",
         perspective: 1000,
       }}
-      className={`relative rounded-2xl text-white overflow-hidden select-none ${featured ? "md:scale-[1.08] md:-translate-y-3 shadow-[0_32px_80px_-24px_rgba(74,45,168,0.5)]" : "shadow-xl"}`}
+      className={`relative rounded-2xl text-white overflow-hidden select-none ${featured ? "md:scale-[1.08] md:-translate-y-3 shadow-[0_32px_80px_-24px_rgba(184,134,11,0.4)]" : "shadow-xl"}`}
     >
       <div
         className="aspect-[3/4] p-6 flex flex-col justify-between relative"
         style={{ background: V.gradient }}
       >
-        {/* grain */}
         <div
-          className="absolute inset-0 opacity-30 mix-blend-overlay pointer-events-none"
+          className="absolute inset-0 opacity-20 mix-blend-overlay pointer-events-none"
           style={{
             backgroundImage:
-              "radial-gradient(circle at 20% 10%, rgba(255,255,255,0.3), transparent 40%), radial-gradient(circle at 80% 90%, rgba(255,207,82,0.3), transparent 40%)",
+              "radial-gradient(circle at 20% 10%, rgba(255,255,255,0.25), transparent 40%), radial-gradient(circle at 80% 90%, rgba(212,168,83,0.3), transparent 40%)",
           }}
         />
-        {/* crown mark */}
-        <div className="absolute top-4 right-4 text-accent/70 text-2xl font-display">♛</div>
 
         <div className="relative">
-          <p className="text-[10px] uppercase tracking-[0.35em] text-white/50">Event • Hene</p>
-          <p className="font-display text-2xl mt-2 leading-tight">
-            DJ Kay<br/>Birthday Bash
+          <p className="text-[10px] uppercase tracking-[0.35em] text-white/50 font-semibold">EventHene</p>
+          <p className="font-extrabold text-2xl mt-2 leading-tight">
+            Fire Conference<br/>2026
           </p>
-          <p className="text-[11px] text-white/60 mt-2">Fri Jun 12 · East Legon</p>
+          <p className="text-[11px] text-white/60 mt-2 font-medium">Sat Nov 14 - Christ Temple, Accra</p>
         </div>
 
         <div className="relative">
           <div className="flex items-end justify-between">
             <div>
-              <p className="text-[10px] uppercase tracking-widest text-white/50">Tier</p>
-              <p className="font-display text-xl">{V.tier}</p>
+              <p className="text-[10px] uppercase tracking-widest text-white/50 font-semibold">Tier</p>
+              <p className="font-extrabold text-xl">{V.tier}</p>
             </div>
             <div className="text-right">
-              <p className="text-[10px] uppercase tracking-widest text-white/50">Price</p>
-              <p className="font-display text-xl">{V.priceLabel}</p>
+              <p className="text-[10px] uppercase tracking-widest text-white/50 font-semibold">Price</p>
+              <p className="font-extrabold text-xl">{V.priceLabel}</p>
             </div>
           </div>
           <div className="mt-4 flex items-center gap-3 rounded-xl bg-white text-ink p-3">
-            {/* QR placeholder */}
             <QRPatch />
             <div className="font-mono text-[10px] leading-tight">
               <p className="text-ink-muted">REFERENCE</p>
-              <p>WOR-DJKAY</p>
-              <p>-4134123</p>
+              <p className="font-semibold">KWA-FIRE</p>
+              <p className="font-semibold">-7241089</p>
             </div>
           </div>
         </div>
@@ -108,7 +104,6 @@ export function TicketCard3D({ variant, featured }: TicketCard3DProps) {
 }
 
 function QRPatch() {
-  // Decorative, not a real QR
   return (
     <div className="w-16 h-16 rounded-lg bg-ink p-1.5">
       <div className="grid grid-cols-7 grid-rows-7 gap-[1px] w-full h-full">

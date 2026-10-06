@@ -10,7 +10,7 @@ export async function TopNav({ invert = false }: { invert?: boolean }) {
       <nav className="section flex h-16 items-center justify-between">
         <Logo invert={invert} />
 
-        <div className={`hidden md:flex items-center gap-7 text-sm ${invert ? "text-white/70" : "text-ink-muted"}`}>
+        <div className={`hidden md:flex items-center gap-7 text-sm font-semibold ${invert ? "text-white/60" : "text-ink-muted"}`}>
           <Link href="/events" className={`hover:${invert ? "text-white" : "text-ink"} transition`}>Discover</Link>
           <Link href="/pricing" className={`hover:${invert ? "text-white" : "text-ink"} transition`}>Pricing</Link>
           <Link href="/services" className={`hover:${invert ? "text-white" : "text-ink"} transition`}>Services</Link>

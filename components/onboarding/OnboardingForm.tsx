@@ -54,7 +54,7 @@ export function OnboardingForm({ defaultCountry = "GH" }: { defaultCountry?: str
           required
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
-          placeholder="DJ Kay Live, Praise Tower, etc."
+          placeholder="Fire Conference, Kingdom Encounter, etc."
           className="input"
         />
         <p className="help">The name attendees see on your event pages.</p>

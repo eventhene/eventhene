@@ -39,6 +39,7 @@ const CreateEventBody = z.object({
   flyerUrl: z.string().url().optional().or(z.literal("")),
   type: z.enum(["PAID", "FREE"]),
   buyerPaysFee: z.boolean().default(true),
+  couponCode: z.string().max(30).optional(),
   ticketTypes: z.array(TicketTypeSchema).min(1).max(20),
   attendeeFields: z.array(AttendeeFieldSchema).min(1).max(30)
 });
@@ -63,6 +64,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Free events cannot have priced tickets" }, { status: 400 });
     }
 
+    // Check coupon code - valid coupon auto-publishes the event
+    let autoPublish = false;
+    if (body.couponCode) {
+      const code = body.couponCode.toUpperCase().trim();
+      const coupon = await db.coupon.findUnique({ where: { code } });
+      if (!coupon) return NextResponse.json({ error: "Invalid coupon code" }, { status: 400 });
+      if (coupon.expiresAt && coupon.expiresAt < new Date()) {
+        return NextResponse.json({ error: "This coupon has expired" }, { status: 400 });
+      }
+      if (coupon.usedCount >= coupon.maxUses) {
+        return NextResponse.json({ error: "This coupon has been fully used" }, { status: 400 });
+      }
+      await db.coupon.update({ where: { id: coupon.id }, data: { usedCount: { increment: 1 } } });
+      autoPublish = true;
+    }
+
     const event = await db.event.create({
       data: {
         organizerId: organizer.id,
@@ -83,7 +100,9 @@ export async function POST(req: NextRequest) {
         flyerUrl: body.flyerUrl || null,
         type: body.type,
         buyerPaysFee: body.buyerPaysFee,
-        status: "DRAFT",
+        couponCode: body.couponCode?.toUpperCase().trim() || null,
+        status: autoPublish ? "PUBLISHED" : "DRAFT",
+        publishedAt: autoPublish ? new Date() : null,
         ticketTypes: { create: body.ticketTypes },
         attendeeFields: { create: body.attendeeFields.map((f) => ({ ...f, options: f.options ?? [] })) }
       },
