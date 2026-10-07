@@ -17,6 +17,7 @@ export function DeleteOrganizerButton({ organizerId, displayName, eventCount, ha
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
   const [mounted, setMounted] = useState(false);
+  const [deleteAccount, setDeleteAccount] = useState(false);
   const router = useRouter();
 
   useEffect(() => setMounted(true), []);
@@ -34,7 +35,12 @@ export function DeleteOrganizerButton({ organizerId, displayName, eventCount, ha
     setDeleting(true);
     setError("");
     try {
-      const res = await fetch(`/api/admin/organizers/${organizerId}`, { method: "DELETE", credentials: "include" });
+      const res = await fetch(`/api/admin/organizers/${organizerId}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ deleteAccount }),
+      });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(data.error || "Failed to delete.");
@@ -78,6 +84,13 @@ export function DeleteOrganizerButton({ organizerId, displayName, eventCount, ha
             Their Paystack payout subaccount will be deactivated (Paystack does not allow deleting subaccounts).
           </p>
         )}
+        <label className="flex items-start gap-2 text-sm text-white/70 cursor-pointer">
+          <input type="checkbox" className="mt-1" checked={deleteAccount} onChange={(e) => setDeleteAccount(e.target.checked)} disabled={deleting} />
+          <span>
+            Also delete their login account
+            <span className="block text-xs text-white/35">Frees the email so it can sign up again. Without this, the login stays as a normal attendee.</span>
+          </span>
+        </label>
         {error && <p className="text-sm text-red-400">{error}</p>}
         <div className="flex gap-2 pt-2">
           <button
