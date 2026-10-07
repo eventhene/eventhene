@@ -35,7 +35,7 @@ export default function TicketLookupPage() {
         </div>
         <h1 className="h-section text-white">Find my ticket</h1>
         <p className="text-white/40 mt-3 text-lg">
-          Search by your name, phone number, email, or ticket reference code.
+          Enter your ticket reference code to view or download your ticket.
         </p>
       </div>
 
@@ -45,8 +45,8 @@ export default function TicketLookupPage() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="e.g. Kofi, 0241234567, KOF-FIRE-1234"
-            className="input text-white pl-12 text-base py-4 w-full"
+            placeholder="e.g. KOF-FIRE-1234"
+            className="input text-white pl-12 text-base py-4 w-full font-mono tracking-wide"
             autoFocus
           />
         </div>
@@ -66,6 +66,9 @@ export default function TicketLookupPage() {
             </>
           )}
         </button>
+        <p className="text-xs text-white/20 text-center">
+          Your reference code was sent to you via SMS after purchase.
+        </p>
         {err && <p className="text-sm text-red-400 text-center">{err}</p>}
       </form>
 
@@ -73,7 +76,7 @@ export default function TicketLookupPage() {
         <div className="mt-8 space-y-3">
           {results.length === 0 && (
             <div className="card-glass rounded-2xl p-10 text-center">
-              <p className="text-white/40">No tickets found. Double-check your details and try again.</p>
+              <p className="text-white/40">No tickets found. Double-check your reference code and try again.</p>
             </div>
           )}
           {results.map((t) => (
@@ -106,10 +109,6 @@ export default function TicketLookupPage() {
           ))}
         </div>
       )}
-
-      <p className="text-xs text-white/20 text-center mt-8">
-        Can't find your ticket? Contact the event organizer or reach out to support.
-      </p>
     </div>
   );
 }

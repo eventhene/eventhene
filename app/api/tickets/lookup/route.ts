@@ -14,59 +14,17 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Enter at least 3 characters" }, { status: 400 });
   }
 
-  let tickets: any[] = [];
-
-  // Try exact ref match first
-  const byRef = await db.ticket.findMany({
-    where: { visibleRef: q.toUpperCase() },
+  // Public lookup - only by ticket reference code (not name/phone/email for privacy)
+  const tickets = await db.ticket.findMany({
+    where: {
+      OR: [
+        { visibleRef: q.toUpperCase() },
+        { visibleRef: { contains: q.toUpperCase() } },
+      ],
+    },
     include: { event: true, attendee: true, ticketType: true },
+    take: 10,
   });
-  if (byRef.length > 0) {
-    tickets = byRef;
-  }
-
-  // Try partial ref match
-  if (tickets.length === 0) {
-    const byPartialRef = await db.ticket.findMany({
-      where: { visibleRef: { contains: q.toUpperCase() } },
-      include: { event: true, attendee: true, ticketType: true },
-      take: 20,
-    });
-    if (byPartialRef.length > 0) tickets = byPartialRef;
-  }
-
-  // Try by phone number
-  if (tickets.length === 0) {
-    const byPhone = await db.ticket.findMany({
-      where: { attendee: { phone: { contains: q } } },
-      include: { event: true, attendee: true, ticketType: true },
-      orderBy: { createdAt: "desc" },
-      take: 20,
-    });
-    if (byPhone.length > 0) tickets = byPhone;
-  }
-
-  // Try by email
-  if (tickets.length === 0) {
-    const byEmail = await db.ticket.findMany({
-      where: { attendee: { email: { contains: q.toLowerCase(), mode: "insensitive" } } },
-      include: { event: true, attendee: true, ticketType: true },
-      orderBy: { createdAt: "desc" },
-      take: 20,
-    });
-    if (byEmail.length > 0) tickets = byEmail;
-  }
-
-  // Try by name
-  if (tickets.length === 0) {
-    const byName = await db.ticket.findMany({
-      where: { attendee: { fullName: { contains: q, mode: "insensitive" } } },
-      include: { event: true, attendee: true, ticketType: true },
-      orderBy: { createdAt: "desc" },
-      take: 20,
-    });
-    tickets = byName;
-  }
 
   return NextResponse.json({
     tickets: tickets.map((t) => ({
