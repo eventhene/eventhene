@@ -8,26 +8,64 @@ export async function GET(req: NextRequest) {
   if (!ok) return NextResponse.json({ error: "rate_limited" }, { status: 429 });
 
   const url = new URL(req.url);
-  const ref = url.searchParams.get("ref")?.trim();
-  const email = url.searchParams.get("email")?.trim().toLowerCase();
+  const q = url.searchParams.get("q")?.trim();
 
-  if (!ref && !email) {
-    return NextResponse.json({ error: "ref_or_email_required" }, { status: 400 });
+  if (!q || q.length < 3) {
+    return NextResponse.json({ error: "Enter at least 3 characters" }, { status: 400 });
   }
 
-  let tickets;
-  if (ref) {
-    tickets = await db.ticket.findMany({
-      where: { visibleRef: ref.toUpperCase() },
-      include: { event: true, attendee: true, ticketType: true }
+  let tickets: any[] = [];
+
+  // Try exact ref match first
+  const byRef = await db.ticket.findMany({
+    where: { visibleRef: q.toUpperCase() },
+    include: { event: true, attendee: true, ticketType: true },
+  });
+  if (byRef.length > 0) {
+    tickets = byRef;
+  }
+
+  // Try partial ref match
+  if (tickets.length === 0) {
+    const byPartialRef = await db.ticket.findMany({
+      where: { visibleRef: { contains: q.toUpperCase() } },
+      include: { event: true, attendee: true, ticketType: true },
+      take: 20,
     });
-  } else {
-    tickets = await db.ticket.findMany({
-      where: { attendee: { email } },
+    if (byPartialRef.length > 0) tickets = byPartialRef;
+  }
+
+  // Try by phone number
+  if (tickets.length === 0) {
+    const byPhone = await db.ticket.findMany({
+      where: { attendee: { phone: { contains: q } } },
       include: { event: true, attendee: true, ticketType: true },
       orderBy: { createdAt: "desc" },
-      take: 50
+      take: 20,
     });
+    if (byPhone.length > 0) tickets = byPhone;
+  }
+
+  // Try by email
+  if (tickets.length === 0) {
+    const byEmail = await db.ticket.findMany({
+      where: { attendee: { email: { contains: q.toLowerCase(), mode: "insensitive" } } },
+      include: { event: true, attendee: true, ticketType: true },
+      orderBy: { createdAt: "desc" },
+      take: 20,
+    });
+    if (byEmail.length > 0) tickets = byEmail;
+  }
+
+  // Try by name
+  if (tickets.length === 0) {
+    const byName = await db.ticket.findMany({
+      where: { attendee: { fullName: { contains: q, mode: "insensitive" } } },
+      include: { event: true, attendee: true, ticketType: true },
+      orderBy: { createdAt: "desc" },
+      take: 20,
+    });
+    tickets = byName;
   }
 
   return NextResponse.json({
@@ -36,9 +74,11 @@ export async function GET(req: NextRequest) {
       visibleRef: t.visibleRef,
       status: t.status,
       attendeeName: t.attendee.fullName,
+      attendeePhone: t.attendee.phone,
+      ticketType: t.ticketType.name,
       eventTitle: t.event.title,
       eventSlug: t.event.slug,
-      pdfUrl: t.pdfUrl
-    }))
+      pdfUrl: t.pdfUrl,
+    })),
   });
 }

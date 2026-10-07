@@ -1,24 +1,22 @@
 "use client";
 
 import { useState } from "react";
+import { Search, Loader2, Ticket, Download } from "lucide-react";
 
 export default function TicketLookupPage() {
-  const [ref, setRef] = useState("");
-  const [email, setEmail] = useState("");
+  const [query, setQuery] = useState("");
   const [busy, setBusy] = useState(false);
   const [results, setResults] = useState<any[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   async function lookup(e: React.FormEvent) {
     e.preventDefault();
+    if (!query.trim() || query.trim().length < 3) return;
     setBusy(true);
     setErr(null);
     setResults(null);
     try {
-      const params = new URLSearchParams();
-      if (ref) params.set("ref", ref);
-      else if (email) params.set("email", email);
-      const res = await fetch(`/api/tickets/lookup?${params.toString()}`);
+      const res = await fetch(`/api/tickets/lookup?q=${encodeURIComponent(query.trim())}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Lookup failed");
       setResults(data.tickets);
@@ -31,63 +29,94 @@ export default function TicketLookupPage() {
 
   return (
     <div className="section max-w-xl py-16">
-      <p className="chip-outline mb-5">Lookup</p>
-      <h1 className="h-section mb-2">Find my ticket.</h1>
-      <p className="text-ink-muted mb-10">Enter your ticket reference or the email you used.</p>
+      <div className="text-center mb-10">
+        <div className="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-5">
+          <Ticket className="w-7 h-7 text-accent" />
+        </div>
+        <h1 className="h-section text-white">Find my ticket</h1>
+        <p className="text-white/40 mt-3 text-lg">
+          Search by your name, phone number, email, or ticket reference code.
+        </p>
+      </div>
 
-      <form onSubmit={lookup} className="card p-7 space-y-4">
-        <div>
-          <label className="label">Ticket reference</label>
+      <form onSubmit={lookup} className="card-glass rounded-2xl p-6 space-y-4">
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30 pointer-events-none" />
           <input
-            value={ref}
-            onChange={(e) => setRef(e.target.value)}
-            placeholder="WOR-DJKAY-4134123"
-            className="input font-mono"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="e.g. Kofi, 0241234567, KOF-FIRE-1234"
+            className="input text-white pl-12 text-base py-4 w-full"
+            autoFocus
           />
         </div>
-        <div className="flex items-center gap-3">
-          <div className="hr-soft flex-1" />
-          <span className="text-xs text-ink-muted">or</span>
-          <div className="hr-soft flex-1" />
-        </div>
-        <div>
-          <label className="label">Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            className="input"
-          />
-        </div>
-        <button disabled={busy || (!ref && !email)} className="btn-primary btn-lg w-full">
-          {busy && <span className="spinner" />}
-          {busy ? "Looking..." : "Find my ticket"}
+        <button
+          disabled={busy || query.trim().length < 3}
+          className="btn-gold btn-lg w-full flex items-center justify-center gap-2"
+        >
+          {busy ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Searching...
+            </>
+          ) : (
+            <>
+              <Search className="w-4 h-4" />
+              Find my ticket
+            </>
+          )}
         </button>
-        {err && <p className="err">{err}</p>}
+        {err && <p className="text-sm text-red-400 text-center">{err}</p>}
       </form>
 
-      {results && (
+      {results !== null && (
         <div className="mt-8 space-y-3">
-          {results.length === 0 && <p className="text-sm text-ink-muted">No tickets found.</p>}
+          {results.length === 0 && (
+            <div className="card-glass rounded-2xl p-10 text-center">
+              <p className="text-white/40">No tickets found. Double-check your details and try again.</p>
+            </div>
+          )}
           {results.map((t) => (
-            <div key={t.id} className="card p-5 flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="font-medium truncate">{t.eventTitle}</p>
-                <p className="text-xs text-ink-muted">{t.attendeeName}</p>
-                <p className="font-mono text-xs text-royal-2 mt-1">{t.visibleRef}</p>
+            <div key={t.id} className="card-glass rounded-2xl p-5 flex items-center justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <p className="font-bold text-white truncate">{t.eventTitle}</p>
+                <p className="text-sm text-white/50 mt-0.5">{t.attendeeName}</p>
+                <div className="flex items-center gap-3 mt-2">
+                  <span className="font-mono text-xs text-accent">{t.visibleRef}</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/50 uppercase font-bold">
+                    {t.ticketType}
+                  </span>
+                  <StatusChip status={t.status} />
+                </div>
               </div>
               {t.pdfUrl ? (
-                <a href={t.pdfUrl} target="_blank" rel="noopener noreferrer" className="btn-primary btn-sm">
-                  Download
+                <a
+                  href={t.pdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-gold btn-sm flex items-center gap-1.5 shrink-0"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  PDF
                 </a>
               ) : (
-                <span className="chip-outline">{t.status}</span>
+                <span className="text-xs text-white/30 shrink-0">No PDF</span>
               )}
             </div>
           ))}
         </div>
       )}
+
+      <p className="text-xs text-white/20 text-center mt-8">
+        Can't find your ticket? Contact the event organizer or reach out to support.
+      </p>
     </div>
   );
+}
+
+function StatusChip({ status }: { status: string }) {
+  if (status === "ATTENDED") return <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold uppercase">Attended</span>;
+  if (status === "TICKET_ISSUED" || status === "REGISTERED") return <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/20 text-accent font-bold uppercase">Valid</span>;
+  if (status === "REFUNDED") return <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 font-bold uppercase">Refunded</span>;
+  return null;
 }

@@ -1,6 +1,6 @@
 import { customAlphabet } from "nanoid";
 
-const numericId = customAlphabet("0123456789", 7);
+const numericId = customAlphabet("0123456789", 4);
 
 /** Sanitize and uppercase the first 3 letters of a name. */
 export function sanitizeFirst3(name: string): string {

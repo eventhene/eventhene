@@ -1,11 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 
 export function MobileMenu({ isLoggedIn }: { isLoggedIn: boolean }) {
   const [open, setOpen] = useState(false);
+
+  const close = useCallback(() => setOpen(false), []);
+
+  useEffect(() => {
+    if (!open) return;
+
+    document.body.style.overflow = "hidden";
+
+    function onScroll() {
+      close();
+    }
+    function onTouchMove(e: TouchEvent) {
+      const menu = document.getElementById("mobile-nav-panel");
+      if (menu && !menu.contains(e.target as Node)) {
+        e.preventDefault();
+        close();
+      }
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    document.addEventListener("touchmove", onTouchMove, { passive: false });
+
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("scroll", onScroll);
+      document.removeEventListener("touchmove", onTouchMove);
+    };
+  }, [open, close]);
 
   return (
     <div className="md:hidden">
@@ -18,27 +46,39 @@ export function MobileMenu({ isLoggedIn }: { isLoggedIn: boolean }) {
       </button>
 
       {open && (
-        <div className="absolute top-16 inset-x-0 glass-dark border-t border-white/5 px-5 py-6 animate-fade-up">
-          <div className="flex flex-col gap-1 text-sm font-semibold">
-            <MLink href="/events" onClick={() => setOpen(false)}>Discover</MLink>
-            <MLink href="/pricing" onClick={() => setOpen(false)}>Pricing</MLink>
-            <MLink href="/services" onClick={() => setOpen(false)}>Services</MLink>
-            <MLink href="/tickets/lookup" onClick={() => setOpen(false)}>Find ticket</MLink>
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 top-16 bg-black/60 z-30"
+            onClick={close}
+          />
+
+          {/* Menu panel */}
+          <div
+            id="mobile-nav-panel"
+            className="fixed top-16 inset-x-0 z-40 bg-[#0a0a0c]/95 backdrop-blur-xl border-t border-white/10 px-5 py-6 animate-fade-up"
+          >
+            <div className="flex flex-col gap-1 text-sm font-semibold">
+              <MLink href="/events" onClick={close}>Discover</MLink>
+              <MLink href="/pricing" onClick={close}>Pricing</MLink>
+              <MLink href="/services" onClick={close}>Services</MLink>
+              <MLink href="/tickets/lookup" onClick={close}>Find ticket</MLink>
+            </div>
+            <div className="mt-5 flex flex-col gap-2">
+              {isLoggedIn ? (
+                <>
+                  <Link href="/dashboard" onClick={close} className="btn-ghost-dark btn-lg w-full">Dashboard</Link>
+                  <Link href="/dashboard/events/new" onClick={close} className="btn-gold btn-lg w-full">New event</Link>
+                </>
+              ) : (
+                <>
+                  <Link href="/sign-in" onClick={close} className="btn-ghost-dark btn-lg w-full">Sign in</Link>
+                  <Link href="/sign-up" onClick={close} className="btn-gold btn-lg w-full">Get started</Link>
+                </>
+              )}
+            </div>
           </div>
-          <div className="mt-5 flex flex-col gap-2">
-            {isLoggedIn ? (
-              <>
-                <Link href="/dashboard" onClick={() => setOpen(false)} className="btn-ghost-dark btn-lg w-full">Dashboard</Link>
-                <Link href="/dashboard/events/new" onClick={() => setOpen(false)} className="btn-gold btn-lg w-full">New event</Link>
-              </>
-            ) : (
-              <>
-                <Link href="/sign-in" onClick={() => setOpen(false)} className="btn-ghost-dark btn-lg w-full">Sign in</Link>
-                <Link href="/sign-up" onClick={() => setOpen(false)} className="btn-gold btn-lg w-full">Get started</Link>
-              </>
-            )}
-          </div>
-        </div>
+        </>
       )}
     </div>
   );
