@@ -32,17 +32,13 @@ export async function POST(req: NextRequest) {
     if (body.action === "save") {
       const { accountNumber, bankCode, bankName, accountName } = SaveBody.parse(body);
 
-      let subacctCode = organizer.paystackSubacct;
-
-      if (!subacctCode) {
-        const sub = await paystack.createSubaccount({
-          businessName: organizer.displayName,
-          bankCode,
-          accountNumber,
-          percentageCharge: 95,
-        });
-        subacctCode = sub.subaccount_code;
-      }
+      const sub = await paystack.createSubaccount({
+        businessName: organizer.displayName,
+        bankCode,
+        accountNumber,
+        percentageCharge: 95,
+      });
+      const subacctCode = sub.subaccount_code;
 
       await db.organizer.update({
         where: { id: organizer.id },

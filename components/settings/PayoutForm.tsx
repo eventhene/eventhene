@@ -26,6 +26,7 @@ export function PayoutForm({ currentBank, currentAccount, currentName, isVerifie
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [resolved, setResolved] = useState(!!currentName);
+  const [editing, setEditing] = useState(false);
 
   useEffect(() => {
     fetch("/api/banks")
@@ -84,7 +85,7 @@ export function PayoutForm({ currentBank, currentAccount, currentName, isVerifie
     }
   }
 
-  if (isVerified && subaccount && !success) {
+  if (isVerified && subaccount && !success && !editing) {
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-2 text-emerald-400">
@@ -110,8 +111,14 @@ export function PayoutForm({ currentBank, currentAccount, currentName, isVerifie
         </div>
         <p className="text-xs text-white/30">
           Revenue from paid events is settled to this account automatically (minus platform fees).
-          Contact support to change your payout details.
         </p>
+        <button
+          type="button"
+          onClick={() => { setEditing(true); setResolved(false); setAccountName(""); setAccountNumber(""); setBankCode(""); }}
+          className="text-sm text-accent hover:text-accent/80 underline underline-offset-2"
+        >
+          Change payout account
+        </button>
       </div>
     );
   }
