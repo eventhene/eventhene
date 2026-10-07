@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createOrder } from "@/lib/services/orders";
-import { issueTicketsForOrder } from "@/lib/services/tickets";
+import { fulfilOrder } from "@/lib/services/fulfil";
 import { rateLimit } from "@/lib/ratelimit";
+
+export const maxDuration = 60;
 
 const AttendeeSchema = z.object({
   fullName: z.string().min(1).max(120),
@@ -57,9 +59,8 @@ export async function POST(req: NextRequest) {
     });
 
     if (result.mode === "free") {
-      // Free events: issue tickets immediately and enqueue PDF
-      await issueTicketsForOrder(result.orderId);
-      // Optional: trigger render-ticket job here in production
+      // Free events: issue tickets, generate the PDF, then send SMS and email
+      await fulfilOrder(result.orderId, "orders");
     }
 
     return NextResponse.json(result, { status: 201 });

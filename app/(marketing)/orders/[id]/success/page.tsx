@@ -41,7 +41,7 @@ export default async function OrderSuccessPage({ params }: { params: { id: strin
             </div>
             <h1 className="h-section">You're all set.</h1>
             <p className="text-ink-muted mt-3">
-              Your ticket{order.tickets.length > 1 ? "s are" : " is"} confirmed and sent to <strong className="text-ink">{order.buyerEmail}</strong>.
+              Your ticket{order.tickets.length > 1 ? "s are" : " is"} confirmed and sent to <strong className="text-ink">{order.buyerEmail}</strong> and by SMS.
             </p>
           </div>
 
@@ -58,13 +58,14 @@ export default async function OrderSuccessPage({ params }: { params: { id: strin
                     <p className="text-xs text-ink-muted">{t.ticketType.name}</p>
                     <p className="font-mono text-xs text-royal-2 mt-1">{t.visibleRef}</p>
                   </div>
-                  {t.pdfUrl ? (
-                    <a href={t.pdfUrl} target="_blank" rel="noopener noreferrer" className="btn-primary btn-sm">
-                      Download
-                    </a>
-                  ) : (
-                    <span className="chip-outline">PDF generating...</span>
-                  )}
+                  <a
+                    href={`/api/tickets/${t.id}/pdf?order=${order.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-primary btn-sm"
+                  >
+                    Download
+                  </a>
                 </div>
               ))}
             </div>

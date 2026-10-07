@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { paystack } from "@/lib/payments/paystack";
-import { issueTicketsForOrder } from "@/lib/services/tickets";
-import { renderAndStoreTicketPdfs } from "@/lib/services/render";
-import { sendTicketEmails } from "@/lib/services/notify";
+import { fulfilOrder } from "@/lib/services/fulfil";
 import { grantCredits } from "@/lib/sms/credits";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   const raw = await req.text();
@@ -72,13 +71,7 @@ export async function POST(req: NextRequest) {
   });
 
   // Issue tickets, render PDFs, send emails
-  const tickets = await issueTicketsForOrder(order.id);
-  await renderAndStoreTicketPdfs(tickets.map((t) => t.ticketId)).catch((e) =>
-    console.error("[paystack webhook] PDF render failed", e)
-  );
-  await sendTicketEmails(order.id).catch((e) =>
-    console.error("[paystack webhook] email failed", e)
-  );
+  await fulfilOrder(order.id, "paystack webhook");
 
   return NextResponse.json({ ok: true });
 }

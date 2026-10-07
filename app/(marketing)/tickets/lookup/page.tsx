@@ -92,9 +92,9 @@ export default function TicketLookupPage() {
                   <StatusChip status={t.status} />
                 </div>
               </div>
-              {t.pdfUrl ? (
+              {t.status !== "REFUNDED" ? (
                 <a
-                  href={t.pdfUrl}
+                  href={`/api/tickets/${t.id}/pdf?ref=${encodeURIComponent(t.visibleRef)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn-gold btn-sm flex items-center gap-1.5 shrink-0"
@@ -103,7 +103,7 @@ export default function TicketLookupPage() {
                   PDF
                 </a>
               ) : (
-                <span className="text-xs text-white/30 shrink-0">No PDF</span>
+                <span className="text-xs text-white/30 shrink-0">Refunded</span>
               )}
             </div>
           ))}

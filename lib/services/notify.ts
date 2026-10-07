@@ -1,10 +1,15 @@
 import { db } from "@/lib/db";
-import { sendEmail, ticketIssuedEmail } from "@/lib/email";
+import { sendEmailDetailed, ticketIssuedEmail } from "@/lib/email";
 import { formatDate } from "@/lib/utils";
 import { renderTicketPdfBuffer } from "@/lib/services/render";
 import { sendSMS } from "@/lib/sms/hubtel";
 
-export async function sendTicketEmails(orderId: string): Promise<void> {
+/**
+ * Sends the ticket confirmation for every ticket on an order.
+ * The SMS goes first because it is fast and almost always arrives; then the email,
+ * reusing the PDF that was already rendered when available.
+ */
+export async function sendTicketEmails(orderId: string, pdfBuffers?: Map<string, Buffer>): Promise<void> {
   const order = await db.order.findUnique({
     where: { id: orderId },
     include: {
@@ -18,33 +23,7 @@ export async function sendTicketEmails(orderId: string): Promise<void> {
   const eventDate = formatDate(order.event.startsAt, order.event.timezone);
 
   for (const ticket of order.tickets) {
-    // Email (best-effort, may fail without custom domain)
-    const emailTo = ticket.attendee.email || order.buyerEmail;
-    if (emailTo) {
-      let pdfBuffer: Buffer | undefined;
-      try {
-        pdfBuffer = await renderTicketPdfBuffer(ticket.id);
-      } catch (e) {
-        console.error("[notify] failed to render PDF for", ticket.id, e);
-      }
-      await sendEmail({
-        to: emailTo,
-        subject: `Your ticket for ${order.event.title}`,
-        html: ticketIssuedEmail({
-          attendeeName: ticket.attendee.fullName,
-          eventTitle: order.event.title,
-          eventDate,
-          venue: order.event.venue,
-          visibleRef: ticket.visibleRef,
-          ticketUrl: ticket.pdfUrl ?? `${appUrl}/tickets/lookup`
-        }),
-        attachments: pdfBuffer
-          ? [{ filename: `${ticket.visibleRef}.pdf`, content: pdfBuffer }]
-          : undefined
-      }).catch((e) => console.error("[notify] email failed for", ticket.id, e));
-    }
-
-    // SMS confirmation (primary delivery channel)
+    // 1) SMS confirmation (fast path)
     const phone = ticket.attendee.phone || order.buyerPhone;
     if (phone) {
       const msg = [
@@ -57,12 +36,40 @@ export async function sendTicketEmails(orderId: string): Promise<void> {
         `Ref: ${ticket.visibleRef}`,
         ``,
         `Show this ref or your QR code at the gate.`,
-        `Lookup: ${appUrl}/tickets/lookup`,
+        `Get your ticket: ${appUrl}/orders/${order.id}/success`,
       ].join("\n");
 
-      await sendSMS(phone, msg).catch((e) =>
-        console.error("[notify] SMS failed for", ticket.id, e)
-      );
+      const sms = await sendSMS(phone, msg);
+      if (!sms.ok) console.error("[notify] SMS failed for", ticket.id, sms.error);
+    }
+
+    // 2) Email with the PDF attached
+    const emailTo = ticket.attendee.email || order.buyerEmail;
+    if (emailTo) {
+      let pdfBuffer = pdfBuffers?.get(ticket.id);
+      if (!pdfBuffer) {
+        try {
+          pdfBuffer = await renderTicketPdfBuffer(ticket.id);
+        } catch (e) {
+          console.error("[notify] failed to render PDF for", ticket.id, e);
+        }
+      }
+      const result = await sendEmailDetailed({
+        to: emailTo,
+        subject: `Your ticket for ${order.event.title}`,
+        html: ticketIssuedEmail({
+          attendeeName: ticket.attendee.fullName,
+          eventTitle: order.event.title,
+          eventDate,
+          venue: order.event.venue,
+          visibleRef: ticket.visibleRef,
+          ticketUrl: `${appUrl}/orders/${order.id}/success`
+        }),
+        attachments: pdfBuffer
+          ? [{ filename: `${ticket.visibleRef}.pdf`, content: pdfBuffer }]
+          : undefined
+      });
+      if (!result.ok) console.error("[notify] email failed for", ticket.id, result.error);
     }
   }
 }

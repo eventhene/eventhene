@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { paystack } from "@/lib/payments/paystack";
-import { issueTicketsForOrder } from "@/lib/services/tickets";
-import { renderAndStoreTicketPdfs } from "@/lib/services/render";
-import { sendTicketEmails } from "@/lib/services/notify";
+import { fulfilOrder } from "@/lib/services/fulfil";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const order = await db.order.findUnique({ where: { id: params.id } });
@@ -29,13 +28,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     data: { status: "PAID", paidAt: new Date(), providerRef: String(verified.id) },
   });
 
-  const tickets = await issueTicketsForOrder(order.id);
-  await renderAndStoreTicketPdfs(tickets.map((t) => t.ticketId)).catch((e) =>
-    console.error("[verify] PDF render failed", e)
-  );
-  await sendTicketEmails(order.id).catch((e) =>
-    console.error("[verify] email failed", e)
-  );
+  await fulfilOrder(order.id, "verify");
 
   return NextResponse.json({ status: "PAID" });
 }
