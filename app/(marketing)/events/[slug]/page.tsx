@@ -95,7 +95,7 @@ export default async function EventPage({ params }: { params: { slug: string } }
           </div>
 
           {!isPast && event.ticketTypes.length > 0 && (
-            <div className="card p-7 sticky top-24 shadow-lg">
+            <div className="card-glass rounded-2xl p-7 sticky top-24 shadow-lg">
               <h2 className="font-display text-2xl mb-4">
                 {event.type === "FREE" ? "Reserve your seat" : "Get tickets"}
               </h2>

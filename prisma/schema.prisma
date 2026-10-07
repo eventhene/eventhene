@@ -207,6 +207,14 @@ model Organizer {
   phoneVerified   Boolean  @default(false)
   paystackSubacct String?
   stripeAccountId String?
+
+  // Payout bank details
+  bankCode        String?
+  bankName        String?
+  accountNumber   String?
+  accountName     String?
+  payoutVerified  Boolean  @default(false)
+
   isSuspended     Boolean  @default(false)
 
   // SMS billing

@@ -33,23 +33,59 @@ export const paystack = {
     reference: string;
     callbackUrl: string;
     metadata?: Record<string, unknown>;
+    subaccount?: string;
+    bearer?: string;
   }): Promise<{ authorization_url: string; access_code: string; reference: string }> {
+    const payload: Record<string, unknown> = {
+      email: opts.email,
+      amount: opts.amountMinor,
+      currency: opts.currency,
+      reference: opts.reference,
+      callback_url: opts.callbackUrl,
+      metadata: opts.metadata,
+    };
+    if (opts.subaccount) {
+      payload.subaccount = opts.subaccount;
+      payload.bearer = opts.bearer || "account";
+    }
     const res = await call<{ data: any }>("/transaction/initialize", {
       method: "POST",
-      body: JSON.stringify({
-        email: opts.email,
-        amount: opts.amountMinor,
-        currency: opts.currency,
-        reference: opts.reference,
-        callback_url: opts.callbackUrl,
-        metadata: opts.metadata
-      })
+      body: JSON.stringify(payload),
     });
     return res.data;
   },
 
   async verify(reference: string): Promise<{ status: string; amount: number; currency: string; reference: string; id: number }> {
     const res = await call<{ data: any }>(`/transaction/verify/${encodeURIComponent(reference)}`);
+    return res.data;
+  },
+
+  async createSubaccount(opts: {
+    businessName: string;
+    bankCode: string;
+    accountNumber: string;
+    percentageCharge: number;
+  }): Promise<{ subaccount_code: string; id: number }> {
+    const res = await call<{ data: any }>("/subaccount", {
+      method: "POST",
+      body: JSON.stringify({
+        business_name: opts.businessName,
+        bank_code: opts.bankCode,
+        account_number: opts.accountNumber,
+        percentage_charge: opts.percentageCharge,
+        settlement_bank: opts.bankCode,
+      }),
+    });
+    return res.data;
+  },
+
+  async listBanks(country: string = "ghana"): Promise<Array<{ name: string; code: string }>> {
+    const res = await call<{ data: any[] }>(`/bank?country=${country}&perPage=100`);
+    return res.data.map((b: any) => ({ name: b.name, code: b.code }));
+  },
+
+  async resolveAccount(accountNumber: string, bankCode: string): Promise<{ account_name: string; account_number: string }> {
+    const res = await call<{ data: any }>(`/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`);
     return res.data;
   },
 

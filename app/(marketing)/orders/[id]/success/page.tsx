@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { CheckCircle, Mail, Ticket, Smartphone } from "lucide-react";
 import { db } from "@/lib/db";
 import { formatMinorAmount } from "@/lib/utils";
+import { PaymentPoller } from "@/components/orders/PaymentPoller";
 
 export const metadata = { title: "Confirmed" };
 export const dynamic = "force-dynamic";
@@ -22,21 +23,13 @@ export default async function OrderSuccessPage({ params }: { params: { id: strin
 
   return (
     <div className="section max-w-2xl py-16">
-      {pending && (
-        <div className="card p-12 text-center">
-          <div className="spinner inline-block text-royal-2" />
-          <h1 className="h-section mt-6 mb-2">Confirming payment...</h1>
-          <p className="text-ink-muted">We're waiting for your bank or Mobile Money confirmation. This page refreshes automatically.</p>
-          <p className="text-xs text-ink-muted mt-6 font-mono">Reference: {order.id}</p>
-          <meta httpEquiv="refresh" content="5" />
-        </div>
-      )}
+      {pending && <PaymentPoller orderId={order.id} />}
 
       {failed && (
-        <div className="card p-12 text-center">
+        <div className="card-glass rounded-2xl p-12 text-center">
           <h1 className="h-section mb-3">Payment didn't go through.</h1>
           <p className="text-ink-muted">No charge was made. Try again from the event page.</p>
-          <Link href={`/events/${order.event.id}`} className="btn-primary btn-lg mt-6">Back to event</Link>
+          <Link href={`/events/${order.event.slug}`} className="btn-primary btn-lg mt-6">Back to event</Link>
         </div>
       )}
 
@@ -52,7 +45,7 @@ export default async function OrderSuccessPage({ params }: { params: { id: strin
             </p>
           </div>
 
-          <div className="card p-7 mb-5">
+          <div className="card-glass rounded-2xl p-7 mb-5">
             <h2 className="h-card mb-1">{order.event.title}</h2>
             <p className="text-sm text-ink-muted mb-5">
               {order.event.venue}
@@ -77,7 +70,7 @@ export default async function OrderSuccessPage({ params }: { params: { id: strin
             </div>
           </div>
 
-          <div className="card p-6 text-sm">
+          <div className="card-glass rounded-2xl p-6 text-sm">
             <p className="font-semibold mb-3">What's next?</p>
             <ul className="space-y-2 text-ink-muted">
               <li className="flex items-start gap-2"><Mail className="w-4 h-4 text-accent mt-0.5 shrink-0" /> Check your email for the ticket PDF (also check spam)</li>

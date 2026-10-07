@@ -5,10 +5,10 @@ import { paystack } from "@/lib/payments/paystack";
 import { nanoid } from "nanoid";
 
 const SMS_PACKAGES = [
-  { id: "100",  credits: 100,  priceMinor: 1000,  label: "100 credits" },
-  { id: "500",  credits: 500,  priceMinor: 4500,  label: "500 credits" },
-  { id: "1000", credits: 1000, priceMinor: 8000,  label: "1,000 credits" },
-  { id: "5000", credits: 5000, priceMinor: 35000, label: "5,000 credits" },
+  { id: "100",  credits: 100,  priceMinor: 2500,  label: "100 credits" },
+  { id: "500",  credits: 500,  priceMinor: 10000, label: "500 credits" },
+  { id: "1000", credits: 1000, priceMinor: 18000, label: "1,000 credits" },
+  { id: "5000", credits: 5000, priceMinor: 75000, label: "5,000 credits" },
 ];
 
 const Body = z.object({
@@ -47,6 +47,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       authorization_url: result.authorization_url,
+      access_code: result.access_code,
       reference: result.reference,
     });
   } catch (e: any) {

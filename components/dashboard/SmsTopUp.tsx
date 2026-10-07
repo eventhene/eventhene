@@ -1,18 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, CreditCard, Zap } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Loader2, CreditCard, Zap, CheckCircle } from "lucide-react";
+import { openPaystackPopup } from "@/lib/paystack-popup";
 
 const PACKAGES = [
-  { id: "100",  credits: 100,  price: "GHS 10",  perCredit: "GHS 0.10", popular: false },
-  { id: "500",  credits: 500,  price: "GHS 45",  perCredit: "GHS 0.09", popular: true },
-  { id: "1000", credits: 1000, price: "GHS 80",  perCredit: "GHS 0.08", popular: false },
-  { id: "5000", credits: 5000, price: "GHS 350", perCredit: "GHS 0.07", popular: false },
+  { id: "100",  credits: 100,  price: "GHS 25",  perCredit: "GHS 0.25", popular: false },
+  { id: "500",  credits: 500,  price: "GHS 100", perCredit: "GHS 0.20", popular: true },
+  { id: "1000", credits: 1000, price: "GHS 180", perCredit: "GHS 0.18", popular: false },
+  { id: "5000", credits: 5000, price: "GHS 750", perCredit: "GHS 0.15", popular: false },
 ];
 
 export function SmsTopUp() {
+  const router = useRouter();
   const [selected, setSelected] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
 
   async function handlePurchase() {
@@ -27,11 +31,29 @@ export function SmsTopUp() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to initialize payment.");
-      window.location.href = data.authorization_url;
+      await openPaystackPopup({
+        accessCode: data.access_code,
+        onSuccess: () => {
+          setSuccess(true);
+          setLoading(false);
+          setTimeout(() => router.refresh(), 2000);
+        },
+        onClose: () => setLoading(false),
+      });
     } catch (e: any) {
       setError(e.message);
       setLoading(false);
     }
+  }
+
+  if (success) {
+    return (
+      <div className="text-center py-6 space-y-3">
+        <CheckCircle className="w-10 h-10 text-emerald-400 mx-auto" />
+        <p className="text-white font-bold text-lg">Credits added!</p>
+        <p className="text-white/50 text-sm">Your SMS balance is being updated...</p>
+      </div>
+    );
   }
 
   return (

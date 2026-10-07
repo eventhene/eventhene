@@ -32,6 +32,7 @@ export interface CreateOrderResult {
   mode: "free" | "paid";
   orderId: string;
   authorizationUrl?: string;
+  accessCode?: string;
 }
 
 export async function createOrder(input: CreateOrderInput): Promise<CreateOrderResult> {
@@ -110,15 +111,23 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
       }
     });
 
-    const init = await paystack.initialize({
+    const organizer = await tx.organizer.findUnique({ where: { id: event.organizerId } });
+    const paystackOpts: Parameters<typeof paystack.initialize>[0] = {
       email: input.buyerEmail,
       amountMinor: totals.totalMinor,
       currency: event.currency,
       reference: order.id,
       callbackUrl: `${process.env.NEXT_PUBLIC_APP_URL}/orders/${order.id}/success`,
-      metadata: { eventId: event.id, buyerName: input.buyerName }
-    });
+      metadata: { eventId: event.id, buyerName: input.buyerName },
+    };
 
-    return { mode: "paid" as const, orderId: order.id, authorizationUrl: init.authorization_url };
+    if (organizer?.paystackSubacct) {
+      (paystackOpts as any).subaccount = organizer.paystackSubacct;
+      (paystackOpts as any).bearer = "account";
+    }
+
+    const init = await paystack.initialize(paystackOpts);
+
+    return { mode: "paid" as const, orderId: order.id, authorizationUrl: init.authorization_url, accessCode: init.access_code };
   });
 }

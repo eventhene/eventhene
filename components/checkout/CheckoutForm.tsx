@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import { formatMinorAmount } from "@/lib/utils";
+import { openPaystackPopup } from "@/lib/paystack-popup";
 
 interface Event {
   id: string;
@@ -96,8 +98,12 @@ export function CheckoutForm({ event, items }: { event: Event; items: Item[] }) 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Checkout failed");
 
-      if (data.authorizationUrl) {
-        window.location.href = data.authorizationUrl;
+      if (data.accessCode) {
+        await openPaystackPopup({
+          accessCode: data.accessCode,
+          onSuccess: () => router.push(`/orders/${data.orderId}/success`),
+          onClose: () => setBusy(false),
+        });
       } else {
         router.push(`/orders/${data.orderId}/success`);
       }
@@ -223,7 +229,12 @@ export function CheckoutForm({ event, items }: { event: Event; items: Item[] }) 
       {err && <div className="rounded-xl bg-danger/10 text-danger p-4 text-sm">{err}</div>}
 
       <button type="submit" disabled={busy} className="btn-primary w-full justify-center text-base py-4">
-        {busy ? "Working…" : event.type === "FREE" ? "Reserve my seat" : "Pay now with Paystack"}
+        {busy ? (
+          <span className="flex items-center justify-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Processing...
+          </span>
+        ) : event.type === "FREE" ? "Reserve my seat" : "Pay now with Paystack"}
       </button>
       <p className="text-xs text-ink-muted text-center">
         By continuing, you agree to EventHene's Terms and Privacy.

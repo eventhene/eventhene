@@ -80,7 +80,7 @@ export function TicketSelector({ event }: { event: Event }) {
           <div
             key={t.id}
             className={`rounded-xl border p-4 flex items-center gap-3 ${
-              soldOut ? "border-border bg-surface-2 opacity-60" : "border-border bg-white"
+              soldOut ? "border-border bg-surface-2 opacity-60" : "border-white/10 bg-white/5"
             }`}
           >
             <div className="flex-1">
