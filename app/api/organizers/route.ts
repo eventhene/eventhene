@@ -14,7 +14,7 @@ const Body = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await requireUser(req);
+    const user = await requireUser();
     const data = Body.parse(await req.json());
     const existing = await db.organizer.findUnique({ where: { userId: user.id } });
     if (existing) return NextResponse.json(existing);
@@ -28,7 +28,6 @@ export async function POST(req: NextRequest) {
         bio: data.bio
       }
     });
-    // Update the user with country/currency/tz + promote role
     await db.user.update({
       where: { id: user.id },
       data: {

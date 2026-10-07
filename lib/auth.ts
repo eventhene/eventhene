@@ -26,9 +26,10 @@ export class UnauthorizedError extends Error {
   }
 }
 
-/** Returns the current signed-in user, or null. Pass req for reliable cookie reading in Route Handlers. */
+/** Returns the current signed-in user, or null. */
 export async function getCurrentUser(req?: ReqWithCookies): Promise<User | null> {
-  const sess = req ? await readSessionFromRequest(req) : await readSession();
+  let sess = await readSession();
+  if (!sess && req) sess = await readSessionFromRequest(req);
   if (!sess) return null;
 
   const bootstrapAdmins = getBootstrapAdminEmails();
