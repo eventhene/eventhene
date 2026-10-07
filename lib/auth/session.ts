@@ -52,8 +52,6 @@ export async function createSession(userId: string, meta: { ip?: string; userAge
     expires: expiresAt,
   };
 
-  try { cookies().set(COOKIE_NAME, jwt, cookieOptions); } catch {}
-
   return { session, jwt, cookieName: COOKIE_NAME, cookieOptions };
 }
 
@@ -76,21 +74,32 @@ async function verifySessionJwt(raw: string) {
     const uid = (payload as any).uid as string;
     const sid = (payload as any).sid as string;
     const token = (payload as any).t as string;
-    if (!uid || !sid || !token) return null;
+    if (!uid || !sid || !token) {
+      console.error("[session] JWT payload missing uid/sid/t");
+      return null;
+    }
 
     const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
     const session = await db.session.findUnique({
       where: { id: sid },
       include: { user: true },
     });
-    if (!session) return null;
-    if (session.tokenHash !== tokenHash) return null;
+    if (!session) {
+      console.error("[session] no DB session for sid", sid);
+      return null;
+    }
+    if (session.tokenHash !== tokenHash) {
+      console.error("[session] tokenHash mismatch for sid", sid);
+      return null;
+    }
     if (session.expiresAt < new Date()) {
+      console.error("[session] expired for sid", sid);
       await db.session.delete({ where: { id: sid } }).catch(() => {});
       return null;
     }
     return { user: session.user, session };
-  } catch {
+  } catch (err: any) {
+    console.error("[session] JWT verify error:", err?.code || err?.message || err);
     return null;
   }
 }
@@ -112,7 +121,10 @@ export async function readSession() {
     } catch {}
   }
 
-  if (!raw) return null;
+  if (!raw) {
+    console.error("[session] readSession: no cookie found");
+    return null;
+  }
   return verifySessionJwt(raw);
 }
 
@@ -140,6 +152,9 @@ export async function readSessionFromRequest(req: {
     } catch {}
   }
 
-  if (!raw) return null;
+  if (!raw) {
+    console.error("[session] readSessionFromRequest: no cookie found");
+    return null;
+  }
   return verifySessionJwt(raw);
 }

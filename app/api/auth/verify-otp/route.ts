@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
 
     const res = NextResponse.json({ ok: true, valid: true, user: { id: user.id, role: user.role } });
     res.cookies.set(sessionInfo.cookieName, sessionInfo.jwt, sessionInfo.cookieOptions);
+    console.log("[verify-otp] session created for", user.email, "cookie:", sessionInfo.cookieName, "secure:", sessionInfo.cookieOptions.secure, "sameSite:", sessionInfo.cookieOptions.sameSite, "path:", sessionInfo.cookieOptions.path);
     return res;
   } catch (e: any) {
     if (e instanceof z.ZodError) return NextResponse.json({ error: "Invalid input." }, { status: 400 });

@@ -1,6 +1,3 @@
-// Light middleware: just checks the session cookie exists for protected routes.
-// Full session validation (DB lookup) happens in the actual page/handler.
-
 import { NextResponse, type NextRequest } from "next/server";
 
 const PROTECTED_PREFIXES = [
@@ -19,6 +16,7 @@ export function middleware(req: NextRequest) {
 
   const hasSession = req.cookies.has("eh_session");
   if (!hasSession) {
+    console.log("[middleware] no eh_session cookie for", pathname, "- all cookies:", [...req.cookies.getAll().map(c => c.name)]);
     const url = req.nextUrl.clone();
     url.pathname = "/sign-in";
     url.searchParams.set("next", pathname);
