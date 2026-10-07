@@ -2,7 +2,7 @@
  * Make a string safe for GSM-7 SMS transport.
  * - Smart quotes/dashes converted to ASCII equivalents.
  * - Non-ASCII and emoji stripped (otherwise message would downgrade to UCS-2).
- * - "https://" and "http://" removed from inline links to save characters.
+ * - Links keep their "https://" so phones make them tappable.
  * - Whitespace collapsed.
  * - Capped at 1000 characters.
  */
@@ -17,9 +17,6 @@ export function sanitizeSmsContent(input: string): string {
     .replace(/[–—―−]/g, "-")
     .replace(/…/g, "...")
     .replace(/ /g, " "); // non-breaking space -> space
-
-  // Strip http(s):// from links so a link eats fewer chars
-  s = s.replace(/https?:\/\//gi, "");
 
   // Strip emoji and any non-ASCII character
   s = s.replace(/[^\x20-\x7E\n\r\t]/g, "");

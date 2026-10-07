@@ -42,8 +42,11 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         "cache-control": "private, no-store",
       },
     });
-  } catch (e) {
+  } catch (e: any) {
     console.error("[tickets/pdf] render failed", e);
-    return NextResponse.json({ error: "render_failed" }, { status: 500 });
+    return NextResponse.json(
+      { error: "render_failed", detail: String(e?.message || e).slice(0, 240) },
+      { status: 500 }
+    );
   }
 }

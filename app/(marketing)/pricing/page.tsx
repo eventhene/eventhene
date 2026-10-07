@@ -36,7 +36,7 @@ export default function PricingPage() {
           <span className="text-xs font-bold uppercase tracking-widest text-accent mb-4 block">Paid events</span>
           <h2 className="h-card">Ticketing</h2>
           <p className="font-display text-6xl mt-6">8%</p>
-          <p className="text-ink-muted text-sm mt-2 mb-7">Per ticket sold. Payment processor fee separate.</p>
+          <p className="text-ink-muted text-sm mt-2 mb-7">Per ticket sold. Payment processor fee separate. Ticket confirmation SMS to your buyers are included.</p>
           <ul className="space-y-2.5 text-sm">
             {[
               "Everything in free events",
@@ -44,6 +44,7 @@ export default function PricingPage() {
               "Branded PDF tickets",
               "Choose: buyer pays fee OR you absorb",
               "Instant publish - no review",
+              "Buyer ticket SMS included in the 8%",
             ].map((f) => <li key={f} className="flex items-start gap-2"><Check className="w-4 h-4 text-emerald mt-0.5 shrink-0" /> {f}</li>)}
           </ul>
           <Link href="/sign-up" className="btn-primary btn-lg w-full mt-7">Create a paid event</Link>

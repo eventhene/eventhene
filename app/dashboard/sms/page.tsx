@@ -56,6 +56,9 @@ export default async function SmsSettingsPage() {
           </div>
           <p className="font-display text-5xl text-white">{organizer.smsBalance}</p>
           <p className="text-sm text-white/60 mt-2">credits (1 credit = 1 SMS segment)</p>
+          <p className="text-xs text-white/35 mt-2">
+            Your package covers bulk SMS and the ticket confirmation SMS sent to people who register for your free events (1 credit each). Confirmation SMS on paid events are included in the 8% fee.
+          </p>
           {organizer.smsFrozen && (
             <div className="mt-4 px-3 py-1 rounded-full text-xs font-bold bg-red-500/20 text-red-400 w-fit">Sending frozen</div>
           )}

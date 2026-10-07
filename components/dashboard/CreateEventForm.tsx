@@ -311,6 +311,11 @@ export function CreateEventForm({
             </div>
             {isEdit && hasOrders && <p className="help">Locked because tickets have already been ordered.</p>}
             {!isEdit && type === "FREE" && <p className="help text-sky">Free events are reviewed by EventHene before going live.</p>}
+            <p className="help">
+              {type === "FREE"
+                ? "Each ticket confirmation SMS to a registrant uses 1 credit from your SMS package."
+                : "Ticket confirmation SMS to your buyers are included in the 8% platform fee."}
+            </p>
           </div>
         </div>
         <div>

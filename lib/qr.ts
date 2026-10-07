@@ -2,7 +2,7 @@ import crypto from "crypto";
 import QRCode from "qrcode";
 
 function getSecret(): string {
-  const s = process.env.QR_SIGNING_SECRET;
+  const s = process.env.QR_SIGNING_SECRET || process.env.AUTH_SECRET;
   if (!s || s.length < 16) {
     throw new Error("QR_SIGNING_SECRET is missing or too short (>=32 chars recommended).");
   }

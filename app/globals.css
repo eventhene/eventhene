@@ -285,3 +285,19 @@
   .prose-eh a { @apply underline underline-offset-2; color: var(--accent); }
   .prose-eh a:hover { color: var(--accent); }
 }
+
+/* ---------- Logo loader: whole logo breathes while the crown spins ---------- */
+@keyframes eh-breathe {
+  0%, 100% { opacity: 0.4; transform: scale(0.93); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+@keyframes eh-crown-spin {
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(360deg); }
+}
+.eh-loader { animation: eh-breathe 2.4s ease-in-out infinite; will-change: transform, opacity; }
+.eh-loader-crown { animation: eh-crown-spin 2.4s cubic-bezier(0.45, 0, 0.55, 1) infinite; transform-origin: 34.7% 17.6%; will-change: transform; }
+@media (prefers-reduced-motion: reduce) {
+  .eh-loader-crown { animation: none; }
+  .eh-loader { animation-duration: 3.2s; }
+}

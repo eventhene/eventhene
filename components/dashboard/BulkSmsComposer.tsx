@@ -404,7 +404,7 @@ export function BulkSmsComposer({ events, initialLists }: { events: EventInfo[];
             </div>
           </div>
           <p className="text-[11px] text-white/30">
-            Emoji and special characters are removed so messages stay at the lowest cost. "https://" is dropped from links.
+            Emoji and special characters are removed so messages stay at the lowest cost. Keep the https:// in links so they are tappable.
           </p>
         </div>
 
