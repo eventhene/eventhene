@@ -10,7 +10,9 @@ const PDF_FILES = [
   "./node_modules/brotli/**/*",
   "./node_modules/png-js/**/*",
   "./node_modules/jay-peg/**/*",
-  "./public/logo-icon.png"
+  "./public/logo-icon.png",
+  "./public/logo-full.png",
+  "./public/fonts/**/*"
 ];
 
 /** @type {import('next').NextConfig} */

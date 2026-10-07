@@ -34,7 +34,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 
   try {
-    const pdf = await renderTicketPdfBuffer(ticket.id);
+    const layout = url.searchParams.get("layout") === "landscape" ? "landscape" : "portrait";
+    const pdf = await renderTicketPdfBuffer(ticket.id, layout);
     return new NextResponse(new Uint8Array(pdf), {
       headers: {
         "content-type": "application/pdf",
