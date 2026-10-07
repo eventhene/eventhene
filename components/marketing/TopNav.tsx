@@ -6,27 +6,29 @@ export async function TopNav({ invert = false }: { invert?: boolean }) {
   const user = await getCurrentUser();
 
   return (
-    <header className={`sticky top-0 z-40 ${invert ? "bg-canvas/60" : "bg-bg/60"} backdrop-blur-xl border-b ${invert ? "border-white/5" : "border-border"}`}>
+    <header
+      className="fixed top-0 inset-x-0 z-40 glass-dark"
+    >
       <nav className="section flex h-16 items-center justify-between">
-        <Logo invert={invert} />
+        <Logo invert />
 
-        <div className={`hidden md:flex items-center gap-7 text-sm font-semibold ${invert ? "text-white/60" : "text-ink-muted"}`}>
-          <Link href="/events" className={`hover:${invert ? "text-white" : "text-ink"} transition`}>Discover</Link>
-          <Link href="/pricing" className={`hover:${invert ? "text-white" : "text-ink"} transition`}>Pricing</Link>
-          <Link href="/services" className={`hover:${invert ? "text-white" : "text-ink"} transition`}>Services</Link>
-          <Link href="/tickets/lookup" className={`hover:${invert ? "text-white" : "text-ink"} transition`}>Find ticket</Link>
+        <div className="hidden md:flex items-center gap-7 text-sm font-semibold text-white/50">
+          <Link href="/events" className="hover:text-white transition">Discover</Link>
+          <Link href="/pricing" className="hover:text-white transition">Pricing</Link>
+          <Link href="/services" className="hover:text-white transition">Services</Link>
+          <Link href="/tickets/lookup" className="hover:text-white transition">Find ticket</Link>
         </div>
 
         <div className="flex items-center gap-2">
           {user ? (
             <>
-              <Link href="/dashboard" className={invert ? "btn-ghost-dark btn-md" : "btn-ghost btn-md"}>Dashboard</Link>
-              <Link href="/dashboard/events/new" className="btn-primary btn-md">New event</Link>
+              <Link href="/dashboard" className="btn-ghost-dark btn-md">Dashboard</Link>
+              <Link href="/dashboard/events/new" className="btn-gold btn-md">New event</Link>
             </>
           ) : (
             <>
-              <Link href="/sign-in" className={invert ? "btn-ghost-dark btn-md" : "btn-ghost btn-md"}>Sign in</Link>
-              <Link href="/sign-up" className="btn-primary btn-md">Get started</Link>
+              <Link href="/sign-in" className="btn-ghost-dark btn-md">Sign in</Link>
+              <Link href="/sign-up" className="btn-gold btn-md">Get started</Link>
             </>
           )}
         </div>
