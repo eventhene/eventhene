@@ -6,7 +6,7 @@ export function Footer() {
     <footer className="relative bg-[#060608] text-white/80 border-t border-white/5">
       <div className="section py-14 md:py-20 grid grid-cols-2 md:grid-cols-[1.3fr,1fr,1fr,1fr] gap-8 md:gap-10">
         <div className="col-span-2 md:col-span-1">
-          <Logo invert size="lg" />
+          <Logo variant="icon" size="lg" />
           <p className="mt-5 text-white/40 max-w-xs text-sm leading-relaxed font-medium">
             Event registration, ticketing, bulk SMS and attendance tracking. Built in Ghana. Ready for the continent.
           </p>

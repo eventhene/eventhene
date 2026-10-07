@@ -3,7 +3,7 @@
  * All amounts in minor units (pesewas for GHS, kobo for NGN, cents for USD).
  */
 
-export const PLATFORM_FEE_RATE = 0.05;
+export const PLATFORM_FEE_RATE = 0.08;
 
 /**
  * Paystack processor fee per country.

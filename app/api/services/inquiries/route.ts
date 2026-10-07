@@ -3,9 +3,10 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
 import { rateLimit } from "@/lib/ratelimit";
+import { getCurrentUser } from "@/lib/auth";
 
 const Body = z.object({
-  serviceType: z.enum(["SOCIAL_MEDIA", "GRAPHIC_DESIGN", "LIVESTREAM", "PHOTOGRAPHY", "MEDIA_COVERAGE", "MARKETING"]),
+  serviceType: z.enum(["SOCIAL_MEDIA", "GRAPHIC_DESIGN", "LIVESTREAM", "PHOTOGRAPHY", "MEDIA_COVERAGE", "BLOGGING", "MARKETING"]),
   contactName: z.string().min(1).max(120),
   contactEmail: z.string().email(),
   contactPhone: z.string().max(40).optional(),
@@ -20,7 +21,11 @@ export async function POST(req: NextRequest) {
     if (!ok) return NextResponse.json({ error: "rate_limited" }, { status: 429 });
 
     const data = Body.parse(await req.json());
-    const inquiry = await db.serviceInquiry.create({ data });
+    const user = await getCurrentUser(req).catch(() => null);
+    const organizer = user ? await db.organizer.findUnique({ where: { userId: user.id } }) : null;
+    const inquiry = await db.serviceInquiry.create({
+      data: { ...data, organizerId: organizer?.id ?? null },
+    });
 
     const adminEmail = process.env.ADMIN_NOTIFY_EMAIL;
     if (adminEmail) {

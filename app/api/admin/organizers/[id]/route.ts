@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
+import { paystack } from "@/lib/payments/paystack";
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -8,29 +9,64 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
     const organizer = await db.organizer.findUnique({
       where: { id: params.id },
-      include: { _count: { select: { events: true } } },
+      include: { events: { select: { id: true } } },
     });
 
     if (!organizer) {
       return NextResponse.json({ error: "Organizer not found." }, { status: 404 });
     }
 
-    if (organizer._count.events > 0) {
-      await db.event.deleteMany({ where: { organizerId: organizer.id } });
+    const eventIds = organizer.events.map((e) => e.id);
+
+    await db.$transaction(
+      async (tx) => {
+        if (eventIds.length > 0) {
+          await tx.scanLog.deleteMany({ where: { eventId: { in: eventIds } } });
+          await tx.ticket.deleteMany({ where: { eventId: { in: eventIds } } });
+          await tx.attendee.deleteMany({ where: { eventId: { in: eventIds } } });
+          await tx.order.deleteMany({ where: { eventId: { in: eventIds } } });
+          await tx.review.deleteMany({ where: { eventId: { in: eventIds } } });
+        }
+        await tx.promotion.deleteMany({
+          where: { OR: [{ organizerId: organizer.id }, { eventId: { in: eventIds } }] },
+        });
+        await tx.smsCampaign.deleteMany({
+          where: { OR: [{ organizerId: organizer.id }, { eventId: { in: eventIds } }] },
+        });
+        await tx.serviceInquiry.updateMany({
+          where: { organizerId: organizer.id },
+          data: { organizerId: null },
+        });
+        await tx.event.deleteMany({ where: { organizerId: organizer.id } });
+        await tx.organizer.delete({ where: { id: organizer.id } });
+        await tx.user.update({
+          where: { id: organizer.userId },
+          data: { role: "ATTENDEE" },
+        });
+      },
+      { timeout: 30000, maxWait: 10000 }
+    );
+
+    // Paystack cannot delete subaccounts, so deactivate it so it can no longer receive payments.
+    let subaccountDeactivated = false;
+    if (organizer.paystackSubacct) {
+      try {
+        await paystack.deactivateSubaccount(organizer.paystackSubacct);
+        subaccountDeactivated = true;
+      } catch (err) {
+        console.error("[admin/organizers/delete] could not deactivate Paystack subaccount", err);
+      }
     }
 
-    await db.organizer.delete({ where: { id: organizer.id } });
-
-    await db.user.update({
-      where: { id: organizer.userId },
-      data: { role: "ATTENDEE" },
+    return NextResponse.json({
+      ok: true,
+      eventsDeleted: eventIds.length,
+      subaccountDeactivated,
     });
-
-    return NextResponse.json({ ok: true });
   } catch (e: any) {
     if (e?.name === "UnauthorizedError") return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     if (e?.name === "ForbiddenError") return NextResponse.json({ error: "forbidden" }, { status: 403 });
     console.error("[admin/organizers/delete]", e);
-    return NextResponse.json({ error: "internal_error" }, { status: 500 });
+    return NextResponse.json({ error: e?.message || "internal_error" }, { status: 500 });
   }
 }

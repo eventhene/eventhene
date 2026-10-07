@@ -15,7 +15,7 @@ export default function TermsPage() {
       <h2>3. Organizers</h2>
       <p>
         Organizers are responsible for delivering the event as advertised, complying with local laws, paying
-        applicable taxes, and honoring refund/cancellation obligations. EventHene charges 5% per paid ticket
+        applicable taxes, and honoring refund/cancellation obligations. EventHene charges 8% per paid ticket
         (plus payment processor fees, which are passed through).
       </p>
 

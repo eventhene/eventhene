@@ -14,73 +14,89 @@ export interface IssuedTicket {
 /**
  * After an order is paid (or for a free event), create attendees + tickets
  * from the draft payload that was stored on the order.
- * Idempotent — if tickets already exist for the order, returns them.
+ * Idempotent and race-safe: the order row is locked so the webhook and the
+ * client poller can never issue (or count) the same order twice.
+ * Paid tickets only count towards `sold` here, once payment has succeeded.
  */
 export async function issueTicketsForOrder(orderId: string): Promise<IssuedTicket[]> {
-  const order = await db.order.findUnique({
-    where: { id: orderId },
-    include: { event: true, tickets: { include: { attendee: true } } }
-  });
-  if (!order) throw new Error("order_not_found");
+  return db.$transaction(
+    async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "Order" WHERE id = ${orderId} FOR UPDATE`;
 
-  if (order.tickets.length > 0) {
-    return order.tickets.map((t) => ({
-      ticketId: t.id,
-      qrToken: t.qrToken,
-      visibleRef: t.visibleRef,
-      attendeeName: t.attendee.fullName,
-      attendeeEmail: t.attendee.email
-    }));
-  }
+      const order = await tx.order.findUnique({
+        where: { id: orderId },
+        include: { event: true, tickets: { include: { attendee: true } } }
+      });
+      if (!order) throw new Error("order_not_found");
 
-  const draft = order.draftPayload as any;
-  if (!draft?.items) throw new Error("order_missing_draft");
+      if (order.tickets.length > 0) {
+        return order.tickets.map((t) => ({
+          ticketId: t.id,
+          qrToken: t.qrToken,
+          visibleRef: t.visibleRef,
+          attendeeName: t.attendee.fullName,
+          attendeeEmail: t.attendee.email
+        }));
+      }
 
-  const issued: IssuedTicket[] = [];
+      const draft = order.draftPayload as any;
+      if (!draft?.items) throw new Error("order_missing_draft");
 
-  for (const item of draft.items as any[]) {
-    for (const a of item.attendees as any[]) {
-      const attendee = await db.attendee.create({
-        data: {
-          eventId: order.eventId,
-          orderId: order.id,
-          fullName: a.fullName,
-          email: a.email ?? order.buyerEmail,
-          phone: a.phone ?? order.buyerPhone,
-          gender: a.gender,
-          city: a.city,
-          address: a.address,
-          organization: a.organization,
-          ageRange: a.ageRange,
-          emergencyContact: a.emergencyContact,
-          customAnswers: (a.customAnswers ?? {}) as Prisma.InputJsonValue
+      const issued: IssuedTicket[] = [];
+
+      for (const item of draft.items as any[]) {
+        for (const a of item.attendees as any[]) {
+          const attendee = await tx.attendee.create({
+            data: {
+              eventId: order.eventId,
+              orderId: order.id,
+              fullName: a.fullName,
+              email: a.email ?? order.buyerEmail,
+              phone: a.phone ?? order.buyerPhone,
+              gender: a.gender,
+              city: a.city,
+              address: a.address,
+              organization: a.organization,
+              ageRange: a.ageRange,
+              emergencyContact: a.emergencyContact,
+              customAnswers: (a.customAnswers ?? {}) as Prisma.InputJsonValue
+            }
+          });
+          const { token, tokenHash } = generateTicketToken();
+          const visibleRef = buildVisibleRef(a.fullName.split(" ")[0] || "GST", order.event.shortCode);
+          const ticket = await tx.ticket.create({
+            data: {
+              eventId: order.eventId,
+              ticketTypeId: item.ticketTypeId,
+              attendeeId: attendee.id,
+              orderId: order.id,
+              visibleRef,
+              qrToken: token,
+              qrTokenHash: tokenHash,
+              status: order.event.type === "FREE" ? "REGISTERED" : "TICKET_ISSUED",
+              issuedAt: new Date()
+            }
+          });
+          issued.push({
+            ticketId: ticket.id,
+            qrToken: token,
+            visibleRef,
+            attendeeName: attendee.fullName,
+            attendeeEmail: attendee.email
+          });
         }
-      });
-      const { token, tokenHash } = generateTicketToken();
-      const visibleRef = buildVisibleRef(a.fullName.split(" ")[0] || "GST", order.event.shortCode);
-      const ticket = await db.ticket.create({
-        data: {
-          eventId: order.eventId,
-          ticketTypeId: item.ticketTypeId,
-          attendeeId: attendee.id,
-          orderId: order.id,
-          visibleRef,
-          qrToken: token,
-          qrTokenHash: tokenHash,
-          status: order.event.type === "FREE" ? "REGISTERED" : "TICKET_ISSUED",
-          issuedAt: new Date()
+
+        if (order.event.type === "PAID") {
+          await tx.ticketType.update({
+            where: { id: item.ticketTypeId },
+            data: { sold: { increment: (item.attendees as any[]).length } }
+          });
         }
-      });
-      issued.push({
-        ticketId: ticket.id,
-        qrToken: token,
-        visibleRef,
-        attendeeName: attendee.fullName,
-        attendeeEmail: attendee.email
-      });
-    }
-  }
-  return issued;
+      }
+      return issued;
+    },
+    { timeout: 30000, maxWait: 10000 }
+  );
 }
 
 export type ScanResultCode =

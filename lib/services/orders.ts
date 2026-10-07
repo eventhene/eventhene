@@ -57,12 +57,15 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
       if (tt.sold + item.quantity > tt.quantity) throw new Error("sold_out");
       subtotalMinor += tt.priceMinor * item.quantity;
 
-      // Optimistic inventory reservation. The `where` clause guards against races.
-      const updated = await tx.ticketType.updateMany({
-        where: { id: tt.id, sold: tt.sold },
-        data: { sold: { increment: item.quantity } }
-      });
-      if (updated.count === 0) throw new Error("inventory_race");
+      // Free tickets are issued instantly, so reserve stock now. Paid tickets only
+      // count as sold once payment succeeds (see issueTicketsForOrder).
+      if (event.type === "FREE") {
+        const updated = await tx.ticketType.updateMany({
+          where: { id: tt.id, sold: tt.sold },
+          data: { sold: { increment: item.quantity } }
+        });
+        if (updated.count === 0) throw new Error("inventory_race");
+      }
     }
 
     if (event.type === "FREE") {
@@ -122,8 +125,9 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     };
 
     if (organizer?.paystackSubacct) {
-      (paystackOpts as any).subaccount = organizer.paystackSubacct;
-      (paystackOpts as any).bearer = "account";
+      paystackOpts.subaccount = organizer.paystackSubacct;
+      paystackOpts.bearer = "account";
+      paystackOpts.transactionChargeMinor = totals.totalMinor - totals.organizerNetMinor;
     }
 
     const init = await paystack.initialize(paystackOpts);

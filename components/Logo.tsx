@@ -10,34 +10,41 @@ interface LogoProps {
   variant?: "icon" | "full";
 }
 
-const ICON_SIZES = { sm: 28, md: 34, lg: 44 };
-const FULL_SIZES = { sm: { w: 130, h: 32 }, md: { w: 160, h: 40 }, lg: { w: 200, h: 50 } };
+const ICON_RATIO = 512 / 662;
+const FULL_RATIO = 900 / 292;
+const HEIGHTS = { sm: 30, md: 38, lg: 52 };
+const FULL_HEIGHTS = { sm: 28, md: 34, lg: 44 };
 
-export function Logo({ href = "/", invert = false, size = "md", className, variant }: LogoProps) {
+export function Logo({ href = "/", size = "md", className, variant = "full" }: LogoProps) {
   const Wrapper: any = href ? Link : "span";
   const props = href ? { href } : {};
 
-  const mode = variant ?? "full";
-
-  if (mode === "icon") {
-    const s = ICON_SIZES[size];
+  if (variant === "icon") {
+    const h = HEIGHTS[size];
     return (
-      <Wrapper {...props} className={cn("inline-flex items-center", className)}>
-        <Image src="/logo-icon.png" alt="EventHene" width={s} height={s} className="object-contain" priority />
+      <Wrapper {...props} className={cn("inline-flex items-center", className)} aria-label="EventHene">
+        <Image src="/logo-icon.png" alt="EventHene" width={Math.round(h * ICON_RATIO)} height={h} className="object-contain" priority />
       </Wrapper>
     );
   }
 
-  const { w, h } = FULL_SIZES[size];
+  const h = FULL_HEIGHTS[size];
   return (
-    <Wrapper {...props} className={cn("inline-flex items-center", className)}>
-      <Image src="/logo-full.png" alt="EventHene" width={w} height={h} className="object-contain" priority />
+    <Wrapper {...props} className={cn("inline-flex items-center", className)} aria-label="EventHene">
+      <Image src="/logo-full.png" alt="EventHene" width={Math.round(h * FULL_RATIO)} height={h} className="object-contain" priority />
     </Wrapper>
   );
 }
 
-export function LogoIcon({ size = 28, className }: { size?: number; className?: string }) {
+export function LogoIcon({ height = 28, className }: { height?: number; className?: string }) {
   return (
-    <Image src="/logo-icon.png" alt="EventHene" width={size} height={size} className={cn("object-contain", className)} priority />
+    <Image
+      src="/logo-icon.png"
+      alt="EventHene"
+      width={Math.round(height * ICON_RATIO)}
+      height={height}
+      className={cn("object-contain", className)}
+      priority
+    />
   );
 }

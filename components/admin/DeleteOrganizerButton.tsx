@@ -1,62 +1,81 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { Trash2, Loader2 } from "lucide-react";
+import { Trash2, Loader2, AlertTriangle } from "lucide-react";
 
 interface Props {
   organizerId: string;
   displayName: string;
   eventCount: number;
+  hasPayoutAccount?: boolean;
 }
 
-export function DeleteOrganizerButton({ organizerId, displayName, eventCount }: Props) {
+export function DeleteOrganizerButton({ organizerId, displayName, eventCount, hasPayoutAccount }: Props) {
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
+
+  useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    if (!confirming) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [confirming]);
 
   async function handleDelete() {
     setDeleting(true);
     setError("");
     try {
-      const res = await fetch(`/api/admin/organizers/${organizerId}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/organizers/${organizerId}`, { method: "DELETE", credentials: "include" });
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const data = await res.json();
         setError(data.error || "Failed to delete.");
         setDeleting(false);
         return;
       }
-      router.refresh();
       setConfirming(false);
+      setDeleting(false);
+      router.refresh();
     } catch {
-      setError("Network error.");
+      setError("Network error. Try again.");
       setDeleting(false);
     }
   }
 
-  if (!confirming) {
-    return (
-      <button
-        onClick={() => setConfirming(true)}
-        className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-400/10 transition"
-        title="Delete organizer"
+  const modal = (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4"
+      onClick={() => !deleting && setConfirming(false)}
+    >
+      <div
+        className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#121216] p-6 space-y-4 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
       >
-        <Trash2 className="w-4 h-4" />
-      </button>
-    );
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => !deleting && setConfirming(false)}>
-      <div className="card-glass rounded-2xl p-6 max-w-sm w-full space-y-4" onClick={(e) => e.stopPropagation()}>
-        <h3 className="text-lg font-bold text-white">Delete organizer?</h3>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-red-500/15 flex items-center justify-center shrink-0">
+            <AlertTriangle className="w-5 h-5 text-red-400" />
+          </div>
+          <h3 className="text-lg font-bold text-white">Delete organizer?</h3>
+        </div>
         <p className="text-sm text-white/60">
-          This will permanently delete <strong className="text-white">{displayName}</strong> and reset their account to attendee.
+          This permanently deletes <strong className="text-white">{displayName}</strong> and resets their account to attendee.
         </p>
         {eventCount > 0 && (
           <p className="text-sm text-amber-400">
-            This organizer has {eventCount} event{eventCount > 1 ? "s" : ""} - they will also be deleted.
+            Their {eventCount} event{eventCount > 1 ? "s" : ""} will also be deleted, along with all tickets, attendees, orders and SMS campaigns.
+          </p>
+        )}
+        {hasPayoutAccount && (
+          <p className="text-xs text-white/40">
+            Their Paystack payout subaccount will be deactivated (Paystack does not allow deleting subaccounts).
           </p>
         )}
         {error && <p className="text-sm text-red-400">{error}</p>}
@@ -64,14 +83,14 @@ export function DeleteOrganizerButton({ organizerId, displayName, eventCount }: 
           <button
             onClick={() => setConfirming(false)}
             disabled={deleting}
-            className="btn-ghost btn-md flex-1 text-white/60"
+            className="flex-1 rounded-xl border border-white/15 px-4 py-2.5 text-sm font-semibold text-white/70 hover:bg-white/5 transition disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             onClick={handleDelete}
             disabled={deleting}
-            className="btn-danger btn-md flex-1 flex items-center justify-center gap-2"
+            className="flex-1 rounded-xl bg-red-600 hover:bg-red-500 px-4 py-2.5 text-sm font-bold text-white transition flex items-center justify-center gap-2 disabled:opacity-70"
           >
             {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
             {deleting ? "Deleting..." : "Delete"}
@@ -79,5 +98,18 @@ export function DeleteOrganizerButton({ organizerId, displayName, eventCount }: 
         </div>
       </div>
     </div>
+  );
+
+  return (
+    <>
+      <button
+        onClick={() => setConfirming(true)}
+        className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-400/10 transition"
+        title="Delete organizer"
+      >
+        <Trash2 className="w-4 h-4" />
+      </button>
+      {confirming && mounted && createPortal(modal, document.body)}
+    </>
   );
 }

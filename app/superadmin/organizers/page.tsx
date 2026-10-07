@@ -53,6 +53,7 @@ export default async function OrganizersAdmin() {
                 organizerId={o.id}
                 displayName={o.displayName}
                 eventCount={o._count.events}
+                hasPayoutAccount={!!o.paystackSubacct}
               />
             </div>
           ))}

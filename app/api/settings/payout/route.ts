@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { requireOrganizer } from "@/lib/auth";
+import { requireOrganizerOwner } from "@/lib/auth";
 import { paystack } from "@/lib/payments/paystack";
 
 const ResolveBody = z.object({
@@ -20,7 +20,7 @@ const SaveBody = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const { user, organizer } = await requireOrganizer(req);
+    const { user, organizer } = await requireOrganizerOwner(req);
     const body = await req.json();
 
     if (body.action === "resolve") {
@@ -36,9 +36,15 @@ export async function POST(req: NextRequest) {
         businessName: organizer.displayName,
         bankCode,
         accountNumber,
-        percentageCharge: 95,
+        percentageCharge: 8,
       });
       const subacctCode = sub.subaccount_code;
+
+      if (organizer.paystackSubacct && organizer.paystackSubacct !== subacctCode) {
+        paystack.deactivateSubaccount(organizer.paystackSubacct).catch((err) =>
+          console.error("[settings/payout] could not deactivate old subaccount", err)
+        );
+      }
 
       await db.organizer.update({
         where: { id: organizer.id },

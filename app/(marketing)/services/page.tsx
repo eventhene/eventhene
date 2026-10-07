@@ -1,16 +1,7 @@
-import { Megaphone, Palette, Radio, Camera, Newspaper, TrendingUp } from "lucide-react";
 import { ServiceInquiryForm } from "@/components/services/ServiceInquiryForm";
+import { SERVICES } from "@/lib/service-catalog";
 
 export const metadata = { title: "Services" };
-
-const SERVICES = [
-  { key: "SOCIAL_MEDIA", title: "Social Media", desc: "Reach the right crowd. Targeted IG, TikTok, and WhatsApp campaigns that actually fill seats.", icon: Megaphone },
-  { key: "GRAPHIC_DESIGN", title: "Graphic Design", desc: "Flyers that pop. Story templates. Tickets that look premium from the first glance.", icon: Palette },
-  { key: "LIVESTREAM", title: "Livestream", desc: "Multi-cam, broadcast-quality streaming to YouTube, Instagram, or your private link.", icon: Radio },
-  { key: "PHOTOGRAPHY", title: "Photography", desc: "Pro on the day. Edited gallery within 48 hours. Moments that matter.", icon: Camera },
-  { key: "MEDIA_COVERAGE", title: "Media Coverage", desc: "Coverage on partner blogs, radio mentions, and influencer roundups.", icon: Newspaper },
-  { key: "MARKETING", title: "Marketing Support", desc: "From early-bird sales to last-minute push, our team plans and runs the campaign with you.", icon: TrendingUp },
-] as const;
 
 export default function ServicesPage() {
   return (

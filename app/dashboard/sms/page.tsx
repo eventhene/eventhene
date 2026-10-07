@@ -5,7 +5,8 @@ import { SenderIdForm } from "@/components/dashboard/SenderIdForm";
 import { SmsTopUp } from "@/components/dashboard/SmsTopUp";
 import { getPlatformSenderId } from "@/lib/sms/hubtel";
 import { formatDate } from "@/lib/utils";
-import { MessageSquare, Send, CreditCard } from "lucide-react";
+import { MessageSquare, Send, CreditCard, History } from "lucide-react";
+import { ResumeCampaignButton } from "@/components/dashboard/ResumeCampaignButton";
 
 export const metadata = { title: "SMS" };
 export const dynamic = "force-dynamic";
@@ -19,6 +20,11 @@ export default async function SmsSettingsPage() {
     take: 30,
   });
 
+  const campaigns = await db.smsCampaign.findMany({
+    where: { organizerId: organizer.id },
+    orderBy: { createdAt: "desc" },
+    take: 15,
+  });
   const campaignCount = await db.smsCampaign.count({
     where: { organizerId: organizer.id },
   });
@@ -90,6 +96,43 @@ export default async function SmsSettingsPage() {
         />
       </section>
 
+      {/* Campaign history */}
+      <section>
+        <div className="flex items-center gap-2 mb-4">
+          <History className="w-4 h-4 text-accent" />
+          <h2 className="text-sm font-bold text-white uppercase tracking-wider">SMS history</h2>
+        </div>
+        {campaigns.length === 0 ? (
+          <div className="card-glass rounded-2xl p-10 text-center text-white/40 text-sm">No campaigns yet. Compose your first one.</div>
+        ) : (
+          <div className="space-y-2">
+            {campaigns.map((c) => {
+              const pending = Math.max(0, c.totalRecipients - c.totalSent - c.totalFailed);
+              const unfinished = (c.status === "QUEUED" || c.status === "SENDING") && pending > 0;
+              return (
+                <div key={c.id} className="card-glass rounded-xl p-4 flex items-center justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-semibold text-white truncate">{c.name}</p>
+                      <CampaignChip status={c.status} />
+                    </div>
+                    <p className="text-xs text-white/40 mt-1 truncate">
+                      {c.audience.startsWith("{") ? "Custom audience" : c.audience} - {formatDate(c.createdAt)}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0 space-y-1">
+                    <p className="text-xs font-mono text-white/60">
+                      {c.totalSent}/{c.totalRecipients} sent{c.totalFailed > 0 ? ` - ${c.totalFailed} failed` : ""}
+                    </p>
+                    {unfinished && <ResumeCampaignButton campaignId={c.id} pending={pending} />}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
       {/* Transaction log */}
       <section>
         <h2 className="text-sm font-bold text-white uppercase tracking-wider mb-4">Credit activity</h2>
@@ -126,6 +169,17 @@ function StatusChip({ status }: { status: string }) {
   if (status === "PENDING") return <span className="mt-3 inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-sky-500/20 text-sky-400">In review</span>;
   if (status === "REJECTED") return <span className="mt-3 inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-red-500/20 text-red-400">Rejected</span>;
   return <span className="mt-3 inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-white/10 text-white/40">Using default</span>;
+}
+
+function CampaignChip({ status }: { status: string }) {
+  const styles: Record<string, string> = {
+    SENT: "bg-emerald-500/20 text-emerald-400",
+    PARTIAL: "bg-amber-500/20 text-amber-400",
+    FAILED: "bg-red-500/20 text-red-400",
+    SENDING: "bg-sky-500/20 text-sky-400",
+    QUEUED: "bg-white/10 text-white/50",
+  };
+  return <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${styles[status] || styles.QUEUED}`}>{status.toLowerCase()}</span>;
 }
 
 function KindChip({ kind }: { kind: string }) {

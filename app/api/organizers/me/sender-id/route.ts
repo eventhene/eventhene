@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { requireOrganizer } from "@/lib/auth";
+import { requireOrganizerOwner } from "@/lib/auth";
 import { sanitizeSenderId, validateSenderIdFormat } from "@/lib/sms/sender";
 
 const Body = z.object({
@@ -10,7 +10,7 @@ const Body = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const { organizer, user } = await requireOrganizer(req);
+    const { organizer, user } = await requireOrganizerOwner(req);
     const data = Body.parse(await req.json());
     const check = validateSenderIdFormat(data.senderId);
     if (!check.ok) {
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    const { organizer } = await requireOrganizer(req);
+    const { organizer } = await requireOrganizerOwner(req);
     return NextResponse.json({
       senderId: organizer.senderId,
       status: organizer.senderIdStatus,

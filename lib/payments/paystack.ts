@@ -35,6 +35,7 @@ export const paystack = {
     metadata?: Record<string, unknown>;
     subaccount?: string;
     bearer?: string;
+    transactionChargeMinor?: number;
   }): Promise<{ authorization_url: string; access_code: string; reference: string }> {
     const payload: Record<string, unknown> = {
       email: opts.email,
@@ -47,6 +48,10 @@ export const paystack = {
     if (opts.subaccount) {
       payload.subaccount = opts.subaccount;
       payload.bearer = opts.bearer || "account";
+      // Flat amount kept by the platform (main account); the rest goes to the organizer subaccount.
+      if (typeof opts.transactionChargeMinor === "number") {
+        payload.transaction_charge = Math.max(0, Math.round(opts.transactionChargeMinor));
+      }
     }
     const res = await call<{ data: any }>("/transaction/initialize", {
       method: "POST",
@@ -77,6 +82,14 @@ export const paystack = {
       }),
     });
     return res.data;
+  },
+
+  /** Paystack cannot delete subaccounts; deactivating stops them being used. */
+  async deactivateSubaccount(code: string): Promise<void> {
+    await call(`/subaccount/${encodeURIComponent(code)}`, {
+      method: "PUT",
+      body: JSON.stringify({ active: false }),
+    });
   },
 
   async listBanks(country: string = "ghana"): Promise<Array<{ name: string; code: string }>> {

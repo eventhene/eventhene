@@ -11,12 +11,25 @@ export const dynamic = "force-dynamic";
 export default async function ScanPicker() {
   const user = await requireUserOrRedirect("/scan");
 
+  const memberships = isAdmin(user.role)
+    ? []
+    : await db.teamMember.findMany({ where: { userId: user.id } });
+  const scannerEventIds = memberships
+    .filter((m) => m.role === "SCANNER" && m.eventIds.length > 0)
+    .flatMap((m) => m.eventIds);
+  const scannerOrgIds = memberships
+    .filter((m) => m.role === "SCANNER" && m.eventIds.length === 0)
+    .map((m) => m.organizerId);
+  const managerOrgIds = memberships.filter((m) => m.role === "MANAGER").map((m) => m.organizerId);
+
   const where: any = isAdmin(user.role)
     ? { status: { in: ["PUBLISHED", "ENDED"] } }
     : {
         OR: [
           { organizer: { userId: user.id } },
           { staff: { some: { userId: user.id } } },
+          { organizerId: { in: [...managerOrgIds, ...scannerOrgIds] } },
+          { id: { in: scannerEventIds } },
         ],
       };
 
@@ -29,7 +42,7 @@ export default async function ScanPicker() {
   return (
     <div className="min-h-screen bg-canvas text-white p-5 md:p-10">
       <div className="max-w-md mx-auto">
-        <Logo invert size="sm" />
+        <Logo variant="icon" size="md" />
         <h1 className="h-section mt-10 text-white">Scan tickets.</h1>
         <p className="text-white/60 mt-2 mb-10 text-sm">Choose an event to start scanning.</p>
 

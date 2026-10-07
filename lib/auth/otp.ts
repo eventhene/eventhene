@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { db } from "@/lib/db";
-import { sendEmail } from "@/lib/email";
+import { sendEmailDetailed, otpEmailHtml } from "@/lib/email";
 import { sendSMS } from "@/lib/sms/hubtel";
 
 const OTP_EXPIRY_MINUTES = 10;
@@ -25,11 +25,15 @@ export async function createAndSendOtp(userId: string, channel: OtpChannel, dest
   });
 
   if (channel === "email") {
-    await sendEmail({
+    const result = await sendEmailDetailed({
       to: destination,
       subject: `${code} - Your EventHene verification code`,
-      html: otpEmailTemplate(code),
+      html: otpEmailHtml(code),
     });
+    if (!result.ok) {
+      console.error("[otp] email send failed:", result.error);
+      throw new Error("Could not send the email code. Please use SMS instead.");
+    }
   } else if (channel === "sms") {
     const result = await sendSMS(destination, `Your EventHene code is ${code}. Expires in 10 minutes.`);
     if (!result.ok) {
@@ -71,28 +75,4 @@ export async function verifyOtp(userId: string, channel: OtpChannel, code: strin
   });
 
   return { valid: true };
-}
-
-function otpEmailTemplate(code: string): string {
-  return `
-<!doctype html>
-<html>
-<body style="margin:0;padding:0;background:#FAFAF8;font-family:Inter,system-ui,sans-serif;color:#111;">
-  <div style="max-width:480px;margin:0 auto;padding:32px 24px;">
-    <div style="text-align:center;margin-bottom:24px;">
-      <div style="font-size:22px;font-weight:800;color:#1C1917;letter-spacing:-0.03em;">
-        Event<span style="color:#D4A853;">Hene</span>
-      </div>
-    </div>
-    <div style="background:#fff;border:1px solid #E5E3DE;border-radius:18px;padding:32px;text-align:center;">
-      <p style="font-size:15px;color:#6B6B6B;margin:0 0 8px;">Your verification code</p>
-      <p style="font-size:40px;font-weight:800;letter-spacing:8px;color:#1C1917;margin:16px 0;">${code}</p>
-      <p style="font-size:13px;color:#6B6B6B;margin:16px 0 0;">This code expires in 10 minutes. Do not share it with anyone.</p>
-    </div>
-    <p style="text-align:center;font-size:11px;color:#6B6B6B;margin-top:20px;">
-      If you didn't request this, ignore this email.
-    </p>
-  </div>
-</body>
-</html>`;
 }

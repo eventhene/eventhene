@@ -68,12 +68,34 @@ export async function requireRole(role: UserRole | UserRole[], req?: ReqWithCook
   return user;
 }
 
+export type OrganizerAccess = "OWNER" | "MANAGER";
+
+/** The organizer a user acts for: their own, or the one that made them a team manager. */
+export async function resolveOrganizerAccess(userId: string) {
+  const own = await db.organizer.findUnique({ where: { userId } });
+  if (own) return { organizer: own, access: "OWNER" as OrganizerAccess };
+  const membership = await db.teamMember.findFirst({
+    where: { userId, role: "MANAGER" },
+    include: { organizer: true },
+    orderBy: { createdAt: "asc" },
+  });
+  if (membership) return { organizer: membership.organizer, access: "MANAGER" as OrganizerAccess };
+  return null;
+}
+
 export async function requireOrganizer(req?: ReqWithCookies) {
   const user = await requireUser(req);
-  const organizer = await db.organizer.findUnique({ where: { userId: user.id } });
-  if (!organizer) throw new ForbiddenError("No organizer profile");
-  if (organizer.isSuspended) throw new ForbiddenError("Organizer account is suspended");
-  return { user, organizer };
+  const resolved = await resolveOrganizerAccess(user.id);
+  if (!resolved) throw new ForbiddenError("No organizer profile");
+  if (resolved.organizer.isSuspended) throw new ForbiddenError("Organizer account is suspended");
+  return { user, organizer: resolved.organizer, access: resolved.access };
+}
+
+/** Owner-only actions (payout details, team management). Managers are rejected. */
+export async function requireOrganizerOwner(req?: ReqWithCookies) {
+  const ctx = await requireOrganizer(req);
+  if (ctx.access !== "OWNER") throw new ForbiddenError("Only the account owner can do this");
+  return ctx;
 }
 
 export async function requireEventOwner(eventId: string, req?: ReqWithCookies) {
@@ -85,7 +107,12 @@ export async function requireEventOwner(eventId: string, req?: ReqWithCookies) {
   if (!event) throw new ForbiddenError("Event not found");
   const isOwner = event.organizer.userId === user.id;
   const isAdmin = user.role === "ADMIN" || user.role === "SUPER_ADMIN";
-  if (!isOwner && !isAdmin) throw new ForbiddenError();
+  if (!isOwner && !isAdmin) {
+    const manager = await db.teamMember.findUnique({
+      where: { organizerId_userId: { organizerId: event.organizerId, userId: user.id } },
+    });
+    if (!manager || manager.role !== "MANAGER") throw new ForbiddenError();
+  }
   return { user, event };
 }
 
@@ -104,8 +131,15 @@ export async function requireScannerForEvent(eventId: string, req?: ReqWithCooki
   const staffEntry = await db.eventStaff.findUnique({
     where: { eventId_userId: { eventId, userId: user.id } },
   });
-  if (!staffEntry) throw new ForbiddenError("Not authorized to scan this event");
-  return { user, event };
+  if (staffEntry) return { user, event };
+
+  const member = await db.teamMember.findUnique({
+    where: { organizerId_userId: { organizerId: event.organizerId, userId: user.id } },
+  });
+  if (member && (member.role === "MANAGER" || member.eventIds.length === 0 || member.eventIds.includes(eventId))) {
+    return { user, event };
+  }
+  throw new ForbiddenError("Not authorized to scan this event");
 }
 
 export function isAdmin(role: UserRole | undefined | null): boolean {

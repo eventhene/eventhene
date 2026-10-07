@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { db } from "@/lib/db";
-import { requireUserOrRedirect } from "@/lib/auth";
+import { requireUserOrRedirect, resolveOrganizerAccess, isAdmin } from "@/lib/auth";
 import { Logo } from "@/components/Logo";
 import { SignOutButton } from "@/components/SignOutButton";
 import {
@@ -11,46 +12,102 @@ import {
   MessageSquare,
   ScanLine,
   Users,
+  UserPlus,
   Briefcase,
   Settings,
+  Shield,
+  ArrowLeft,
 } from "lucide-react";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUserOrRedirect("/dashboard");
-  const organizer = await db.organizer.findUnique({ where: { userId: user.id } });
-  if (!organizer) redirect("/onboarding");
+  const resolved = await resolveOrganizerAccess(user.id);
+
+  let organizer = resolved?.organizer ?? null;
+  let access: "OWNER" | "MANAGER" | "ADMIN" = resolved?.access ?? "OWNER";
+
+  if (!organizer) {
+    // Admins can step into any organizer's event from the admin panel.
+    if (isAdmin(user.role)) {
+      const path = headers().get("x-pathname") || "";
+      const match = path.match(/^\/dashboard\/events\/([^/]+)/);
+      if (match && match[1] !== "new") {
+        const event = await db.event.findUnique({
+          where: { id: match[1] },
+          include: { organizer: true },
+        });
+        if (event) {
+          organizer = event.organizer;
+          access = "ADMIN";
+        }
+      }
+      if (!organizer) redirect("/superadmin");
+    } else {
+      // Scanner-only team members and event staff go straight to the scanner.
+      const scannerAccess =
+        (await db.teamMember.count({ where: { userId: user.id } })) > 0 ||
+        (await db.eventStaff.count({ where: { userId: user.id } })) > 0;
+      redirect(scannerAccess ? "/scan" : "/onboarding");
+    }
+  }
+
+  const org = organizer!;
+  const isOwner = access === "OWNER";
+  const isAdminView = access === "ADMIN";
 
   return (
     <div className="min-h-screen bg-[#0a0a0c]">
       <aside className="fixed left-0 top-0 h-screen w-[260px] hidden md:flex flex-col">
         <div className="m-3 flex-1 flex flex-col rounded-2xl card-glass p-5 overflow-y-auto">
-          <Logo invert size="sm" />
+          <Logo variant="icon" size="md" />
 
-          <div className="mt-8 flex-1 flex flex-col gap-0.5">
-            <SideSection label="Menu" />
-            <NavLink href="/dashboard" icon={<LayoutDashboard className="w-[18px] h-[18px]" />}>Overview</NavLink>
-            <NavLink href="/dashboard/events" icon={<CalendarDays className="w-[18px] h-[18px]" />}>Events</NavLink>
-            <NavLink href="/dashboard/events/new" icon={<PlusCircle className="w-[18px] h-[18px]" />} accent>Create event</NavLink>
+          {isAdminView ? (
+            <div className="mt-6 flex-1 flex flex-col gap-0.5">
+              <div className="rounded-xl border border-crimson/30 bg-crimson/10 p-3 mb-3">
+                <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-crimson">
+                  <Shield className="w-3.5 h-3.5" />
+                  Admin view
+                </p>
+                <p className="text-xs text-white/60 mt-1">
+                  You are managing an event for <strong className="text-white">{org.displayName}</strong>.
+                </p>
+              </div>
+              <NavLink href="/superadmin/events" icon={<ArrowLeft className="w-[18px] h-[18px]" />}>Back to all events</NavLink>
+              <NavLink href="/superadmin" icon={<Shield className="w-[18px] h-[18px]" />}>Admin overview</NavLink>
+            </div>
+          ) : (
+            <div className="mt-8 flex-1 flex flex-col gap-0.5">
+              <SideSection label="Menu" />
+              <NavLink href="/dashboard" icon={<LayoutDashboard className="w-[18px] h-[18px]" />}>Overview</NavLink>
+              <NavLink href="/dashboard/events" icon={<CalendarDays className="w-[18px] h-[18px]" />}>Events</NavLink>
+              <NavLink href="/dashboard/events/new" icon={<PlusCircle className="w-[18px] h-[18px]" />} accent>Create event</NavLink>
 
-            <SideSection label="Tools" />
-            <NavLink href="/dashboard/sms" icon={<MessageSquare className="w-[18px] h-[18px]" />}>SMS</NavLink>
-            <NavLink href="/scan" icon={<ScanLine className="w-[18px] h-[18px]" />}>Scanner</NavLink>
-            <NavLink href="/dashboard/staff" icon={<Users className="w-[18px] h-[18px]" />}>Scanner staff</NavLink>
-            <NavLink href="/dashboard/services" icon={<Briefcase className="w-[18px] h-[18px]" />}>Services</NavLink>
+              <SideSection label="Tools" />
+              <NavLink href="/dashboard/sms" icon={<MessageSquare className="w-[18px] h-[18px]" />}>SMS</NavLink>
+              <NavLink href="/scan" icon={<ScanLine className="w-[18px] h-[18px]" />}>Scanner</NavLink>
+              {isOwner && (
+                <NavLink href="/dashboard/team" icon={<Users className="w-[18px] h-[18px]" />}>Team</NavLink>
+              )}
+              <NavLink href="/dashboard/services" icon={<Briefcase className="w-[18px] h-[18px]" />}>Services</NavLink>
 
-            <SideSection label="Account" />
-            <NavLink href="/dashboard/settings" icon={<Settings className="w-[18px] h-[18px]" />}>Settings</NavLink>
-            <SignOutButton className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/40 hover:text-white/70 hover:bg-white/5 transition font-medium w-full text-left" />
-          </div>
+              <SideSection label="Account" />
+              {isOwner && (
+                <NavLink href="/dashboard/settings" icon={<Settings className="w-[18px] h-[18px]" />}>Settings</NavLink>
+              )}
+              <SignOutButton className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/40 hover:text-white/70 hover:bg-white/5 transition font-medium w-full text-left" />
+            </div>
+          )}
 
           <div className="mt-4 rounded-xl bg-white/5 border border-white/8 p-4">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-accent/20 flex items-center justify-center text-accent font-bold text-sm">
-                {organizer.displayName?.charAt(0)?.toUpperCase() || "U"}
+                {org.displayName?.charAt(0)?.toUpperCase() || "U"}
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-bold text-white truncate">{organizer.displayName}</p>
-                <p className="text-[11px] text-white/40 truncate">{user.email}</p>
+                <p className="text-sm font-bold text-white truncate">{org.displayName}</p>
+                <p className="text-[11px] text-white/40 truncate">
+                  {isAdminView ? "Admin access" : isOwner ? user.email : `Manager - ${user.email}`}
+                </p>
               </div>
             </div>
           </div>
@@ -58,21 +115,36 @@ export default async function DashboardLayout({ children }: { children: React.Re
       </aside>
 
       <header className="md:hidden sticky top-0 z-30 glass-dark px-4 py-3 flex items-center justify-between">
-        <Logo invert size="sm" />
-        <SignOutButton className="text-xs text-white/40 font-semibold hover:text-white/60 transition" showIcon={false} />
+        <Logo variant="icon" size="md" />
+        {isAdminView ? (
+          <Link href="/superadmin/events" className="text-xs text-white/60 font-semibold">Back to admin</Link>
+        ) : (
+          <SignOutButton className="text-xs text-white/40 font-semibold hover:text-white/60 transition" showIcon={false} />
+        )}
       </header>
 
       <main className="md:ml-[260px] p-5 md:p-10 pb-24 md:pb-10 max-w-6xl">
+        {isAdminView && (
+          <div className="md:hidden mb-4 rounded-xl border border-crimson/30 bg-crimson/10 p-3 text-xs text-white/70">
+            <strong className="text-crimson">Admin view:</strong> managing an event for {org.displayName}.
+          </div>
+        )}
         {children}
       </main>
 
-      <nav className="md:hidden fixed bottom-0 inset-x-0 glass-dark grid grid-cols-5 py-2 z-30">
-        <MobileTab href="/dashboard" icon={<LayoutDashboard className="w-4 h-4" />} label="Home" />
-        <MobileTab href="/dashboard/events" icon={<CalendarDays className="w-4 h-4" />} label="Events" />
-        <MobileTab href="/dashboard/events/new" icon={<PlusCircle className="w-4 h-4" />} label="New" accent />
-        <MobileTab href="/scan" icon={<ScanLine className="w-4 h-4" />} label="Scan" />
-        <MobileTab href="/dashboard/settings" icon={<Settings className="w-4 h-4" />} label="Me" />
-      </nav>
+      {!isAdminView && (
+        <nav className="md:hidden fixed bottom-0 inset-x-0 glass-dark grid grid-cols-5 py-2 z-30">
+          <MobileTab href="/dashboard" icon={<LayoutDashboard className="w-4 h-4" />} label="Home" />
+          <MobileTab href="/dashboard/events" icon={<CalendarDays className="w-4 h-4" />} label="Events" />
+          <MobileTab href="/dashboard/events/new" icon={<PlusCircle className="w-4 h-4" />} label="New" accent />
+          <MobileTab href="/scan" icon={<ScanLine className="w-4 h-4" />} label="Scan" />
+          {isOwner ? (
+            <MobileTab href="/dashboard/team" icon={<UserPlus className="w-4 h-4" />} label="Team" />
+          ) : (
+            <MobileTab href="/dashboard/sms" icon={<MessageSquare className="w-4 h-4" />} label="SMS" />
+          )}
+        </nav>
+      )}
     </div>
   );
 }

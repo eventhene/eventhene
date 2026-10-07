@@ -13,29 +13,35 @@ export default async function AllEventsAdmin() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-sm text-ink-muted">Admin</p>
-        <h1 className="h-section mt-1">All events</h1>
+        <p className="text-sm text-white/40">Admin</p>
+        <h1 className="h-section mt-1 text-white">All events</h1>
       </div>
-      <div className="card overflow-hidden">
+      <div className="card-glass rounded-2xl overflow-hidden overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-surface-2 text-left">
+          <thead className="bg-white/5 text-left text-white/60">
             <tr>
               <th className="px-5 py-4">Event</th>
               <th className="px-5 py-4">Organizer</th>
               <th className="px-5 py-4">Status</th>
               <th className="px-5 py-4 text-right">Tickets</th>
+              <th className="px-5 py-4 text-right">Manage</th>
             </tr>
           </thead>
           <tbody>
             {events.map((e) => (
-              <tr key={e.id} className="border-t border-border hover:bg-surface-2/50">
+              <tr key={e.id} className="border-t border-white/10 hover:bg-white/5">
                 <td className="px-5 py-4">
-                  <Link href={`/events/${e.slug}`} className="font-medium hover:text-royal-2">{e.title}</Link>
-                  <p className="text-xs text-ink-muted mt-0.5">{new Date(e.startsAt).toLocaleString()}</p>
+                  <Link href={`/events/${e.slug}`} className="font-medium text-white hover:text-accent">{e.title}</Link>
+                  <p className="text-xs text-white/40 mt-0.5">{new Date(e.startsAt).toLocaleString()}</p>
                 </td>
-                <td className="px-5 py-4 text-ink-muted">{e.organizer.displayName}</td>
+                <td className="px-5 py-4 text-white/50">{e.organizer.displayName}</td>
                 <td className="px-5 py-4"><StatusChip status={e.status} /></td>
                 <td className="px-5 py-4 text-right font-mono text-xs">{e._count.tickets}</td>
+                <td className="px-5 py-4 text-right">
+                  <Link href={`/dashboard/events/${e.id}`} className="text-xs font-semibold text-accent hover:underline">
+                    Open as admin
+                  </Link>
+                </td>
               </tr>
             ))}
           </tbody>

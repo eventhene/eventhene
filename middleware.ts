@@ -22,7 +22,9 @@ export function middleware(req: NextRequest) {
     url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
   }
-  return NextResponse.next();
+  const forwarded = new Headers(req.headers);
+  forwarded.set("x-pathname", pathname);
+  return NextResponse.next({ request: { headers: forwarded } });
 }
 
 export const config = {

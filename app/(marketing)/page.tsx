@@ -55,7 +55,7 @@ export default async function HomePage() {
             {[
               { value: "5 min", label: "to publish" },
               { value: "Free", label: "to list events" },
-              { value: "5%", label: "per paid ticket" },
+              { value: "8%", label: "per paid ticket" },
               { value: "24/7", label: "attendance exports" },
             ].map((s) => (
               <div
@@ -295,7 +295,7 @@ export default async function HomePage() {
             <span className="text-accent">elevated.</span>
           </h2>
           <p className="mt-6 text-white/50 text-lg max-w-xl mx-auto font-medium">
-            Free to publish. 5% per paid ticket. Zero monthly fees.
+            Free to publish. 8% per paid ticket. Zero monthly fees.
           </p>
           <div className="mt-10 flex flex-wrap justify-center gap-3">
             <Link href="/sign-up" className="btn-gold btn-xl">Create your event</Link>

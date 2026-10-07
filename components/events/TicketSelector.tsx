@@ -25,7 +25,7 @@ interface Event {
   ticketTypes: TicketType[];
 }
 
-const PLATFORM_FEE_RATE = 0.05;
+const PLATFORM_FEE_RATE = 0.08;
 
 function processorFeeMinor(amt: number, country: string): number {
   switch (country) {
@@ -127,7 +127,7 @@ export function TicketSelector({ event }: { event: Event }) {
           {event.buyerPaysFee && event.type === "PAID" && (
             <>
               <div className="flex justify-between text-ink-muted">
-                <span>Platform fee (5%)</span>
+                <span>Platform fee (8%)</span>
                 <span>{formatMinorAmount(totals.platformFee, event.currency)}</span>
               </div>
               <div className="flex justify-between text-ink-muted">

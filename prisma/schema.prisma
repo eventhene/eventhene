@@ -108,7 +108,19 @@ enum ServiceType {
   LIVESTREAM
   PHOTOGRAPHY
   MEDIA_COVERAGE
+  BLOGGING
   MARKETING
+}
+
+enum TeamRole {
+  MANAGER
+  SCANNER
+}
+
+enum TeamInviteStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
 }
 
 enum PaymentProvider {
@@ -167,14 +179,15 @@ model User {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  organizer      Organizer?
-  orders         Order[]
-  staffEvents    EventStaff[]
-  scans          ScanLog[]
-  adminActions   AdminLog[]
-  supportTickets SupportTicket[]
-  sessions       Session[]
-  couponsCreated Coupon[]       @relation("CouponCreator")
+  organizer       Organizer?
+  orders          Order[]
+  staffEvents     EventStaff[]
+  scans           ScanLog[]
+  adminActions    AdminLog[]
+  supportTickets  SupportTicket[]
+  sessions        Session[]
+  couponsCreated  Coupon[]        @relation("CouponCreator")
+  teamMemberships TeamMember[]
 }
 
 model Session {
@@ -196,46 +209,49 @@ model Session {
 // ============================================================
 
 model Organizer {
-  id              String   @id @default(cuid())
-  userId          String   @unique
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              String  @id @default(cuid())
+  userId          String  @unique
+  user            User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   displayName     String
-  slug            String   @unique
+  slug            String  @unique
   logoUrl         String?
-  bio             String?  @db.Text
+  bio             String? @db.Text
   website         String?
-  phoneVerified   Boolean  @default(false)
+  phoneVerified   Boolean @default(false)
   paystackSubacct String?
   stripeAccountId String?
 
   // Payout bank details
-  bankCode        String?
-  bankName        String?
-  accountNumber   String?
-  accountName     String?
-  payoutVerified  Boolean  @default(false)
+  bankCode       String?
+  bankName       String?
+  accountNumber  String?
+  accountName    String?
+  payoutVerified Boolean @default(false)
 
-  isSuspended     Boolean  @default(false)
+  isSuspended Boolean @default(false)
 
   // SMS billing
-  smsBalance         Int           @default(0)  // in segments
-  smsFrozen          Boolean       @default(false)
+  smsBalance Int     @default(0) // in segments
+  smsFrozen  Boolean @default(false)
 
   // Custom Sender ID (approval flow)
   senderId           String?
   senderIdStatus     SenderIdStatus @default(NONE)
-  senderIdNote       String?       @db.Text
+  senderIdNote       String?        @db.Text
   senderIdApprovedAt DateTime?
   senderIdApprovedBy String?
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   events           Event[]
   promotions       Promotion[]
   serviceInquiries ServiceInquiry[]
   smsCampaigns     SmsCampaign[]
   smsTransactions  SmsTransaction[]
+  contactLists     ContactList[]
+  teamMembers      TeamMember[]
+  teamInvites      TeamInvite[]
 }
 
 model Event {
@@ -459,27 +475,28 @@ model PromoPrice {
 // ============================================================
 
 model SmsCampaign {
-  id              String      @id @default(cuid())
+  id              String    @id @default(cuid())
   organizerId     String
-  organizer       Organizer   @relation(fields: [organizerId], references: [id])
+  organizer       Organizer @relation(fields: [organizerId], references: [id])
   eventId         String?
-  event           Event?      @relation(fields: [eventId], references: [id])
+  event           Event?    @relation(fields: [eventId], references: [id])
   name            String
-  senderId        String      // sender name used on this campaign
-  message         String      @db.Text
+  senderId        String // sender name used on this campaign
+  message         String    @db.Text
   audience        String
-  segmentsPer     Int         @default(1)  // segments per message
-  creditsCharged  Int         @default(0)  // total credits deducted
-  totalRecipients Int         @default(0)
-  totalSent       Int         @default(0)
-  totalFailed     Int         @default(0)
-  totalDelivered  Int         @default(0)
-  status          SmsStatus   @default(QUEUED)
+  segmentsPer     Int       @default(1) // segments per message
+  creditsCharged  Int       @default(0) // total credits deducted
+  totalRecipients Int       @default(0)
+  totalSent       Int       @default(0)
+  totalFailed     Int       @default(0)
+  totalDelivered  Int       @default(0)
+  status          SmsStatus @default(QUEUED)
   scheduledFor    DateTime?
+  lockedUntil     DateTime?
   startedAt       DateTime?
   completedAt     DateTime?
   createdById     String
-  createdAt       DateTime    @default(now())
+  createdAt       DateTime  @default(now())
 
   recipients   SmsRecipient[]
   transactions SmsTransaction[]
@@ -490,17 +507,17 @@ model SmsCampaign {
 }
 
 model SmsTransaction {
-  id            String       @id @default(cuid())
-  organizerId   String
-  organizer     Organizer    @relation(fields: [organizerId], references: [id], onDelete: Cascade)
-  kind          SmsTxnKind
-  amount        Int          // positive for grant/purchase/refund, negative for deduct
-  balanceAfter  Int
-  note          String?
-  actorId       String?      // user who performed the action
-  campaignId    String?
-  campaign      SmsCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
-  createdAt     DateTime     @default(now())
+  id           String       @id @default(cuid())
+  organizerId  String
+  organizer    Organizer    @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  kind         SmsTxnKind
+  amount       Int // positive for grant/purchase/refund, negative for deduct
+  balanceAfter Int
+  note         String?
+  actorId      String? // user who performed the action
+  campaignId   String?
+  campaign     SmsCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  createdAt    DateTime     @default(now())
 
   @@index([organizerId, createdAt])
   @@index([campaignId])
@@ -516,6 +533,8 @@ model SmsRecipient {
   status      SmsRecipientStatus @default(PENDING)
   providerRef String?
   errorText   String?
+  content     String?            @db.Text
+  segments    Int                @default(1)
   sentAt      DateTime?
   deliveredAt DateTime?
   createdAt   DateTime           @default(now())
@@ -607,7 +626,7 @@ model Otp {
   id        String   @id @default(cuid())
   userId    String
   code      String
-  channel   String   // "email" or "phone"
+  channel   String // "email" or "phone"
   expiresAt DateTime
   attempts  Int      @default(0)
   verified  Boolean  @default(false)
@@ -626,4 +645,69 @@ model AdminLog {
   createdAt DateTime @default(now())
 
   @@index([actorId, createdAt])
+}
+
+// ============================================================
+// SMS CONTACT LISTS
+// ============================================================
+
+model ContactList {
+  id          String    @id @default(cuid())
+  organizerId String
+  organizer   Organizer @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  name        String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  contacts Contact[]
+
+  @@unique([organizerId, name])
+  @@index([organizerId])
+}
+
+model Contact {
+  id        String      @id @default(cuid())
+  listId    String
+  list      ContactList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  name      String?
+  phone     String
+  createdAt DateTime    @default(now())
+
+  @@unique([listId, phone])
+  @@index([listId])
+}
+
+// ============================================================
+// TEAM (organizer staff)
+// ============================================================
+
+model TeamMember {
+  id          String    @id @default(cuid())
+  organizerId String
+  organizer   Organizer @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        TeamRole
+  eventIds    String[] // SCANNER only: empty means all of the organizer's events
+  createdAt   DateTime  @default(now())
+
+  @@unique([organizerId, userId])
+  @@index([userId])
+}
+
+model TeamInvite {
+  id             String           @id @default(cuid())
+  token          String           @unique
+  organizerId    String
+  organizer      Organizer        @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  phone          String
+  role           TeamRole
+  eventIds       String[]
+  invitedById    String
+  status         TeamInviteStatus @default(PENDING)
+  expiresAt      DateTime
+  acceptedUserId String?
+  createdAt      DateTime         @default(now())
+
+  @@index([organizerId, status])
 }

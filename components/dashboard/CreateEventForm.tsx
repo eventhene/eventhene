@@ -18,6 +18,8 @@ const FIELD_OPTIONS = [
 ];
 
 interface TicketRow {
+  id?: string;
+  sold?: number;
   name: string;
   priceMajor: string;
   quantity: string;
@@ -32,36 +34,85 @@ interface FieldRow {
   options: string[];
 }
 
-export function CreateEventForm() {
+export interface InitialEvent {
+  title: string;
+  description: string;
+  category: string;
+  venue: string;
+  city: string | null;
+  startsAt: string;
+  endsAt: string;
+  bookingOpensAt: string;
+  bookingClosesAt: string;
+  flyerUrl: string | null;
+  type: "PAID" | "FREE";
+  buyerPaysFee: boolean;
+  ticketTypes: { id: string; name: string; priceMinor: number; quantity: number; notes: string | null; sold: number }[];
+  attendeeFields: { key: string; label: string; type: string; required: boolean; options: string[] }[];
+}
+
+function toLocalInput(iso?: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+export function CreateEventForm({
+  mode = "create",
+  eventId,
+  initial,
+  hasOrders = false,
+}: {
+  mode?: "create" | "edit";
+  eventId?: string;
+  initial?: InitialEvent;
+  hasOrders?: boolean;
+}) {
+  const isEdit = mode === "edit" && !!eventId && !!initial;
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("Music");
-  const [venue, setVenue] = useState("");
-  const [city, setCity] = useState("");
-  const [startsAt, setStartsAt] = useState("");
-  const [endsAt, setEndsAt] = useState("");
-  const [bookingClosesAt, setBookingClosesAt] = useState("");
-  const [flyerUrl, setFlyerUrl] = useState("");
+  const [title, setTitle] = useState(initial?.title ?? "");
+  const [description, setDescription] = useState(initial?.description ?? "");
+  const [category, setCategory] = useState(initial?.category ?? "Music");
+  const [venue, setVenue] = useState(initial?.venue ?? "");
+  const [city, setCity] = useState(initial?.city ?? "");
+  const [startsAt, setStartsAt] = useState(toLocalInput(initial?.startsAt));
+  const [endsAt, setEndsAt] = useState(toLocalInput(initial?.endsAt));
+  const [bookingClosesAt, setBookingClosesAt] = useState(toLocalInput(initial?.bookingClosesAt));
+  const [flyerUrl, setFlyerUrl] = useState(initial?.flyerUrl ?? "");
   const [flyerPreview, setFlyerPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
-  const [type, setType] = useState<"PAID" | "FREE">("PAID");
-  const [buyerPaysFee, setBuyerPaysFee] = useState(true);
+  const [type, setType] = useState<"PAID" | "FREE">(initial?.type ?? "PAID");
+  const [buyerPaysFee, setBuyerPaysFee] = useState(initial?.buyerPaysFee ?? true);
   const [couponCode, setCouponCode] = useState("");
   const [couponValid, setCouponValid] = useState<boolean | null>(null);
   const [couponMsg, setCouponMsg] = useState("");
-  const [tickets, setTickets] = useState<TicketRow[]>([
-    { name: "Regular", priceMajor: "0", quantity: "100", notes: "" }
-  ]);
-  const [fields, setFields] = useState<FieldRow[]>([
-    { key: "FULL_NAME", label: "Full name", type: "TEXT", required: true, options: [] },
-    { key: "PHONE", label: "Phone number", type: "PHONE", required: true, options: [] },
-    { key: "EMAIL", label: "Email", type: "EMAIL", required: true, options: [] }
-  ]);
+  const [tickets, setTickets] = useState<TicketRow[]>(
+    initial
+      ? initial.ticketTypes.map((t) => ({
+          id: t.id,
+          sold: t.sold,
+          name: t.name,
+          priceMajor: String(t.priceMinor / 100),
+          quantity: String(t.quantity),
+          notes: t.notes ?? "",
+        }))
+      : [{ name: "Regular", priceMajor: "0", quantity: "100", notes: "" }]
+  );
+  const [fields, setFields] = useState<FieldRow[]>(
+    initial
+      ? initial.attendeeFields.map((f) => ({ key: f.key, label: f.label, type: f.type, required: f.required, options: f.options ?? [] }))
+      : [
+          { key: "FULL_NAME", label: "Full name", type: "TEXT", required: true, options: [] },
+          { key: "PHONE", label: "Phone number", type: "PHONE", required: true, options: [] },
+          { key: "EMAIL", label: "Email", type: "EMAIL", required: true, options: [] }
+        ]
+  );
 
   async function validateCoupon() {
     if (!couponCode.trim()) return;
@@ -135,8 +186,52 @@ export function CreateEventForm() {
     setBusy(true);
     try {
       // Compose booking window: opens immediately, closes at bookingClosesAt or event start
-      const bookingOpensAt = new Date().toISOString();
+      const bookingOpensAt = isEdit ? initial!.bookingOpensAt : new Date().toISOString();
       const closes = bookingClosesAt || startsAt;
+
+      if (isEdit) {
+        const res = await fetch(`/api/events/${eventId}`, {
+          method: "PATCH",
+          credentials: "include",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            title,
+            description,
+            category,
+            venue,
+            city: city || null,
+            startsAt: new Date(startsAt).toISOString(),
+            endsAt: new Date(endsAt).toISOString(),
+            bookingOpensAt,
+            bookingClosesAt: new Date(closes).toISOString(),
+            flyerUrl: flyerUrl || null,
+            type,
+            buyerPaysFee,
+            ticketTypes: tickets.map((t, idx) => ({
+              id: t.id,
+              name: t.name.trim(),
+              priceMinor: type === "FREE" ? 0 : Math.round(parseFloat(t.priceMajor || "0") * 100),
+              quantity: parseInt(t.quantity || "0", 10),
+              notes: t.notes || null,
+              isActive: true,
+              sortOrder: idx,
+            })),
+            attendeeFields: fields.map((f, idx) => ({
+              key: f.key,
+              label: f.label,
+              type: f.type,
+              required: f.required,
+              options: f.options,
+              sortOrder: idx,
+            })),
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Could not save your changes.");
+        router.push(`/dashboard/events/${eventId}`);
+        router.refresh();
+        return;
+      }
 
       const payload = {
         title,
@@ -211,10 +306,11 @@ export function CreateEventForm() {
           <div>
             <label className="label">Event type</label>
             <div className="flex gap-2">
-              <button type="button" onClick={() => setType("PAID")} className={`btn-md flex-1 ${type === "PAID" ? "btn-primary" : "btn-ghost"}`}>Paid</button>
-              <button type="button" onClick={() => setType("FREE")} className={`btn-md flex-1 ${type === "FREE" ? "btn-primary" : "btn-ghost"}`}>Free</button>
+              <button type="button" disabled={isEdit && hasOrders} onClick={() => setType("PAID")} className={`btn-md flex-1 ${type === "PAID" ? "btn-primary" : "btn-ghost"}`}>Paid</button>
+              <button type="button" disabled={isEdit && hasOrders} onClick={() => setType("FREE")} className={`btn-md flex-1 ${type === "FREE" ? "btn-primary" : "btn-ghost"}`}>Free</button>
             </div>
-            {type === "FREE" && <p className="help text-sky">Free events are reviewed by EventHene before going live.</p>}
+            {isEdit && hasOrders && <p className="help">Locked because tickets have already been ordered.</p>}
+            {!isEdit && type === "FREE" && <p className="help text-sky">Free events are reviewed by EventHene before going live.</p>}
           </div>
         </div>
         <div>
@@ -319,11 +415,14 @@ export function CreateEventForm() {
             )}
             <div className={type === "PAID" ? "col-span-3" : "col-span-6"}>
               <label className="label">Quantity</label>
-              <input type="number" min="1" required value={t.quantity} onChange={(e) => updateTicket(i, "quantity", e.target.value)} className="input" />
+              <input type="number" min={Math.max(1, t.sold ?? 0)} required value={t.quantity} onChange={(e) => updateTicket(i, "quantity", e.target.value)} className="input" />
             </div>
             <div className="col-span-2 flex">
-              {tickets.length > 1 && (
+              {tickets.length > 1 && (t.sold ?? 0) === 0 && (
                 <button type="button" onClick={() => removeTicket(i)} className="btn-danger btn-sm w-full">Remove</button>
+              )}
+              {(t.sold ?? 0) > 0 && (
+                <p className="text-[11px] text-ink-muted self-end pb-3">{t.sold} sold</p>
               )}
             </div>
             <div className="col-span-12">
@@ -385,7 +484,7 @@ export function CreateEventForm() {
       </section>
 
       {/* SECTION: Coupon code */}
-      {type === "FREE" && (
+      {!isEdit && type === "FREE" && (
         <section className="card p-7 space-y-4">
           <h2 className="font-extrabold text-xl tracking-tight">Have a coupon code?</h2>
           <p className="text-sm text-ink-muted">Enter a coupon code to publish your event instantly without waiting for review.</p>
@@ -413,13 +512,15 @@ export function CreateEventForm() {
           {busy ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              Publishing...
+              {isEdit ? "Saving changes..." : "Publishing..."}
             </>
-          ) : (type === "FREE" && !couponValid) ? "Submit for review" : "Publish event"}
+          ) : isEdit ? "Save changes" : (type === "FREE" && !couponValid) ? "Submit for review" : "Publish event"}
         </button>
       </div>
       <p className="text-xs text-ink-muted text-center font-medium">
-        {type === "FREE" && !couponValid ? "Free events go live after a quick review (usually under 24 hours)." : "Your event will publish instantly."}
+        {isEdit
+          ? "Changes go live on your event page as soon as you save."
+          : type === "FREE" && !couponValid ? "Free events go live after a quick review (usually under 24 hours)." : "Your event will publish instantly."}
       </p>
     </form>
   );

@@ -171,7 +171,7 @@ eventhene/
 │   ├── auth.ts            Role guards
 │   ├── qr.ts              QR generation + verification
 │   ├── refs.ts            Visible ticket references
-│   ├── fees.ts            5% platform fee + processor math
+│   ├── fees.ts            8% platform fee + processor math
 │   ├── email.ts           Resend templates
 │   ├── storage.ts         Supabase file uploads
 │   ├── payments/          Paystack + Stripe abstractions

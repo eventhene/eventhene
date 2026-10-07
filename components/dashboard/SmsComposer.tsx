@@ -83,7 +83,11 @@ export function SmsComposer({ eventId, eventTitle, ticketTypes, totals }: Props)
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Send failed");
-      setSuccess(`Sent to ${data.totalSent} recipient${data.totalSent === 1 ? "" : "s"}. ${data.totalFailed} failed.`);
+      setSuccess(
+        data.remaining > 0
+          ? `Sent ${data.totalSent} so far. ${data.remaining} still queued: open Compose SMS, then SMS history, to resume.`
+          : `Sent to ${data.totalSent} recipient${data.totalSent === 1 ? "" : "s"}. ${data.totalFailed} failed.`
+      );
       setMessage("");
       setName("");
       router.refresh();

@@ -35,7 +35,7 @@ export default function PricingPage() {
           <div className="absolute -top-20 -right-20 w-64 h-64 bg-royal-2/15 rounded-full blur-3xl pointer-events-none" />
           <span className="text-xs font-bold uppercase tracking-widest text-accent mb-4 block">Paid events</span>
           <h2 className="h-card">Ticketing</h2>
-          <p className="font-display text-6xl mt-6">5%</p>
+          <p className="font-display text-6xl mt-6">8%</p>
           <p className="text-ink-muted text-sm mt-2 mb-7">Per ticket sold. Payment processor fee separate.</p>
           <ul className="space-y-2.5 text-sm">
             {[

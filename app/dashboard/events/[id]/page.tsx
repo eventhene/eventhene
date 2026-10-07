@@ -39,7 +39,8 @@ export default async function EventOverviewPage({ params }: { params: { id: stri
 
       {/* Action bar */}
       <div className="flex flex-wrap gap-2">
-        <Link href={`/events/${event.slug}`} target="_blank" className="btn-ghost btn-md">View public page ↗</Link>
+        <Link href={`/dashboard/events/${event.id}/edit`} className="btn-primary btn-md">Edit event</Link>
+        <Link href={`/events/${event.slug}`} target="_blank" className="btn-ghost btn-md">View public page</Link>
         <Link href={`/dashboard/events/${event.id}/attendees`} className="btn-ghost btn-md">Attendees</Link>
         <Link href={`/dashboard/events/${event.id}/sms`} className="btn-ghost btn-md">Bulk SMS</Link>
         <Link href={`/scan/${event.id}`} className="btn-primary btn-md">Open scanner</Link>

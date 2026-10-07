@@ -13,6 +13,7 @@ import {
   Shield,
   ArrowLeft,
   ListChecks,
+  Mail,
 } from "lucide-react";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -23,7 +24,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="min-h-screen bg-[#0a0a0c]">
       <aside className="fixed left-0 top-0 h-screen w-[260px] hidden md:flex flex-col">
         <div className="m-3 flex-1 flex flex-col rounded-2xl card-glass p-5 overflow-y-auto">
-          <Logo invert size="sm" />
+          <Logo variant="icon" size="md" />
           <div className="mt-2 flex items-center gap-1.5">
             <Shield className="w-3.5 h-3.5 text-crimson" />
             <span className="text-[10px] font-bold text-crimson uppercase tracking-widest">Admin</span>
@@ -40,6 +41,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <NavLink href="/superadmin/sms" icon={<MessageSquare className="w-[18px] h-[18px]" />}>SMS and Sender IDs</NavLink>
             <NavLink href="/superadmin/services" icon={<Briefcase className="w-[18px] h-[18px]" />}>Service inquiries</NavLink>
             <NavLink href="/superadmin/support" icon={<Headphones className="w-[18px] h-[18px]" />}>Support</NavLink>
+            <NavLink href="/superadmin/email" icon={<Mail className="w-[18px] h-[18px]" />}>Email setup</NavLink>
 
             <SideSection label="Account" />
             <NavLink href="/dashboard" icon={<ArrowLeft className="w-[18px] h-[18px]" />}>My dashboard</NavLink>

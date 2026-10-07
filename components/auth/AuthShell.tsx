@@ -31,9 +31,9 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
 
       <main className="flex items-center justify-center px-6 py-12 lg:py-20">
         <div className="w-full max-w-sm">
-          <Link href="/" className="lg:hidden mb-10 inline-block">
-            <Logo invert />
-          </Link>
+          <div className="lg:hidden mb-10">
+            <Logo variant="icon" size="lg" />
+          </div>
           {children}
         </div>
       </main>

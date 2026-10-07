@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { requireEventOwner, requireOrganizer } from "@/lib/auth";
-import { createCampaign, previewAudience, runCampaign, InsufficientCreditsError, SmsFrozenError } from "@/lib/services/sms";
-import { smsSegments } from "@/lib/sms/segments";
-import { sanitizeSmsContent } from "@/lib/sms/sanitize";
+import { db } from "@/lib/db";
+import { requireEventOwner } from "@/lib/auth";
+import {
+  createCampaign,
+  prepareCampaign,
+  processCampaign,
+  specFromEventAudience,
+  InsufficientCreditsError,
+  SmsFrozenError,
+} from "@/lib/services/sms";
 import { resolveSenderId } from "@/lib/sms/sender";
+
+export const maxDuration = 60;
 
 const Body = z.object({
   name: z.string().min(2).max(80),
@@ -14,21 +22,32 @@ const Body = z.object({
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { user, event } = await requireEventOwner(params.id);
-    const { organizer } = await requireOrganizer(req);
+    const { user, event } = await requireEventOwner(params.id, req);
+    const organizer = await db.organizer.findUniqueOrThrow({ where: { id: event.organizerId } });
     const data = Body.parse(await req.json());
 
-    const campaign = await createCampaign({
-      organizerId: organizer.id,
+    const { campaign } = await createCampaign({
+      organizerId: event.organizerId,
       createdById: user.id,
       eventId: event.id,
       name: data.name,
       message: data.message,
-      audience: data.audience,
+      spec: { ...specFromEventAudience(event.id, data.audience), contextEventId: event.id },
+      audienceLabel: data.audience,
     });
 
-    const final = await runCampaign(campaign.id);
-    return NextResponse.json(final, { status: 201 });
+    const result = await processCampaign(campaign.id, { maxRecipients: 400, deadlineMs: 45_000 });
+    return NextResponse.json(
+      {
+        campaignId: campaign.id,
+        status: result.status,
+        totalSent: result.sent,
+        totalFailed: result.failed,
+        remaining: result.remaining,
+        organizerId: organizer.id,
+      },
+      { status: 201 }
+    );
   } catch (e: any) {
     if (e instanceof z.ZodError) return NextResponse.json({ error: "Please check your inputs." }, { status: 400 });
     if (e?.name === "ForbiddenError") return NextResponse.json({ error: "forbidden" }, { status: 403 });
@@ -47,25 +66,27 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { user, event } = await requireEventOwner(params.id);
-    const { organizer } = await requireOrganizer(req);
+    const { event } = await requireEventOwner(params.id, req);
+    const organizer = await db.organizer.findUniqueOrThrow({ where: { id: event.organizerId } });
     const url = new URL(req.url);
     const audience = url.searchParams.get("audience") || "ALL";
     const draftMessage = url.searchParams.get("message") || "";
 
-    const recipients = await previewAudience({ eventId: event.id, audience });
-    const safe = sanitizeSmsContent(draftMessage);
-    const seg = smsSegments(safe);
+    const prepared = await prepareCampaign({
+      organizerId: event.organizerId,
+      message: draftMessage,
+      spec: { ...specFromEventAudience(event.id, audience), contextEventId: event.id },
+    });
     const senderIdUsed = await resolveSenderId(organizer.id);
 
     return NextResponse.json({
-      count: recipients.length,
-      sample: recipients.slice(0, 5),
-      segments: seg,
+      count: prepared.items.length,
+      sample: prepared.items.slice(0, 5).map((i) => ({ phone: i.recipient.phone, name: i.recipient.name })),
+      segments: prepared.templateSegments,
       senderId: senderIdUsed,
       balance: organizer.smsBalance,
-      estimatedCredits: seg.segments * recipients.length,
-      sanitized: safe,
+      estimatedCredits: prepared.totalCredits,
+      sanitized: prepared.safeTemplate,
     });
   } catch (e: any) {
     if (e?.name === "ForbiddenError") return NextResponse.json({ error: "forbidden" }, { status: 403 });

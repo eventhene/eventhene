@@ -7,7 +7,7 @@ export default function AdminInvitePage({ searchParams }: { searchParams: { emai
     <div className="min-h-screen bg-[#0a0a0c] flex items-center justify-center px-5 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-10">
-          <img src="/logo-icon.png" alt="EventHene" className="w-16 h-16 mx-auto mb-5" />
+          <img src="/logo-icon.png" alt="EventHene" className="h-20 w-auto mx-auto mb-5 object-contain" />
           <h1 className="text-3xl font-extrabold text-white tracking-tight">
             Welcome, SuperAdmin
           </h1>
