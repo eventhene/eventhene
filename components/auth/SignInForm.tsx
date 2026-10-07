@@ -29,7 +29,7 @@ export function SignInForm({ next }: { next?: string }) {
         method: "POST",
         credentials: "include",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, otpChannel }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Sign-in failed");
@@ -64,7 +64,9 @@ export function SignInForm({ next }: { next?: string }) {
     }
   }
 
-  async function resendCode() {
+  async function resendCode(channel?: "email" | "sms") {
+    const useChannel = channel || otpChannel;
+    if (channel) setOtpChannel(useChannel);
     setResending(true);
     setOtpErr(null);
     try {
@@ -72,7 +74,7 @@ export function SignInForm({ next }: { next?: string }) {
         method: "POST",
         credentials: "include",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email, channel: otpChannel }),
+        body: JSON.stringify({ email, channel: useChannel }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -116,9 +118,19 @@ export function SignInForm({ next }: { next?: string }) {
           {otpBusy && <span className="spinner" />}
           {otpBusy ? "Verifying..." : "Verify and sign in"}
         </button>
-        <button type="button" onClick={resendCode} disabled={resending} className="btn-ghost btn-md w-full">
+        <button type="button" onClick={() => resendCode()} disabled={resending} className="btn-ghost-dark btn-md w-full">
           {resending ? "Sending..." : "Resend code"}
         </button>
+        {maskedPhone && (
+          <button
+            type="button"
+            onClick={() => resendCode(otpChannel === "sms" ? "email" : "sms")}
+            disabled={resending}
+            className="btn-ghost-dark btn-sm w-full"
+          >
+            {otpChannel === "sms" ? "Send to my email instead" : `Send to ${maskedPhone} instead`}
+          </button>
+        )}
       </form>
     );
   }
@@ -156,6 +168,27 @@ export function SignInForm({ next }: { next?: string }) {
             title={showPw ? "Hide password" : "Show password"}
           >
             {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        </div>
+      </div>
+
+
+      <div>
+        <label className="label">Send my code via</label>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setOtpChannel("sms")}
+            className={`btn-md flex-1 ${otpChannel === "sms" ? "btn-gold" : "btn-ghost-dark"}`}
+          >
+            SMS
+          </button>
+          <button
+            type="button"
+            onClick={() => setOtpChannel("email")}
+            className={`btn-md flex-1 ${otpChannel === "email" ? "btn-gold" : "btn-ghost-dark"}`}
+          >
+            Email
           </button>
         </div>
       </div>

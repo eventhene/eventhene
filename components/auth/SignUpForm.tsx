@@ -47,11 +47,13 @@ export function SignUpForm({ next }: { next?: string }) {
           country: "GH",
           currency: "GHS",
           timezone: "Africa/Accra",
+          otpChannel,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Sign-up failed");
       if (data.phone) setMaskedPhone(data.phone);
+      if (data.otpChannel) setOtpChannel(data.otpChannel);
       setStep("otp");
     } catch (e: any) {
       setErr(e.message);
@@ -108,9 +110,9 @@ export function SignUpForm({ next }: { next?: string }) {
     return (
       <form onSubmit={onVerifyOtp} className="space-y-4">
         <div className="text-center mb-2">
-          <p className="text-sm text-ink-muted">
+          <p className="text-sm text-white/50">
             We sent a 6-digit code to{" "}
-            <strong className="text-ink">
+            <strong className="text-white">
               {otpChannel === "sms" ? maskedPhone : email}
             </strong>
           </p>
@@ -131,13 +133,23 @@ export function SignUpForm({ next }: { next?: string }) {
 
         {otpErr && <div className="rounded-xl bg-crimson/5 border border-crimson/20 text-crimson text-sm px-4 py-3 font-semibold">{otpErr}</div>}
 
-        <button type="submit" disabled={otpBusy || otpCode.length < 6} className="btn-primary btn-lg w-full">
+        <button type="submit" disabled={otpBusy || otpCode.length < 6} className="btn-gold btn-lg w-full">
           {otpBusy && <span className="spinner" />}
           {otpBusy ? "Verifying..." : "Verify and continue"}
         </button>
-        <button type="button" onClick={() => resendCode()} disabled={resending} className="btn-ghost btn-md w-full">
+        <button type="button" onClick={() => resendCode()} disabled={resending} className="btn-ghost-dark btn-md w-full">
           {resending ? "Sending..." : "Resend code"}
         </button>
+        {maskedPhone && (
+          <button
+            type="button"
+            onClick={() => resendCode(otpChannel === "sms" ? "email" : "sms")}
+            disabled={resending}
+            className="btn-ghost-dark btn-sm w-full"
+          >
+            {otpChannel === "sms" ? "Send to my email instead" : `Send to ${maskedPhone} instead`}
+          </button>
+        )}
       </form>
     );
   }
@@ -187,9 +199,30 @@ export function SignUpForm({ next }: { next?: string }) {
         onConfirmChange={setConfirmPassword}
       />
 
+
+      <div>
+        <label className="label">Send my code via</label>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setOtpChannel("sms")}
+            className={`btn-md flex-1 ${otpChannel === "sms" ? "btn-gold" : "btn-ghost-dark"}`}
+          >
+            SMS
+          </button>
+          <button
+            type="button"
+            onClick={() => setOtpChannel("email")}
+            className={`btn-md flex-1 ${otpChannel === "email" ? "btn-gold" : "btn-ghost-dark"}`}
+          >
+            Email
+          </button>
+        </div>
+      </div>
+
       {err && <div className="rounded-xl bg-crimson/5 border border-crimson/20 text-crimson text-sm px-4 py-3 font-semibold">{err}</div>}
 
-      <button type="submit" disabled={busy || !canSubmit} className="btn-primary btn-lg w-full">
+      <button type="submit" disabled={busy || !canSubmit} className="btn-gold btn-lg w-full">
         {busy && <span className="spinner" />}
         {busy ? "Creating account..." : "Create account"}
       </button>

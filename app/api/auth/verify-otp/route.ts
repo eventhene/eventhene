@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     if (channel === "sms" && !user.phoneVerified) {
       await db.user.update({ where: { id: user.id }, data: { phoneVerified: true } });
     }
-    if (!user.emailVerified) {
+    if (channel === "email" && !user.emailVerified) {
       await db.user.update({ where: { id: user.id }, data: { emailVerified: true } });
     }
 

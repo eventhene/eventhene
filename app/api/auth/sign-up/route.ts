@@ -11,14 +11,16 @@ const Body = z.object({
   country: z.string().length(2).optional(),
   currency: z.string().length(3).optional(),
   timezone: z.string().max(60).optional(),
+  otpChannel: z.enum(["email", "sms"]).optional(),
 });
 
 export async function POST(req: NextRequest) {
   try {
     const data = Body.parse(await req.json());
-    const { user } = await signUpUser({ ...data });
+    const { otpChannel, ...account } = data;
+    const { user } = await signUpUser({ ...account });
 
-    const channel: "sms" | "email" = user.phone ? "sms" : "email";
+    const channel: "sms" | "email" = otpChannel === "email" ? "email" : user.phone ? "sms" : "email";
     const destination = channel === "sms" ? user.phone! : user.email;
     await createAndSendOtp(user.id, channel, destination);
 
