@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { Loader2, Upload, X, Image as ImageIcon } from "lucide-react";
 
 const CATEGORIES = ["Music", "Faith", "Conference", "Sports", "Comedy", "Wedding", "Party", "Other"];
 const FIELD_OPTIONS = [
@@ -45,6 +46,9 @@ export function CreateEventForm() {
   const [endsAt, setEndsAt] = useState("");
   const [bookingClosesAt, setBookingClosesAt] = useState("");
   const [flyerUrl, setFlyerUrl] = useState("");
+  const [flyerPreview, setFlyerPreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
   const [type, setType] = useState<"PAID" | "FREE">("PAID");
   const [buyerPaysFee, setBuyerPaysFee] = useState(true);
   const [couponCode, setCouponCode] = useState("");
@@ -70,6 +74,37 @@ export function CreateEventForm() {
       setCouponValid(false);
       setCouponMsg("Could not verify coupon");
     }
+  }
+
+  async function handleFlyerUpload(file: File) {
+    if (file.size > 5 * 1024 * 1024) {
+      setErr("Flyer must be under 5 MB");
+      return;
+    }
+    setUploading(true);
+    setErr(null);
+    const preview = URL.createObjectURL(file);
+    setFlyerPreview(preview);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload/flyer", { method: "POST", credentials: "include", body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Upload failed");
+      setFlyerUrl(data.url);
+    } catch (e: any) {
+      setErr(e.message);
+      setFlyerPreview(null);
+      setFlyerUrl("");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function removeFlyerUpload() {
+    setFlyerUrl("");
+    setFlyerPreview(null);
+    if (fileRef.current) fileRef.current.value = "";
   }
 
   function addTicket() {
@@ -187,9 +222,55 @@ export function CreateEventForm() {
           <textarea required value={description} onChange={(e) => setDescription(e.target.value)} className="input" rows={5} placeholder="What's the event about? Lineup, what to expect, dress code, anything special." />
         </div>
         <div>
-          <label className="label">Flyer image URL (optional for now)</label>
-          <input value={flyerUrl} onChange={(e) => setFlyerUrl(e.target.value)} className="input" placeholder="https://..." />
-          <p className="help">Paste a link to your flyer (we'll add direct upload in a moment).</p>
+          <label className="label">Event flyer (optional)</label>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handleFlyerUpload(f);
+            }}
+          />
+          {flyerPreview || flyerUrl ? (
+            <div className="relative rounded-xl overflow-hidden border border-border group">
+              <img
+                src={flyerPreview || flyerUrl}
+                alt="Flyer preview"
+                className="w-full max-h-64 object-contain bg-black/5"
+              />
+              {uploading && (
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                  <Loader2 className="w-6 h-6 animate-spin text-white" />
+                  <span className="ml-2 text-white text-sm font-semibold">Uploading...</span>
+                </div>
+              )}
+              {!uploading && (
+                <button
+                  type="button"
+                  onClick={removeFlyerUpload}
+                  className="absolute top-2 right-2 p-1.5 rounded-full bg-black/70 text-white hover:bg-black transition opacity-0 group-hover:opacity-100"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="w-full border-2 border-dashed border-border rounded-xl p-8 flex flex-col items-center gap-3 hover:border-ink/30 transition cursor-pointer"
+            >
+              <div className="w-12 h-12 rounded-xl bg-ink/5 flex items-center justify-center">
+                <ImageIcon className="w-6 h-6 text-ink-muted" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-semibold text-ink">Click to upload your flyer</p>
+                <p className="text-xs text-ink-muted mt-1">JPG, PNG, or WebP - max 5 MB</p>
+              </div>
+            </button>
+          )}
         </div>
       </section>
 
@@ -282,16 +363,25 @@ export function CreateEventForm() {
         {fields.length > 0 && (
           <div className="space-y-2 pt-4 border-t border-border">
             {fields.map((f, i) => (
-              <div key={f.key} className="flex items-center justify-between text-sm">
-                <span>{f.label} <span className="text-ink-muted text-xs">({f.type.toLowerCase()})</span></span>
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" checked={f.required} onChange={() => toggleRequired(i)} />
-                  Required
-                </label>
+              <div key={`${f.key}-${i}`} className="flex items-center justify-between text-sm gap-2">
+                <span className="truncate">{f.label} <span className="text-ink-muted text-xs">({f.type.toLowerCase()})</span></span>
+                <div className="flex items-center gap-3 shrink-0">
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" checked={f.required} onChange={() => toggleRequired(i)} />
+                    Required
+                  </label>
+                  {f.key === "CUSTOM" && (
+                    <button type="button" onClick={() => setFields(fields.filter((_, idx) => idx !== i))} className="text-xs text-red-500 hover:text-red-400">Remove</button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
         )}
+        <div className="pt-3">
+          <p className="text-xs text-ink-muted mb-2">Need a custom field? Add your own below.</p>
+          <CustomFieldAdder onAdd={(f) => setFields([...fields, f])} />
+        </div>
       </section>
 
       {/* SECTION: Coupon code */}
@@ -319,14 +409,86 @@ export function CreateEventForm() {
       {err && <div className="rounded-xl bg-crimson/5 border border-crimson/20 text-crimson text-sm px-4 py-3 font-semibold">{err}</div>}
 
       <div className="flex gap-3">
-        <button type="submit" disabled={busy} className="btn-primary btn-xl flex-1">
-          {busy && <span className="spinner" />}
-          {busy ? "Publishing..." : (type === "FREE" && !couponValid) ? "Submit for review" : "Publish event"}
+        <button type="submit" disabled={busy || uploading} className="btn-primary btn-xl flex-1 flex items-center justify-center gap-2">
+          {busy ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Publishing...
+            </>
+          ) : (type === "FREE" && !couponValid) ? "Submit for review" : "Publish event"}
         </button>
       </div>
       <p className="text-xs text-ink-muted text-center font-medium">
         {type === "FREE" && !couponValid ? "Free events go live after a quick review (usually under 24 hours)." : "Your event will publish instantly."}
       </p>
     </form>
+  );
+}
+
+const CUSTOM_TYPES = [
+  { value: "TEXT", label: "Text" },
+  { value: "NUMBER", label: "Number" },
+  { value: "SELECT", label: "Dropdown" },
+  { value: "TEXTAREA", label: "Long text" },
+  { value: "DATE", label: "Date" },
+];
+
+function CustomFieldAdder({ onAdd }: { onAdd: (f: FieldRow) => void }) {
+  const [open, setOpen] = useState(false);
+  const [label, setLabel] = useState("");
+  const [type, setType] = useState("TEXT");
+  const [required, setRequired] = useState(false);
+  const [optionsText, setOptionsText] = useState("");
+
+  function add() {
+    if (!label.trim()) return;
+    const options = type === "SELECT" ? optionsText.split(",").map((o) => o.trim()).filter(Boolean) : [];
+    onAdd({ key: "CUSTOM", label: label.trim(), type, required, options });
+    setLabel("");
+    setType("TEXT");
+    setRequired(false);
+    setOptionsText("");
+    setOpen(false);
+  }
+
+  if (!open) {
+    return (
+      <button type="button" onClick={() => setOpen(true)} className="btn-ghost btn-sm text-xs">
+        + Add custom field
+      </button>
+    );
+  }
+
+  return (
+    <div className="border border-border rounded-xl p-4 space-y-3 bg-white/50">
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="label text-xs">Field label</label>
+          <input value={label} onChange={(e) => setLabel(e.target.value)} className="input text-sm" placeholder="e.g. T-shirt size" />
+        </div>
+        <div>
+          <label className="label text-xs">Type</label>
+          <select value={type} onChange={(e) => setType(e.target.value)} className="input text-sm">
+            {CUSTOM_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+          </select>
+        </div>
+      </div>
+      {type === "SELECT" && (
+        <div>
+          <label className="label text-xs">Options (comma-separated)</label>
+          <input value={optionsText} onChange={(e) => setOptionsText(e.target.value)} className="input text-sm" placeholder="Small, Medium, Large, XL" />
+        </div>
+      )}
+      <div className="flex items-center justify-between">
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={required} onChange={(e) => setRequired(e.target.checked)} />
+          Required
+        </label>
+        <div className="flex gap-2">
+          <button type="button" onClick={() => setOpen(false)} className="btn-ghost btn-sm text-xs">Cancel</button>
+          <button type="button" onClick={add} disabled={!label.trim()} className="btn-primary btn-sm text-xs">Add field</button>
+        </div>
+      </div>
+    </div>
   );
 }
