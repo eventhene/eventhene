@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { db } from "@/lib/db";
 import { requireUserOrRedirect } from "@/lib/auth";
 import { OnboardingForm } from "@/components/onboarding/OnboardingForm";
 import { Logo } from "@/components/Logo";
+import { SignOutButton } from "@/components/SignOutButton";
 
 export const metadata = { title: "Welcome" };
 export const dynamic = "force-dynamic";
@@ -25,7 +25,7 @@ export default async function OnboardingPage() {
           <OnboardingForm />
         </div>
         <p className="text-center text-xs text-white/30 mt-6">
-          <Link href="/api/auth/sign-out" className="underline hover:text-white/50 transition">Sign out</Link>
+          <SignOutButton className="underline hover:text-white/50 transition" showIcon={false} />
         </p>
       </div>
     </div>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireUserOrRedirect, isAdmin } from "@/lib/auth";
 import { Logo } from "@/components/Logo";
+import { SignOutButton } from "@/components/SignOutButton";
 import {
   LayoutDashboard,
   CalendarDays,
@@ -11,7 +12,6 @@ import {
   Briefcase,
   Shield,
   ArrowLeft,
-  LogOut,
   ListChecks,
 } from "lucide-react";
 
@@ -43,13 +43,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
             <SideSection label="Account" />
             <NavLink href="/dashboard" icon={<ArrowLeft className="w-[18px] h-[18px]" />}>My dashboard</NavLink>
-            <Link
-              href="/api/auth/sign-out"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/40 hover:text-white/70 hover:bg-white/5 transition font-medium"
-            >
-              <LogOut className="w-[18px] h-[18px]" />
-              Sign out
-            </Link>
+            <SignOutButton className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/40 hover:text-white/70 hover:bg-white/5 transition font-medium w-full text-left" />
           </div>
 
           <div className="mt-4 rounded-xl bg-white/5 border border-white/8 p-4">

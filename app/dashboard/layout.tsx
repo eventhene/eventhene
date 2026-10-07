@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireUserOrRedirect } from "@/lib/auth";
 import { Logo } from "@/components/Logo";
+import { SignOutButton } from "@/components/SignOutButton";
 import {
   LayoutDashboard,
   CalendarDays,
@@ -12,7 +13,6 @@ import {
   Users,
   Briefcase,
   Settings,
-  LogOut,
 } from "lucide-react";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -40,13 +40,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
             <SideSection label="Account" />
             <NavLink href="/dashboard/settings" icon={<Settings className="w-[18px] h-[18px]" />}>Settings</NavLink>
-            <Link
-              href="/api/auth/sign-out"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/40 hover:text-white/70 hover:bg-white/5 transition font-medium"
-            >
-              <LogOut className="w-[18px] h-[18px]" />
-              Sign out
-            </Link>
+            <SignOutButton className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/40 hover:text-white/70 hover:bg-white/5 transition font-medium w-full text-left" />
           </div>
 
           <div className="mt-4 rounded-xl bg-white/5 border border-white/8 p-4">
@@ -65,7 +59,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       <header className="md:hidden sticky top-0 z-30 glass-dark px-4 py-3 flex items-center justify-between">
         <Logo invert size="sm" />
-        <Link href="/api/auth/sign-out" className="text-xs text-white/40 font-semibold hover:text-white/60 transition">Sign out</Link>
+        <SignOutButton className="text-xs text-white/40 font-semibold hover:text-white/60 transition" showIcon={false} />
       </header>
 
       <main className="md:ml-[260px] p-5 md:p-10 pb-24 md:pb-10 max-w-6xl">

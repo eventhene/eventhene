@@ -2,6 +2,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { requireUserOrRedirect, isAdmin } from "@/lib/auth";
 import { Logo } from "@/components/Logo";
+import { SignOutButton } from "@/components/SignOutButton";
 import { formatDateShort } from "@/lib/utils";
 
 export const metadata = { title: "Scan tickets" };
@@ -58,7 +59,7 @@ export default async function ScanPicker() {
 
         <div className="mt-10 flex gap-2 text-sm">
           <Link href="/dashboard" className="btn-ghost-dark btn-md">Dashboard</Link>
-          <Link href="/api/auth/sign-out" className="btn-ghost-dark btn-md">Sign out</Link>
+          <SignOutButton className="btn-ghost-dark btn-md" showIcon={false} />
         </div>
       </div>
     </div>

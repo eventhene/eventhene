@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { requireUserOrRedirect } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { SignOutButton } from "@/components/SignOutButton";
 
 export const metadata = { title: "Settings" };
 export const dynamic = "force-dynamic";
@@ -22,7 +22,7 @@ export default async function SettingsPage() {
         {organizer && <Row label="Organizer" value={organizer.displayName} />}
         {organizer && <Row label="Public URL" value={`/@${organizer.slug}`} mono />}
       </div>
-      <Link href="/api/auth/sign-out" className="btn-ghost btn-md">Sign out</Link>
+      <SignOutButton className="btn-ghost btn-md" showIcon={false} />
     </div>
   );
 }
