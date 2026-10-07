@@ -14,10 +14,7 @@ export async function POST(req: NextRequest) {
     const user = await db.user.findUnique({ where: { email: data.email.trim().toLowerCase() } });
     if (!user) return NextResponse.json({ error: "No account found." }, { status: 404 });
 
-    const channel = data.channel || "email";
-    if (channel === "sms" && !user.phone) {
-      return NextResponse.json({ error: "No phone number on file." }, { status: 400 });
-    }
+    const channel: "sms" | "email" = (data.channel === "email") ? "email" : (user.phone ? "sms" : "email");
     const destination = channel === "sms" ? user.phone! : user.email;
     const result = await createAndSendOtp(user.id, channel, destination);
     return NextResponse.json({ ok: true, ...result });

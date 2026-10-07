@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
       await sendEmail({
         to: adminEmail,
         subject: `New service inquiry: ${data.serviceType}`,
-        html: `<p>From ${data.contactName} (${data.contactEmail})</p><p>${data.message}</p><p><a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/services">View in admin</a></p>`
+        html: `<p>From ${data.contactName} (${data.contactEmail})</p><p>${data.message}</p><p><a href="${process.env.NEXT_PUBLIC_APP_URL}/superadmin/services">View in admin</a></p>`
       }).catch(() => {});
     }
     return NextResponse.json({ id: inquiry.id }, { status: 201 });

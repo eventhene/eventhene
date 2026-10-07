@@ -12,7 +12,6 @@ function maskPhone(phone: string): string {
 const Body = z.object({
   email: z.string().email(),
   password: z.string().min(1).max(200),
-  otpChannel: z.enum(["email", "sms"]).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -25,10 +24,7 @@ export async function POST(req: NextRequest) {
     const ok = await verifyPassword(data.password, user.passwordHash);
     if (!ok) return NextResponse.json({ error: "Incorrect password." }, { status: 400 });
 
-    const channel = data.otpChannel || "email";
-    if (channel === "sms" && !user.phone) {
-      return NextResponse.json({ error: "No phone number on file. Use email verification." }, { status: 400 });
-    }
+    const channel: "sms" | "email" = user.phone ? "sms" : "email";
     const destination = channel === "sms" ? user.phone! : user.email;
     await createAndSendOtp(user.id, channel, destination);
 

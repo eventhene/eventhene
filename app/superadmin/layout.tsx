@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const user = await requireUserOrRedirect("/admin");
+  const user = await requireUserOrRedirect("/superadmin");
   if (!isAdmin(user.role)) redirect("/dashboard");
 
   return (
@@ -31,15 +31,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
           <div className="mt-6 flex-1 flex flex-col gap-0.5">
             <SideSection label="Manage" />
-            <NavLink href="/admin" icon={<LayoutDashboard className="w-[18px] h-[18px]" />}>Overview</NavLink>
-            <NavLink href="/admin/free-events" icon={<ListChecks className="w-[18px] h-[18px]" />}>Free event queue</NavLink>
-            <NavLink href="/admin/events" icon={<CalendarDays className="w-[18px] h-[18px]" />}>All events</NavLink>
-            <NavLink href="/admin/organizers" icon={<Users className="w-[18px] h-[18px]" />}>Organizers</NavLink>
+            <NavLink href="/superadmin" icon={<LayoutDashboard className="w-[18px] h-[18px]" />}>Overview</NavLink>
+            <NavLink href="/superadmin/free-events" icon={<ListChecks className="w-[18px] h-[18px]" />}>Free event queue</NavLink>
+            <NavLink href="/superadmin/events" icon={<CalendarDays className="w-[18px] h-[18px]" />}>All events</NavLink>
+            <NavLink href="/superadmin/organizers" icon={<Users className="w-[18px] h-[18px]" />}>Organizers</NavLink>
 
             <SideSection label="Operations" />
-            <NavLink href="/admin/sms" icon={<MessageSquare className="w-[18px] h-[18px]" />}>SMS and Sender IDs</NavLink>
-            <NavLink href="/admin/services" icon={<Briefcase className="w-[18px] h-[18px]" />}>Service inquiries</NavLink>
-            <NavLink href="/admin/support" icon={<Headphones className="w-[18px] h-[18px]" />}>Support</NavLink>
+            <NavLink href="/superadmin/sms" icon={<MessageSquare className="w-[18px] h-[18px]" />}>SMS and Sender IDs</NavLink>
+            <NavLink href="/superadmin/services" icon={<Briefcase className="w-[18px] h-[18px]" />}>Service inquiries</NavLink>
+            <NavLink href="/superadmin/support" icon={<Headphones className="w-[18px] h-[18px]" />}>Support</NavLink>
 
             <SideSection label="Account" />
             <NavLink href="/dashboard" icon={<ArrowLeft className="w-[18px] h-[18px]" />}>My dashboard</NavLink>

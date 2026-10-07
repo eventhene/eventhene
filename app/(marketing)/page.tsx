@@ -51,7 +51,7 @@ export default async function HomePage() {
           </div>
 
           {/* Glassmorphic stat cards */}
-          <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl">
+          <div className="mt-10 sm:mt-16 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl">
             {[
               { value: "5 min", label: "to publish" },
               { value: "Free", label: "to list events" },
@@ -60,9 +60,9 @@ export default async function HomePage() {
             ].map((s) => (
               <div
                 key={s.label}
-                className="card-glass rounded-2xl p-4"
+                className="card-glass rounded-2xl p-3 sm:p-4"
               >
-                <p className="font-extrabold text-2xl md:text-3xl text-white tracking-tight">{s.value}</p>
+                <p className="font-extrabold text-xl sm:text-2xl md:text-3xl text-white tracking-tight">{s.value}</p>
                 <p className="text-[11px] text-white/40 uppercase tracking-widest mt-1 font-semibold">{s.label}</p>
               </div>
             ))}
@@ -113,13 +113,13 @@ export default async function HomePage() {
       </section>
 
       {/* ============ CATEGORY STRIPS ============ */}
-      <section className="py-20 overflow-hidden">
+      <section className="py-14 md:py-20 overflow-hidden">
         <div className="section mb-10">
           <p className="text-sm font-semibold text-accent uppercase tracking-wide mb-3">Explore</p>
           <h2 className="h-section text-white">Find your kind of event.</h2>
         </div>
         <div className="section">
-          <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
             {[
               { label: "Music & Concerts", img: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=400&q=80" },
               { label: "Faith & Worship", img: "https://images.unsplash.com/photo-1507692049790-de58290a4334?w=400&q=80" },
@@ -148,7 +148,7 @@ export default async function HomePage() {
       </section>
 
       {/* ============ TICKET SHOWCASE ============ */}
-      <section className="relative py-28">
+      <section className="relative py-16 md:py-28">
         <div className="section">
           <ScrollReveal>
             <div className="max-w-2xl">
@@ -162,7 +162,7 @@ export default async function HomePage() {
               </p>
             </div>
 
-            <div className="mt-16 grid md:grid-cols-3 gap-6 items-end">
+            <div className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-6 items-end">
               <TicketCard3D variant="regular" />
               <TicketCard3D variant="vip" featured />
               <TicketCard3D variant="vvip" />
@@ -172,14 +172,14 @@ export default async function HomePage() {
       </section>
 
       {/* ============ FEATURE GRID ============ */}
-      <section className="section py-28">
-        <div className="max-w-3xl mb-16">
+      <section className="section py-16 md:py-28">
+        <div className="max-w-3xl mb-10 md:mb-16">
           <p className="text-sm font-semibold text-accent uppercase tracking-wide mb-4">What's inside</p>
           <h2 className="h-section text-white">Everything you need, nothing you don't.</h2>
         </div>
 
-        <div className="grid md:grid-cols-6 gap-4">
-          <FeatureCard className="md:col-span-4" icon={<MessageSquare className="w-5 h-5 text-accent" />} label="Bulk SMS" title="Instant broadcasts to every registrant">
+        <div className="grid sm:grid-cols-2 md:grid-cols-6 gap-4">
+          <FeatureCard className="sm:col-span-2 md:col-span-4" icon={<MessageSquare className="w-5 h-5 text-accent" />} label="Bulk SMS" title="Instant broadcasts to every registrant">
             <SmsPreview />
           </FeatureCard>
           <FeatureCard className="md:col-span-2" icon={<QrCode className="w-5 h-5 text-emerald" />} label="QR Check-in" title="Scan at the gate, instant verdict.">
@@ -188,7 +188,7 @@ export default async function HomePage() {
           <FeatureCard className="md:col-span-2" icon={<Users className="w-5 h-5 text-sky" />} label="Registration" title="Collect exactly the fields you want.">
             <FieldPreview />
           </FeatureCard>
-          <FeatureCard className="md:col-span-4" icon={<BarChart3 className="w-5 h-5 text-accent" />} label="Attendance" title="Live dashboard, export anytime.">
+          <FeatureCard className="sm:col-span-2 md:col-span-4" icon={<BarChart3 className="w-5 h-5 text-accent" />} label="Attendance" title="Live dashboard, export anytime.">
             <DashboardPreview />
           </FeatureCard>
         </div>
@@ -196,7 +196,7 @@ export default async function HomePage() {
 
       {/* ============ FEATURED EVENTS ============ */}
       {featured.length > 0 && (
-        <section className="py-28">
+        <section className="py-16 md:py-28">
           <div className="section">
             <div className="flex items-end justify-between mb-10">
               <div>
@@ -207,7 +207,7 @@ export default async function HomePage() {
                 See all <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
-            <div className="grid md:grid-cols-3 gap-5">
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-5">
               {featured.map((e) => {
                 const min = Math.min(...e.ticketTypes.map((t) => t.priceMinor));
                 return (
@@ -245,8 +245,8 @@ export default async function HomePage() {
       )}
 
       {/* ============ SERVICES STRIP ============ */}
-      <section className="section py-28">
-        <div className="grid md:grid-cols-[1.1fr,1fr] gap-16 items-center">
+      <section className="section py-16 md:py-28">
+        <div className="grid md:grid-cols-[1.1fr,1fr] gap-10 md:gap-16 items-center">
           <div>
             <p className="text-sm font-semibold text-accent uppercase tracking-wide mb-4">Need more?</p>
             <h2 className="h-section text-white text-balance">
@@ -289,7 +289,7 @@ export default async function HomePage() {
           <div className="absolute inset-0 bg-black/70" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0c] via-transparent to-[#0a0a0c]/50" />
         </div>
-        <div className="section py-32 relative text-center">
+        <div className="section py-20 md:py-32 relative text-center">
           <h2 className="h-hero text-white text-balance">
             Your next event,{" "}
             <span className="text-accent">elevated.</span>
@@ -379,7 +379,7 @@ function FieldPreview() {
 
 function DashboardPreview() {
   return (
-    <div className="grid grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {[
         { v: "342", l: "Registered" },
         { v: "289", l: "Attended" },
@@ -387,7 +387,7 @@ function DashboardPreview() {
         { v: "84%", l: "Show rate" },
       ].map((k) => (
         <div key={k.l} className="rounded-xl bg-white/5 p-4 border border-white/5">
-          <p className="font-extrabold text-2xl text-white tracking-tight">{k.v}</p>
+          <p className="font-extrabold text-xl sm:text-2xl text-white tracking-tight">{k.v}</p>
           <p className="text-xs text-white/40 mt-1 font-medium">{k.l}</p>
         </div>
       ))}

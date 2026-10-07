@@ -15,7 +15,7 @@ export function SignUpForm({ next }: { next?: string }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  const [otpChannel, setOtpChannel] = useState<"email" | "sms">("email");
+  const [otpChannel, setOtpChannel] = useState<"email" | "sms">("sms");
   const [maskedPhone, setMaskedPhone] = useState<string | null>(null);
   const [otpCode, setOtpCode] = useState("");
   const [otpBusy, setOtpBusy] = useState(false);
@@ -138,16 +138,6 @@ export function SignUpForm({ next }: { next?: string }) {
         <button type="button" onClick={() => resendCode()} disabled={resending} className="btn-ghost btn-md w-full">
           {resending ? "Sending..." : "Resend code"}
         </button>
-        {maskedPhone && (
-          <button
-            type="button"
-            onClick={() => resendCode(otpChannel === "sms" ? "email" : "sms")}
-            disabled={resending}
-            className="btn-ghost btn-sm w-full text-ink-muted"
-          >
-            {otpChannel === "sms" ? "Send to email instead" : `Send to ${maskedPhone} instead`}
-          </button>
-        )}
       </form>
     );
   }

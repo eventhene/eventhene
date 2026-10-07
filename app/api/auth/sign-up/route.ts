@@ -18,14 +18,16 @@ export async function POST(req: NextRequest) {
     const data = Body.parse(await req.json());
     const { user } = await signUpUser({ ...data });
 
-    await createAndSendOtp(user.id, "email", user.email);
+    const channel: "sms" | "email" = user.phone ? "sms" : "email";
+    const destination = channel === "sms" ? user.phone! : user.email;
+    await createAndSendOtp(user.id, channel, destination);
 
     return NextResponse.json({
       ok: true,
       needsVerification: true,
       email: user.email,
       phone: user.phone ? "****" + user.phone.slice(-4) : null,
-      otpChannel: "email",
+      otpChannel: channel,
     });
   } catch (e: any) {
     if (e instanceof z.ZodError) {
