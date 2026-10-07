@@ -121,10 +121,7 @@ export async function readSession() {
     } catch {}
   }
 
-  if (!raw) {
-    console.error("[session] readSession: no cookie found");
-    return null;
-  }
+  if (!raw) return null;
   return verifySessionJwt(raw);
 }
 
@@ -152,9 +149,6 @@ export async function readSessionFromRequest(req: {
     } catch {}
   }
 
-  if (!raw) {
-    console.error("[session] readSessionFromRequest: no cookie found");
-    return null;
-  }
+  if (!raw) return null;
   return verifySessionJwt(raw);
 }
