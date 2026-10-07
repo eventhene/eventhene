@@ -10,10 +10,11 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
   return bcrypt.compare(password, hash);
 }
 
-/** Minimum: 8 chars, with at least a letter and a number. */
 export function validatePasswordStrength(password: string): { ok: boolean; reason?: string } {
   if (password.length < 8) return { ok: false, reason: "Password must be at least 8 characters." };
-  if (!/[A-Za-z]/.test(password)) return { ok: false, reason: "Password needs at least one letter." };
+  if (!/[A-Z]/.test(password)) return { ok: false, reason: "Password needs at least one uppercase letter." };
+  if (!/[a-z]/.test(password)) return { ok: false, reason: "Password needs at least one lowercase letter." };
   if (!/\d/.test(password)) return { ok: false, reason: "Password needs at least one number." };
+  if (!/[^A-Za-z0-9]/.test(password)) return { ok: false, reason: "Password needs at least one symbol." };
   return { ok: true };
 }

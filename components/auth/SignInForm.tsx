@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 
 export function SignInForm({ next }: { next?: string }) {
   const router = useRouter();
@@ -149,25 +150,26 @@ export function SignInForm({ next }: { next?: string }) {
         />
       </div>
       <div>
-        <div className="flex items-center justify-between mb-2">
-          <label className="label mb-0">Password</label>
+        <label className="label">Password</label>
+        <div className="relative">
+          <input
+            type={showPw ? "text" : "password"}
+            required
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="input pr-12"
+            placeholder="Your password"
+          />
           <button
             type="button"
             onClick={() => setShowPw((v) => !v)}
-            className="text-[11px] text-ink-muted hover:text-ink"
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-ink-muted hover:text-ink hover:bg-black/5 transition"
+            title={showPw ? "Hide password" : "Show password"}
           >
-            {showPw ? "Hide" : "Show"}
+            {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
-        <input
-          type={showPw ? "text" : "password"}
-          required
-          autoComplete="current-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="input"
-          placeholder="Your password"
-        />
       </div>
 
       <div>

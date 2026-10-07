@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { PasswordInput, RULES } from "./PasswordInput";
 
 export function SignUpForm({ next }: { next?: string }) {
   const router = useRouter();
@@ -10,7 +11,7 @@ export function SignUpForm({ next }: { next?: string }) {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const [showPw, setShowPw] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -21,8 +22,16 @@ export function SignUpForm({ next }: { next?: string }) {
   const [otpErr, setOtpErr] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
 
+  const allRulesPassed = RULES.every((r) => r.test(password));
+  const passwordsMatch = password === confirmPassword;
+  const canSubmit = allRulesPassed && passwordsMatch && confirmPassword.length > 0;
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!canSubmit) {
+      setErr("Please fix the password requirements above.");
+      return;
+    }
     setBusy(true);
     setErr(null);
     try {
@@ -180,33 +189,17 @@ export function SignUpForm({ next }: { next?: string }) {
           placeholder="0241234567"
         />
       </div>
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <label className="label mb-0">Password</label>
-          <button
-            type="button"
-            onClick={() => setShowPw((v) => !v)}
-            className="text-[11px] text-ink-muted hover:text-ink"
-          >
-            {showPw ? "Hide" : "Show"}
-          </button>
-        </div>
-        <input
-          type={showPw ? "text" : "password"}
-          required
-          minLength={8}
-          autoComplete="new-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="input"
-          placeholder="At least 8 characters"
-        />
-        <p className="help">8+ characters, with at least one letter and one number.</p>
-      </div>
+
+      <PasswordInput
+        value={password}
+        onChange={setPassword}
+        confirmValue={confirmPassword}
+        onConfirmChange={setConfirmPassword}
+      />
 
       {err && <div className="rounded-xl bg-crimson/5 border border-crimson/20 text-crimson text-sm px-4 py-3 font-semibold">{err}</div>}
 
-      <button type="submit" disabled={busy} className="btn-primary btn-lg w-full">
+      <button type="submit" disabled={busy || !canSubmit} className="btn-primary btn-lg w-full">
         {busy && <span className="spinner" />}
         {busy ? "Creating account..." : "Create account"}
       </button>
