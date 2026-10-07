@@ -1,6 +1,7 @@
 import { requireUserOrRedirect } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { SignOutButton } from "@/components/SignOutButton";
+import { SettingsForm } from "@/components/settings/SettingsForm";
 
 export const metadata = { title: "Settings" };
 export const dynamic = "force-dynamic";
@@ -10,28 +11,32 @@ export default async function SettingsPage() {
   const organizer = await db.organizer.findUnique({ where: { userId: user.id } });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <p className="text-sm text-ink-muted">Account</p>
-        <h1 className="h-section mt-1">Settings</h1>
+        <p className="text-sm text-white/40">Account</p>
+        <h1 className="h-section mt-1 text-white">Settings</h1>
       </div>
-      <div className="card p-6 space-y-3">
-        <Row label="Name" value={user.fullName ?? "-"} />
-        <Row label="Email" value={user.email} />
-        <Row label="Role" value={user.role} />
-        {organizer && <Row label="Organizer" value={organizer.displayName} />}
-        {organizer && <Row label="Public URL" value={`/@${organizer.slug}`} mono />}
-      </div>
-      <SignOutButton className="btn-ghost btn-md" showIcon={false} />
-    </div>
-  );
-}
 
-function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
-  return (
-    <div className="flex items-center justify-between py-2 border-b border-border last:border-0">
-      <span className="text-sm text-ink-muted">{label}</span>
-      <span className={`text-sm ${mono ? "font-mono" : ""}`}>{value}</span>
+      <SettingsForm
+        user={{
+          id: user.id,
+          fullName: user.fullName,
+          email: user.email,
+          phone: user.phone,
+          role: user.role,
+        }}
+        organizer={organizer ? {
+          id: organizer.id,
+          displayName: organizer.displayName,
+          slug: organizer.slug,
+          bio: organizer.bio,
+          website: organizer.website,
+        } : null}
+      />
+
+      <hr className="border-white/10" />
+
+      <SignOutButton className="btn-ghost btn-md text-white/40 hover:text-white/70" showIcon={false} />
     </div>
   );
 }
