@@ -22,6 +22,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: result.reason, valid: false }, { status: 400 });
     }
 
+    if (channel === "sms" && !user.phoneVerified) {
+      await db.user.update({ where: { id: user.id }, data: { phoneVerified: true } });
+    }
     if (!user.emailVerified) {
       await db.user.update({ where: { id: user.id }, data: { emailVerified: true } });
     }
