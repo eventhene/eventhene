@@ -14,6 +14,8 @@ export function SignUpForm({ next }: { next?: string }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
+  const [otpChannel, setOtpChannel] = useState<"email" | "sms">("email");
+  const [maskedPhone, setMaskedPhone] = useState<string | null>(null);
   const [otpCode, setOtpCode] = useState("");
   const [otpBusy, setOtpBusy] = useState(false);
   const [otpErr, setOtpErr] = useState<string | null>(null);
@@ -40,6 +42,7 @@ export function SignUpForm({ next }: { next?: string }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Sign-up failed");
+      if (data.phone) setMaskedPhone(data.phone);
       setStep("otp");
     } catch (e: any) {
       setErr(e.message);
@@ -57,7 +60,7 @@ export function SignUpForm({ next }: { next?: string }) {
         method: "POST",
         credentials: "include",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email, code: otpCode }),
+        body: JSON.stringify({ email, code: otpCode, channel: otpChannel }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Verification failed");
@@ -69,7 +72,9 @@ export function SignUpForm({ next }: { next?: string }) {
     }
   }
 
-  async function resendCode() {
+  async function resendCode(channel?: "email" | "sms") {
+    const useChannel = channel || otpChannel;
+    if (channel) setOtpChannel(useChannel);
     setResending(true);
     setOtpErr(null);
     try {
@@ -77,7 +82,7 @@ export function SignUpForm({ next }: { next?: string }) {
         method: "POST",
         credentials: "include",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, channel: useChannel }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -95,7 +100,10 @@ export function SignUpForm({ next }: { next?: string }) {
       <form onSubmit={onVerifyOtp} className="space-y-4">
         <div className="text-center mb-2">
           <p className="text-sm text-ink-muted">
-            We sent a 6-digit code to <strong className="text-ink">{email}</strong>
+            We sent a 6-digit code to{" "}
+            <strong className="text-ink">
+              {otpChannel === "sms" ? maskedPhone : email}
+            </strong>
           </p>
         </div>
         <div>
@@ -118,9 +126,19 @@ export function SignUpForm({ next }: { next?: string }) {
           {otpBusy && <span className="spinner" />}
           {otpBusy ? "Verifying..." : "Verify and continue"}
         </button>
-        <button type="button" onClick={resendCode} disabled={resending} className="btn-ghost btn-md w-full">
+        <button type="button" onClick={() => resendCode()} disabled={resending} className="btn-ghost btn-md w-full">
           {resending ? "Sending..." : "Resend code"}
         </button>
+        {maskedPhone && (
+          <button
+            type="button"
+            onClick={() => resendCode(otpChannel === "sms" ? "email" : "sms")}
+            disabled={resending}
+            className="btn-ghost btn-sm w-full text-ink-muted"
+          >
+            {otpChannel === "sms" ? "Send to email instead" : `Send to ${maskedPhone} instead`}
+          </button>
+        )}
       </form>
     );
   }

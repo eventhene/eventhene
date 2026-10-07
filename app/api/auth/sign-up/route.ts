@@ -24,6 +24,8 @@ export async function POST(req: NextRequest) {
       ok: true,
       needsVerification: true,
       email: user.email,
+      phone: user.phone ? "****" + user.phone.slice(-4) : null,
+      otpChannel: "email",
     });
   } catch (e: any) {
     if (e instanceof z.ZodError) {

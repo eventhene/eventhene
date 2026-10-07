@@ -8,15 +8,16 @@ import { headers } from "next/headers";
 const Body = z.object({
   email: z.string().email(),
   code: z.string().min(4).max(8),
+  channel: z.enum(["email", "sms"]).optional(),
 });
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, code } = Body.parse(await req.json());
+    const { email, code, channel } = Body.parse(await req.json());
     const user = await db.user.findUnique({ where: { email: email.trim().toLowerCase() } });
     if (!user) return NextResponse.json({ error: "No account found." }, { status: 404 });
 
-    const result = await verifyOtp(user.id, "email", code);
+    const result = await verifyOtp(user.id, channel || "email", code);
     if (!result.valid) {
       return NextResponse.json({ error: result.reason, valid: false }, { status: 400 });
     }

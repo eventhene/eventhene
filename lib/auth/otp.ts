@@ -1,8 +1,8 @@
 import crypto from "crypto";
 import { db } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
+import { sendSMS } from "@/lib/sms/hubtel";
 
-const OTP_LENGTH = 6;
 const OTP_EXPIRY_MINUTES = 10;
 const MAX_ATTEMPTS = 5;
 
@@ -10,7 +10,9 @@ function generateOtp(): string {
   return crypto.randomInt(100000, 999999).toString();
 }
 
-export async function createAndSendOtp(userId: string, channel: "email", destination: string) {
+export type OtpChannel = "email" | "sms";
+
+export async function createAndSendOtp(userId: string, channel: OtpChannel, destination: string) {
   await db.otp.deleteMany({
     where: { userId, channel, verified: false },
   });
@@ -28,12 +30,18 @@ export async function createAndSendOtp(userId: string, channel: "email", destina
       subject: `${code} - Your EventHene verification code`,
       html: otpEmailTemplate(code),
     });
+  } else if (channel === "sms") {
+    const result = await sendSMS(destination, `Your EventHene code is ${code}. Expires in 10 minutes.`);
+    if (!result.ok) {
+      console.error("[otp] SMS send failed:", result.error);
+      throw new Error("Failed to send SMS. Please try email instead.");
+    }
   }
 
   return { sent: true, channel, expiresInSeconds: OTP_EXPIRY_MINUTES * 60 };
 }
 
-export async function verifyOtp(userId: string, channel: "email", code: string): Promise<{ valid: boolean; reason?: string }> {
+export async function verifyOtp(userId: string, channel: OtpChannel, code: string): Promise<{ valid: boolean; reason?: string }> {
   const otp = await db.otp.findFirst({
     where: { userId, channel, verified: false },
     orderBy: { createdAt: "desc" },
