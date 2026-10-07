@@ -162,7 +162,7 @@ export default async function HomePage() {
               </p>
             </div>
 
-            <div className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-6 items-end">
+            <div className="mt-16 flex flex-col gap-6 max-w-3xl mx-auto">
               <TicketCard3D variant="regular" />
               <TicketCard3D variant="vip" featured />
               <TicketCard3D variant="vvip" />
