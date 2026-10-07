@@ -225,8 +225,9 @@ export function Scanner({ eventId, eventTitle }: { eventId: string; eventTitle: 
         )}
       </div>
 
-      <footer className="relative z-10 px-5 py-3 text-center text-xs text-white/40 font-mono tracking-widest">
-        EVENTHENE SCANNER
+      <footer className="relative z-10 px-5 py-3 flex items-center justify-center gap-2">
+        <img src="/logo-icon.png" alt="" className="h-4 w-4 object-contain opacity-40" />
+        <span className="text-xs text-white/40 font-mono tracking-widest">EVENTHENE SCANNER</span>
       </footer>
     </div>
   );

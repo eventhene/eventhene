@@ -94,9 +94,7 @@ export function TicketCard3D({ variant, featured }: TicketCard3DProps) {
             {/* Top section */}
             <div>
               <div className="flex items-center justify-between mb-4">
-                <p className="text-[9px] uppercase tracking-[0.4em] font-bold text-[#D4A853]">
-                  EventHene
-                </p>
+                <img src="/logo-icon.png" alt="EventHene" className="h-5 w-5 object-contain" />
                 <span className={`text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${V.badge}`}>
                   {V.tier}
                 </span>

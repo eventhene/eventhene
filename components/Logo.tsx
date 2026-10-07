@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface LogoProps {
@@ -6,48 +7,37 @@ interface LogoProps {
   invert?: boolean;
   size?: "sm" | "md" | "lg";
   className?: string;
+  variant?: "icon" | "full";
 }
 
-export function Logo({ href = "/", invert = false, size = "md", className }: LogoProps) {
-  const sizes = {
-    sm: "text-[18px]",
-    md: "text-[22px]",
-    lg: "text-[30px]",
-  };
+const ICON_SIZES = { sm: 28, md: 34, lg: 44 };
+const FULL_SIZES = { sm: { w: 130, h: 32 }, md: { w: 160, h: 40 }, lg: { w: 200, h: 50 } };
+
+export function Logo({ href = "/", invert = false, size = "md", className, variant }: LogoProps) {
   const Wrapper: any = href ? Link : "span";
   const props = href ? { href } : {};
+
+  const mode = variant ?? "full";
+
+  if (mode === "icon") {
+    const s = ICON_SIZES[size];
+    return (
+      <Wrapper {...props} className={cn("inline-flex items-center", className)}>
+        <Image src="/logo-icon.png" alt="EventHene" width={s} height={s} className="object-contain" priority />
+      </Wrapper>
+    );
+  }
+
+  const { w, h } = FULL_SIZES[size];
   return (
-    <Wrapper
-      {...props}
-      className={cn(
-        "inline-flex items-center gap-2 font-extrabold tracking-tightest leading-none",
-        sizes[size],
-        invert ? "text-white" : "text-ink",
-        className
-      )}
-    >
-      <CrownMark className={cn("h-[1.1em] w-auto", "text-accent")} />
-      <span>Event<span className={invert ? "text-white/60" : "text-ink-muted"}>hene</span></span>
+    <Wrapper {...props} className={cn("inline-flex items-center", className)}>
+      <Image src="/logo-full.png" alt="EventHene" width={w} height={h} className="object-contain" priority />
     </Wrapper>
   );
 }
 
-export function CrownMark({ className }: { className?: string }) {
+export function LogoIcon({ size = 28, className }: { size?: number; className?: string }) {
   return (
-    <svg viewBox="0 0 32 32" fill="none" className={className} aria-hidden>
-      <defs>
-        <linearGradient id="crown-grad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="currentColor" />
-          <stop offset="1" stopColor="currentColor" stopOpacity="0.7" />
-        </linearGradient>
-      </defs>
-      <path
-        d="M4 10l5 7 7-10 7 10 5-7v12a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V10z"
-        fill="url(#crown-grad)"
-      />
-      <circle cx="4" cy="10" r="2" fill="currentColor" />
-      <circle cx="16" cy="7" r="2" fill="currentColor" />
-      <circle cx="28" cy="10" r="2" fill="currentColor" />
-    </svg>
+    <Image src="/logo-icon.png" alt="EventHene" width={size} height={size} className={cn("object-contain", className)} priority />
   );
 }

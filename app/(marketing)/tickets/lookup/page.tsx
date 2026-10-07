@@ -30,8 +30,8 @@ export default function TicketLookupPage() {
   return (
     <div className="section max-w-xl py-16">
       <div className="text-center mb-10">
-        <div className="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-5">
-          <Ticket className="w-7 h-7 text-accent" />
+        <div className="w-14 h-14 flex items-center justify-center mx-auto mb-5">
+          <img src="/logo-icon.png" alt="EventHene" className="w-12 h-12 object-contain" />
         </div>
         <h1 className="h-section text-white">Find my ticket</h1>
         <p className="text-white/40 mt-3 text-lg">
