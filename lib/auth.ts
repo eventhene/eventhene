@@ -8,6 +8,11 @@ import type { User, UserRole } from "@prisma/client";
 import { readSession, readSessionFromRequest, createSession, destroySession } from "./auth/session";
 import { hashPassword, verifyPassword, validatePasswordStrength } from "./auth/password";
 
+type ReqWithCookies = {
+  cookies: { get(name: string): { value: string } | undefined };
+  headers: { get(name: string): string | null };
+};
+
 export class ForbiddenError extends Error {
   constructor(msg = "Forbidden") {
     super(msg);
@@ -23,7 +28,7 @@ export class UnauthorizedError extends Error {
 }
 
 /** Returns the current signed-in user, or null. Pass req for reliable cookie reading in Route Handlers. */
-export async function getCurrentUser(req?: { cookies: { get(name: string): { value: string } | undefined } }): Promise<User | null> {
+export async function getCurrentUser(req?: ReqWithCookies): Promise<User | null> {
   const sess = req ? await readSessionFromRequest(req) : await readSession();
   if (!sess) return null;
 
@@ -40,7 +45,7 @@ export async function getCurrentUser(req?: { cookies: { get(name: string): { val
   return sess.user;
 }
 
-export async function requireUser(req?: { cookies: { get(name: string): { value: string } | undefined } }): Promise<User> {
+export async function requireUser(req?: ReqWithCookies): Promise<User> {
   const user = await getCurrentUser(req);
   if (!user) throw new UnauthorizedError();
   return user;
@@ -56,14 +61,14 @@ export async function requireUserOrRedirect(returnTo?: string): Promise<User> {
   return user;
 }
 
-export async function requireRole(role: UserRole | UserRole[], req?: { cookies: { get(name: string): { value: string } | undefined } }): Promise<User> {
+export async function requireRole(role: UserRole | UserRole[], req?: ReqWithCookies): Promise<User> {
   const user = await requireUser(req);
   const roles = Array.isArray(role) ? role : [role];
   if (!roles.includes(user.role)) throw new ForbiddenError();
   return user;
 }
 
-export async function requireOrganizer(req?: { cookies: { get(name: string): { value: string } | undefined } }) {
+export async function requireOrganizer(req?: ReqWithCookies) {
   const user = await requireUser(req);
   const organizer = await db.organizer.findUnique({ where: { userId: user.id } });
   if (!organizer) throw new ForbiddenError("No organizer profile");
@@ -71,7 +76,7 @@ export async function requireOrganizer(req?: { cookies: { get(name: string): { v
   return { user, organizer };
 }
 
-export async function requireEventOwner(eventId: string, req?: { cookies: { get(name: string): { value: string } | undefined } }) {
+export async function requireEventOwner(eventId: string, req?: ReqWithCookies) {
   const user = await requireUser(req);
   const event = await db.event.findUnique({
     where: { id: eventId },
@@ -84,7 +89,7 @@ export async function requireEventOwner(eventId: string, req?: { cookies: { get(
   return { user, event };
 }
 
-export async function requireScannerForEvent(eventId: string, req?: { cookies: { get(name: string): { value: string } | undefined } }) {
+export async function requireScannerForEvent(eventId: string, req?: ReqWithCookies) {
   const user = await requireUser(req);
   if (user.role === "ADMIN" || user.role === "SUPER_ADMIN") {
     const event = await db.event.findUniqueOrThrow({ where: { id: eventId } });
@@ -123,6 +128,7 @@ export async function signUpUser(input: {
   email: string;
   password: string;
   fullName?: string;
+  phone?: string;
   country?: string;
   currency?: string;
   timezone?: string;
@@ -141,11 +147,18 @@ export async function signUpUser(input: {
   const bootstrapAdmins = getBootstrapAdminEmails();
   const role: UserRole = bootstrapAdmins.includes(email) ? "SUPER_ADMIN" : "ATTENDEE";
 
+  const phone = input.phone?.trim() || null;
+  if (phone) {
+    const existingPhone = await db.user.findUnique({ where: { phone } });
+    if (existingPhone) throw new Error("This phone number is already registered.");
+  }
+
   const user = await db.user.create({
     data: {
       email,
       passwordHash,
       fullName: input.fullName?.trim() || null,
+      phone,
       country: input.country,
       currency: input.currency,
       timezone: input.timezone,

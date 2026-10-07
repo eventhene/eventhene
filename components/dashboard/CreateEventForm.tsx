@@ -4,15 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 const CATEGORIES = ["Music", "Faith", "Conference", "Sports", "Comedy", "Wedding", "Party", "Other"];
-const COUNTRIES = [
-  { code: "GH", name: "Ghana", currency: "GHS", tz: "Africa/Accra" },
-  { code: "NG", name: "Nigeria", currency: "NGN", tz: "Africa/Lagos" },
-  { code: "KE", name: "Kenya", currency: "KES", tz: "Africa/Nairobi" },
-  { code: "ZA", name: "South Africa", currency: "ZAR", tz: "Africa/Johannesburg" },
-  { code: "US", name: "United States", currency: "USD", tz: "America/New_York" },
-  { code: "GB", name: "United Kingdom", currency: "GBP", tz: "Europe/London" }
-];
-
 const FIELD_OPTIONS = [
   { key: "FULL_NAME", label: "Full name", type: "TEXT" },
   { key: "PHONE", label: "Phone number", type: "PHONE" },
@@ -40,15 +31,7 @@ interface FieldRow {
   options: string[];
 }
 
-export function CreateEventForm({
-  defaultCountry,
-  defaultCurrency,
-  defaultTimezone
-}: {
-  defaultCountry: string;
-  defaultCurrency: string;
-  defaultTimezone: string;
-}) {
+export function CreateEventForm() {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -58,9 +41,6 @@ export function CreateEventForm({
   const [category, setCategory] = useState("Music");
   const [venue, setVenue] = useState("");
   const [city, setCity] = useState("");
-  const [country, setCountry] = useState(defaultCountry);
-  const [currency, setCurrency] = useState(defaultCurrency);
-  const [timezone, setTimezone] = useState(defaultTimezone);
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
   const [bookingClosesAt, setBookingClosesAt] = useState("");
@@ -78,14 +58,6 @@ export function CreateEventForm({
     { key: "PHONE", label: "Phone number", type: "PHONE", required: true, options: [] },
     { key: "EMAIL", label: "Email", type: "EMAIL", required: true, options: [] }
   ]);
-
-  function handleCountry(code: string) {
-    const c = COUNTRIES.find((x) => x.code === code);
-    if (!c) return;
-    setCountry(code);
-    setCurrency(c.currency);
-    setTimezone(c.tz);
-  }
 
   async function validateCoupon() {
     if (!couponCode.trim()) return;
@@ -137,9 +109,9 @@ export function CreateEventForm({
         category,
         venue,
         city: city || undefined,
-        country,
-        currency,
-        timezone,
+        country: "GH",
+        currency: "GHS",
+        timezone: "Africa/Accra",
         startsAt: new Date(startsAt).toISOString(),
         endsAt: new Date(endsAt).toISOString(),
         bookingOpensAt,
@@ -234,16 +206,6 @@ export function CreateEventForm({
             <input value={city} onChange={(e) => setCity(e.target.value)} className="input" placeholder="Accra" />
           </div>
           <div>
-            <label className="label">Country</label>
-            <select value={country} onChange={(e) => handleCountry(e.target.value)} className="input">
-              {COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.name} ({c.currency})</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="label">Currency</label>
-            <input value={currency} onChange={(e) => setCurrency(e.target.value.toUpperCase())} className="input" />
-          </div>
-          <div>
             <label className="label">Starts at</label>
             <input type="datetime-local" required value={startsAt} onChange={(e) => setStartsAt(e.target.value)} className="input" />
           </div>
@@ -270,7 +232,7 @@ export function CreateEventForm({
             </div>
             {type === "PAID" && (
               <div className="col-span-3">
-                <label className="label">Price ({currency})</label>
+                <label className="label">Price (GHS)</label>
                 <input type="number" min="0" step="0.01" required value={t.priceMajor} onChange={(e) => updateTicket(i, "priceMajor", e.target.value)} className="input" />
               </div>
             )}

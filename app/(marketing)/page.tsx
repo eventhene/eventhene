@@ -24,7 +24,7 @@ export default async function HomePage() {
 
         <div className="section relative z-10 pt-28 pb-32">
           <p className="text-sm font-semibold text-accent tracking-wide uppercase mb-8">
-            Now registering events in Accra
+            Now registering events in Ghana
           </p>
 
           <h1 className="h-mega text-white max-w-5xl text-balance">
@@ -90,7 +90,7 @@ export default async function HomePage() {
         </div>
 
         <div className="grid md:grid-cols-6 gap-4">
-          <FeatureCard className="md:col-span-4" label="Bulk SMS" title="Hubtel-powered broadcasts to every registrant">
+          <FeatureCard className="md:col-span-4" label="Bulk SMS" title="Instant broadcasts to every registrant">
             <SmsPreview />
           </FeatureCard>
           <FeatureCard className="md:col-span-2" label="QR Check-in" title="Scan at the gate, instant verdict.">
@@ -236,7 +236,7 @@ function SmsPreview() {
     <div className="rounded-xl bg-surface-2 p-5 text-sm">
       <div className="flex items-center gap-2 text-xs text-ink-muted font-semibold mb-3">
         <span className="w-2 h-2 rounded-full bg-emerald animate-pulse" />
-        Hubtel - EventHene - 342 recipients
+        EventHene SMS - 342 recipients
       </div>
       <div className="rounded-lg bg-white border border-border p-4 text-ink">
         Hi Kwame, your ticket for Fire Conference 2026 is confirmed.<br />

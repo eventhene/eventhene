@@ -75,7 +75,7 @@ export function TicketCard3D({ variant, featured }: TicketCard3DProps) {
           <p className="font-extrabold text-2xl mt-2 leading-tight">
             Fire Conference<br/>2026
           </p>
-          <p className="text-[11px] text-white/60 mt-2 font-medium">Sat Nov 14 - Christ Temple, Accra</p>
+          <p className="text-[11px] text-white/60 mt-2 font-medium">Sat Nov 14 - Christ Temple, Ghana</p>
         </div>
 
         <div className="relative">

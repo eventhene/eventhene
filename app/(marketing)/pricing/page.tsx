@@ -24,7 +24,7 @@ export default function PricingPage() {
               "QR-secured digital tickets",
               "Email delivery",
               "Attendance tracking + export",
-              "Bulk SMS (Hubtel, pay per message)",
+              "Bulk SMS (pay per message)",
               "Reviewed within 24 hours",
             ].map((f) => <li key={f} className="flex items-start gap-2"><Check className="w-4 h-4 text-emerald mt-0.5 shrink-0" /> {f}</li>)}
           </ul>

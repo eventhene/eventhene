@@ -16,7 +16,7 @@ export default function AboutPage() {
 
       <h2>Built for Africa. Ready for the world.</h2>
       <p>
-        Mobile Money first. Multi-currency. Local SMS via Hubtel. Designed for organizers from Accra to Lagos to London.
+        Mobile Money first. Multi-currency. Local SMS delivery. Designed for organizers from Ghana to Nigeria to the world.
       </p>
     </div>
   );

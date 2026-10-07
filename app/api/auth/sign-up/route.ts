@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { signUpUser } from "@/lib/auth";
+import { createAndSendOtp } from "@/lib/auth/otp";
 
 const Body = z.object({
   fullName: z.string().min(2).max(120),
   email: z.string().email(),
+  phone: z.string().min(6).max(20),
   password: z.string().min(8).max(200),
   country: z.string().length(2).optional(),
   currency: z.string().length(3).optional(),
@@ -14,10 +16,15 @@ const Body = z.object({
 export async function POST(req: NextRequest) {
   try {
     const data = Body.parse(await req.json());
-    const { user, sessionInfo } = await signUpUser(data);
-    const res = NextResponse.json({ ok: true, user: { id: user.id, email: user.email, role: user.role } });
-    res.cookies.set(sessionInfo.cookieName, sessionInfo.jwt, sessionInfo.cookieOptions);
-    return res;
+    const { user } = await signUpUser({ ...data });
+
+    await createAndSendOtp(user.id, "email", user.email);
+
+    return NextResponse.json({
+      ok: true,
+      needsVerification: true,
+      email: user.email,
+    });
   } catch (e: any) {
     if (e instanceof z.ZodError) {
       return NextResponse.json({ error: "Please check your info and try again." }, { status: 400 });

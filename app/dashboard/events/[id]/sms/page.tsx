@@ -30,7 +30,7 @@ export default async function SmsPage({ params }: { params: { id: string } }) {
         <p className="text-xs text-ink-muted uppercase tracking-widest mb-2">Bulk SMS</p>
         <h1 className="h-section">Send to your crowd.</h1>
         <p className="text-ink-muted mt-2">
-          Blast an announcement, reminder, or custom message to everyone who registered for <strong>{event.title}</strong>. Hubtel-powered.
+          Blast an announcement, reminder, or custom message to everyone who registered for <strong>{event.title}</strong>.
         </p>
       </div>
 

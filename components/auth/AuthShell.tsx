@@ -17,7 +17,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
               Collect registrations, send bulk SMS, scan QR tickets, and know exactly who showed up.
             </p>
           </div>
-          <p className="text-xs text-white/30 font-semibold tracking-widest uppercase">EventHene - Accra - Worldwide</p>
+          <p className="text-xs text-white/30 font-semibold tracking-widest uppercase">EventHene - Ghana - Worldwide</p>
         </div>
       </aside>
 

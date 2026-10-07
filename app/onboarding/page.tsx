@@ -6,6 +6,7 @@ import { OnboardingForm } from "@/components/onboarding/OnboardingForm";
 import { Logo } from "@/components/Logo";
 
 export const metadata = { title: "Welcome" };
+export const dynamic = "force-dynamic";
 
 export default async function OnboardingPage() {
   const user = await requireUserOrRedirect("/onboarding");
@@ -21,7 +22,7 @@ export default async function OnboardingPage() {
           <p className="text-ink-muted mt-2">Let's set up your organizer profile.</p>
         </div>
         <div className="card p-7">
-          <OnboardingForm defaultCountry={user.country || "GH"} />
+          <OnboardingForm />
         </div>
         <p className="text-center text-xs text-ink-muted mt-6">
           <Link href="/api/auth/sign-out" className="underline">Sign out</Link>

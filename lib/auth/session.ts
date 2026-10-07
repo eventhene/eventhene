@@ -86,39 +86,76 @@ async function verifySessionJwt(raw: string) {
       where: { id: sid },
       include: { user: true },
     });
-    if (!session) return null;
-    if (session.tokenHash !== tokenHash) return null;
+    if (!session) {
+      console.error("[session] DB lookup failed: no session found for sid", sid);
+      return null;
+    }
+    if (session.tokenHash !== tokenHash) {
+      console.error("[session] Token hash mismatch for sid", sid);
+      return null;
+    }
     if (session.expiresAt < new Date()) {
       await db.session.delete({ where: { id: sid } }).catch(() => {});
       return null;
     }
     return { user: session.user, session };
-  } catch {
+  } catch (err) {
+    console.error("[session] verifySessionJwt error:", err);
     return null;
   }
+}
+
+function extractCookieFromHeader(headerValue: string): string | undefined {
+  const match = headerValue.match(new RegExp(`(?:^|;\\s*)${COOKIE_NAME}=([^;]*)`));
+  return match ? match[1] : undefined;
 }
 
 export async function readSession() {
   let raw: string | undefined;
 
-  // Method 1: cookies() helper (works in Server Components, sometimes fails in Route Handlers)
   try { raw = cookies().get(COOKIE_NAME)?.value; } catch {}
 
-  // Method 2: parse raw Cookie header (more reliable in Route Handlers on Vercel)
   if (!raw) {
     try {
       const cookieHeader = headers().get("cookie") || "";
-      const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${COOKIE_NAME}=([^;]*)`));
-      if (match) raw = match[1];
+      raw = extractCookieFromHeader(cookieHeader);
     } catch {}
   }
 
-  if (!raw) return null;
+  if (!raw) {
+    console.error("[session] readSession: no cookie found via cookies() or headers()");
+    return null;
+  }
   return verifySessionJwt(raw);
 }
 
-export async function readSessionFromRequest(req: { cookies: { get(name: string): { value: string } | undefined } }) {
-  const raw = req.cookies.get(COOKIE_NAME)?.value;
-  if (!raw) return null;
+export async function readSessionFromRequest(req: {
+  cookies: { get(name: string): { value: string } | undefined };
+  headers: { get(name: string): string | null };
+}) {
+  let raw = req.cookies.get(COOKIE_NAME)?.value;
+
+  if (!raw) {
+    try {
+      const cookieHeader = req.headers.get("cookie") || "";
+      raw = extractCookieFromHeader(cookieHeader);
+    } catch {}
+  }
+
+  if (!raw) {
+    try { raw = cookies().get(COOKIE_NAME)?.value; } catch {}
+  }
+
+  if (!raw) {
+    try {
+      const cookieHeader = headers().get("cookie") || "";
+      raw = extractCookieFromHeader(cookieHeader);
+    } catch {}
+  }
+
+  if (!raw) {
+    console.error("[session] readSessionFromRequest: no cookie found via any method");
+    return null;
+  }
   return verifySessionJwt(raw);
 }
