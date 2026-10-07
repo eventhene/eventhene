@@ -25,7 +25,8 @@ export async function POST(req: NextRequest) {
         userId: user.id,
         displayName: data.displayName,
         slug,
-        bio: data.bio
+        bio: data.bio,
+        phoneVerified: user.phoneVerified
       }
     });
     await db.user.update({

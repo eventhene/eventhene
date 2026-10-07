@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
+import { resetPhoneVerified } from "@/lib/auth/verification";
+import { normalizeGhPhone } from "@/lib/sms/phone";
 
 const Body = z.object({
   fullName: z.string().max(120).nullable().optional(),
@@ -23,6 +25,12 @@ export async function PATCH(req: NextRequest) {
         ...(data.phone !== undefined && { phone: data.phone || null }),
       },
     });
+
+    if (data.phone !== undefined) {
+      const before = user.phone ? normalizeGhPhone(user.phone) : null;
+      const after = data.phone ? normalizeGhPhone(data.phone) : null;
+      if (before !== after) await resetPhoneVerified(user.id);
+    }
 
     if (data.displayName !== undefined) {
       const organizer = await db.organizer.findUnique({ where: { userId: user.id } });

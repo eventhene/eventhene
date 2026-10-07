@@ -2,6 +2,7 @@ import { customAlphabet } from "nanoid";
 import { db } from "@/lib/db";
 import { sendSMS } from "@/lib/sms/hubtel";
 import { normalizeGhPhone } from "@/lib/sms/phone";
+import { markPhoneVerified } from "@/lib/auth/verification";
 import type { TeamRole } from "@prisma/client";
 
 const tokenId = customAlphabet("abcdefghijkmnpqrstuvwxyz23456789", 22);
@@ -127,8 +128,8 @@ export async function acceptTeamInvite(token: string, user: { id: string; phone:
       where: { id: invite.id },
       data: { status: "ACCEPTED", acceptedUserId: user.id },
     });
-    await tx.user.update({ where: { id: user.id }, data: { phoneVerified: true } });
   });
+  await markPhoneVerified(user.id);
 
   return { role: invite.role };
 }

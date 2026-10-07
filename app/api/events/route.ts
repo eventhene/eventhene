@@ -66,6 +66,7 @@ export async function POST(req: NextRequest) {
 
     // Check coupon code - valid coupon auto-publishes the event
     let autoPublish = false;
+    let claimedCouponId: string | null = null;
     if (body.couponCode) {
       const code = body.couponCode.toUpperCase().trim();
       const coupon = await db.coupon.findUnique({ where: { code } });
@@ -73,10 +74,12 @@ export async function POST(req: NextRequest) {
       if (coupon.expiresAt && coupon.expiresAt < new Date()) {
         return NextResponse.json({ error: "This coupon has expired" }, { status: 400 });
       }
-      if (coupon.usedCount >= coupon.maxUses) {
+      // Claim one use atomically so two simultaneous requests cannot both spend the last use.
+      const claimed = await db.$executeRaw`UPDATE "Coupon" SET "usedCount" = "usedCount" + 1 WHERE id = ${coupon.id} AND "usedCount" < "maxUses"`;
+      if (claimed === 0) {
         return NextResponse.json({ error: "This coupon has been fully used" }, { status: 400 });
       }
-      await db.coupon.update({ where: { id: coupon.id }, data: { usedCount: { increment: 1 } } });
+      claimedCouponId = coupon.id;
       autoPublish = true;
     }
 
@@ -107,6 +110,11 @@ export async function POST(req: NextRequest) {
         attendeeFields: { create: body.attendeeFields.map((f) => ({ ...f, options: f.options ?? [] })) }
       },
       include: { ticketTypes: true, attendeeFields: true }
+    }).catch(async (err) => {
+      if (claimedCouponId) {
+        await db.$executeRaw`UPDATE "Coupon" SET "usedCount" = GREATEST("usedCount" - 1, 0) WHERE id = ${claimedCouponId}`;
+      }
+      throw err;
     });
 
     return NextResponse.json(event, { status: 201 });

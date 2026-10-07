@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { verifyOtp } from "@/lib/auth/otp";
 import { createSession } from "@/lib/auth/session";
+import { markPhoneVerified, markEmailVerified } from "@/lib/auth/verification";
 import { headers } from "next/headers";
 
 const Body = z.object({
@@ -22,12 +23,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: result.reason, valid: false }, { status: 400 });
     }
 
-    if (channel === "sms" && !user.phoneVerified) {
-      await db.user.update({ where: { id: user.id }, data: { phoneVerified: true } });
-    }
-    if (channel === "email" && !user.emailVerified) {
-      await db.user.update({ where: { id: user.id }, data: { emailVerified: true } });
-    }
+    if (channel === "sms" && !user.phoneVerified) await markPhoneVerified(user.id);
+    if (channel === "email" && !user.emailVerified) await markEmailVerified(user.id);
 
     const h = headers();
     const sessionInfo = await createSession(user.id, {

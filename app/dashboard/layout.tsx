@@ -124,6 +124,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
       </header>
 
       <main className="md:ml-[260px] p-5 md:p-10 pb-24 md:pb-10 max-w-6xl">
+        {isOwner && !user.phoneVerified && (
+          <Link
+            href="/dashboard/settings#verification"
+            className="mb-6 flex items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-sm hover:bg-amber-500/10 transition"
+          >
+            <span className="text-white/80">
+              <strong className="text-amber-400">Verify your phone number</strong> to secure your account and payouts.
+            </span>
+            <span className="text-xs font-semibold text-accent shrink-0">Verify now</span>
+          </Link>
+        )}
         {isAdminView && (
           <div className="md:hidden mb-4 rounded-xl border border-crimson/30 bg-crimson/10 p-3 text-xs text-white/70">
             <strong className="text-crimson">Admin view:</strong> managing an event for {org.displayName}.
