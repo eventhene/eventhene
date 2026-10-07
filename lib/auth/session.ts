@@ -1,6 +1,3 @@
-// Custom session system using signed JWTs stored in httpOnly cookies.
-// No Clerk, no third-party auth lock-in. Full control.
-
 import { SignJWT, jwtVerify } from "jose";
 import { cookies, headers } from "next/headers";
 import crypto from "crypto";
@@ -86,21 +83,14 @@ async function verifySessionJwt(raw: string) {
       where: { id: sid },
       include: { user: true },
     });
-    if (!session) {
-      console.error("[session] DB lookup failed: no session found for sid", sid);
-      return null;
-    }
-    if (session.tokenHash !== tokenHash) {
-      console.error("[session] Token hash mismatch for sid", sid);
-      return null;
-    }
+    if (!session) return null;
+    if (session.tokenHash !== tokenHash) return null;
     if (session.expiresAt < new Date()) {
       await db.session.delete({ where: { id: sid } }).catch(() => {});
       return null;
     }
     return { user: session.user, session };
-  } catch (err) {
-    console.error("[session] verifySessionJwt error:", err);
+  } catch {
     return null;
   }
 }
@@ -122,10 +112,7 @@ export async function readSession() {
     } catch {}
   }
 
-  if (!raw) {
-    console.error("[session] readSession: no cookie found via cookies() or headers()");
-    return null;
-  }
+  if (!raw) return null;
   return verifySessionJwt(raw);
 }
 
@@ -153,9 +140,6 @@ export async function readSessionFromRequest(req: {
     } catch {}
   }
 
-  if (!raw) {
-    console.error("[session] readSessionFromRequest: no cookie found via any method");
-    return null;
-  }
+  if (!raw) return null;
   return verifySessionJwt(raw);
 }

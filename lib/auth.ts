@@ -2,10 +2,9 @@
 // Replaces the previous Clerk-based module. No external auth provider.
 
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
 import { db } from "./db";
 import type { User, UserRole } from "@prisma/client";
-import { readSession, readSessionFromRequest, createSession, destroySession } from "./auth/session";
+import { readSession, readSessionFromRequest, destroySession } from "./auth/session";
 import { hashPassword, verifyPassword, validatePasswordStrength } from "./auth/password";
 
 type ReqWithCookies = {
@@ -166,8 +165,7 @@ export async function signUpUser(input: {
     },
   });
 
-  const sessionInfo = await createSessionFromRequest(user.id);
-  return { user, sessionInfo };
+  return { user };
 }
 
 export async function signInUser(input: { email: string; password: string }) {
@@ -178,18 +176,9 @@ export async function signInUser(input: { email: string; password: string }) {
   const ok = await verifyPassword(input.password, user.passwordHash);
   if (!ok) throw new Error("Incorrect password.");
 
-  const sessionInfo = await createSessionFromRequest(user.id);
-  return { user, sessionInfo };
+  return { user };
 }
 
 export async function signOutUser(): Promise<void> {
   await destroySession();
-}
-
-async function createSessionFromRequest(userId: string) {
-  const h = headers();
-  return createSession(userId, {
-    ip: h.get("x-forwarded-for") ?? undefined,
-    userAgent: h.get("user-agent") ?? undefined,
-  });
 }
