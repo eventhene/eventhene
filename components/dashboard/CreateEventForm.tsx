@@ -47,6 +47,7 @@ export interface InitialEvent {
   flyerUrl: string | null;
   type: "PAID" | "FREE";
   buyerPaysFee: boolean;
+  welcomeSms: boolean;
   ticketTypes: { id: string; name: string; priceMinor: number; quantity: number; notes: string | null; sold: number }[];
   attendeeFields: { key: string; label: string; type: string; required: boolean; options: string[] }[];
 }
@@ -89,6 +90,7 @@ export function CreateEventForm({
   const fileRef = useRef<HTMLInputElement>(null);
   const [type, setType] = useState<"PAID" | "FREE">(initial?.type ?? "PAID");
   const [buyerPaysFee, setBuyerPaysFee] = useState(initial?.buyerPaysFee ?? true);
+  const [welcomeSms, setWelcomeSms] = useState(initial?.welcomeSms ?? true);
   const [couponCode, setCouponCode] = useState("");
   const [couponValid, setCouponValid] = useState<boolean | null>(null);
   const [couponMsg, setCouponMsg] = useState("");
@@ -207,6 +209,7 @@ export function CreateEventForm({
             flyerUrl: flyerUrl || null,
             type,
             buyerPaysFee,
+            welcomeSms,
             ticketTypes: tickets.map((t, idx) => ({
               id: t.id,
               name: t.name.trim(),
@@ -249,6 +252,7 @@ export function CreateEventForm({
         flyerUrl: flyerUrl || undefined,
         type,
         buyerPaysFee,
+        welcomeSms,
         couponCode: couponCode.trim() || undefined,
         ticketTypes: tickets.map((t, idx) => ({
           name: t.name.trim(),
@@ -437,6 +441,15 @@ export function CreateEventForm({
           </div>
         ))}
         <button type="button" onClick={addTicket} className="btn-ghost btn-md">+ Add ticket type</button>
+        <div className="flex items-start gap-2 pt-4 border-t border-border">
+          <input id="wsms" type="checkbox" className="mt-1" checked={welcomeSms} onChange={(e) => setWelcomeSms(e.target.checked)} />
+          <label htmlFor="wsms" className="text-sm">
+            Send a welcome SMS when a ticket is scanned at the gate
+            <span className="block text-xs text-ink-muted">
+              {type === "FREE" ? "Uses 1 credit from your SMS package per person." : "Included in the 8% platform fee."}
+            </span>
+          </label>
+        </div>
         {type === "PAID" && (
           <div className="flex items-center gap-2 pt-4 border-t border-border">
             <input id="bpf" type="checkbox" checked={buyerPaysFee} onChange={(e) => setBuyerPaysFee(e.target.checked)} />

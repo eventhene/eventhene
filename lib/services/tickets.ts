@@ -2,6 +2,12 @@ import { db } from "@/lib/db";
 import { buildVisibleRef } from "@/lib/refs";
 import { generateTicketToken, verifyQrPayload, hashToken } from "@/lib/qr";
 import type { Prisma } from "@prisma/client";
+import { sendWelcomeSms } from "@/lib/services/notify";
+
+/** Send the welcome text, but never let a slow SMS hold up the gate: give it 2.5s at most. */
+async function welcomeWithoutBlocking(ticketId: string): Promise<void> {
+  await Promise.race([sendWelcomeSms(ticketId), new Promise<void>((r) => setTimeout(r, 2500))]);
+}
 
 export interface IssuedTicket {
   ticketId: string;
@@ -240,6 +246,8 @@ export async function validateScan(opts: {
     }
   });
 
+  await welcomeWithoutBlocking(ticket.id);
+
   return {
     result: "VALID",
     attendeeName: ticket.attendee.fullName,
@@ -278,6 +286,7 @@ export async function manualCheckIn(opts: { ticketId: string; scannedById: strin
       result: "VALID_MANUAL"
     }
   });
+  await welcomeWithoutBlocking(ticket.id);
   return {
     result: "VALID",
     attendeeName: ticket.attendee.fullName,

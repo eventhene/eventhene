@@ -28,6 +28,63 @@ function confirmationSms(opts: { title: string; date: string; ref: string; url: 
   }
 }
 
+function welcomeSms(title: string, firstName: string): string {
+  const name = firstName ? ` ${firstName}` : "";
+  let t = title;
+  for (;;) {
+    const msg = `Welcome${name}! You are checked in at ${t}. Enjoy the event! - EventHene`;
+    if (smsSegments(msg).segments <= 1 || t.length <= 8) return msg;
+    t = t.slice(0, Math.max(8, t.length - 4)).trimEnd();
+  }
+}
+
+/**
+ * Welcome text sent once when a ticket is scanned in. Never throws and never blocks the scan.
+ * Same cost rule as the confirmation SMS: free events use the organizer's credits (1 each),
+ * paid events are covered by the platform fee.
+ */
+export async function sendWelcomeSms(ticketId: string): Promise<void> {
+  try {
+    const ticket = await db.ticket.findUnique({
+      where: { id: ticketId },
+      include: { attendee: true, event: true, order: { select: { buyerPhone: true } } },
+    });
+    if (!ticket || !ticket.event.welcomeSms) return;
+    const phone = ticket.attendee.phone || ticket.order?.buyerPhone;
+    if (!phone) return;
+
+    const msg = welcomeSms(ticket.event.title, ticket.attendee.fullName.split(" ")[0] || "");
+    const credits = smsSegments(msg).segments;
+    const organizerPays = ticket.event.type === "FREE";
+
+    if (organizerPays) {
+      try {
+        await chargeCredits({
+          organizerId: ticket.event.organizerId,
+          amount: credits,
+          note: `Welcome SMS - ${ticket.event.title}`,
+        });
+      } catch (e: any) {
+        console.warn("[notify] welcome SMS skipped, organizer credits unavailable:", e?.message);
+        return;
+      }
+    }
+    const sms = await sendSMS(phone, msg);
+    if (!sms.ok) {
+      console.error("[notify] welcome SMS failed", sms.error);
+      if (organizerPays) {
+        await refundCredits({
+          organizerId: ticket.event.organizerId,
+          amount: credits,
+          note: "Refund for welcome SMS that could not be delivered",
+        }).catch(() => {});
+      }
+    }
+  } catch (e) {
+    console.error("[notify] welcome SMS error", e);
+  }
+}
+
 /**
  * Sends the ticket confirmation for every ticket on an order.
  * The SMS goes first because it is fast and almost always arrives; then the email,

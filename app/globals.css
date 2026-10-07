@@ -291,13 +291,16 @@
   0%, 100% { opacity: 0.4; transform: scale(0.93); }
   50% { opacity: 1; transform: scale(1.05); }
 }
+/* The crown sits tilted ~13deg in the logo, so spin it around ITS OWN upright axis:
+   straighten, spin about the vertical, then tilt back. At rest it matches the artwork exactly. */
 @keyframes eh-crown-spin {
-  from { transform: rotateY(0deg); }
-  to { transform: rotateY(360deg); }
+  from { transform: rotate(-13deg) rotateY(0deg) rotate(13deg); }
+  to { transform: rotate(-13deg) rotateY(360deg) rotate(13deg); }
 }
 .eh-loader { animation: eh-breathe 2.4s ease-in-out infinite; will-change: transform, opacity; }
 .eh-loader-crown { animation: eh-crown-spin 2.4s cubic-bezier(0.45, 0, 0.55, 1) infinite; transform-origin: 34.7% 17.6%; will-change: transform; }
 @media (prefers-reduced-motion: reduce) {
-  .eh-loader-crown { animation: none; }
-  .eh-loader { animation-duration: 3.2s; }
+  /* Gentler, not off: the loader is the only sign that something is happening. */
+  .eh-loader-crown { animation-duration: 5s; }
+  .eh-loader { animation-duration: 4s; }
 }

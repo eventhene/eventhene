@@ -35,6 +35,7 @@ const EditEventBody = z.object({
   flyerUrl: z.string().url().nullish().or(z.literal("")),
   type: z.enum(["PAID", "FREE"]),
   buyerPaysFee: z.boolean(),
+  welcomeSms: z.boolean().default(true),
   ticketTypes: z.array(TicketTypeSchema).min(1).max(20),
   attendeeFields: z.array(AttendeeFieldSchema).min(1).max(30),
 });
@@ -140,6 +141,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
           flyerUrl: body.flyerUrl || null,
           type: body.type,
           buyerPaysFee: body.buyerPaysFee,
+          welcomeSms: body.welcomeSms,
           status: nextStatus,
         },
       });
