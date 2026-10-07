@@ -1,3 +1,4 @@
+import { brandEmail } from "@/lib/app-url";
 export const metadata = { title: "Contact" };
 
 export default function ContactPage() {
@@ -9,9 +10,9 @@ export default function ContactPage() {
         Need help with an event, a ticket, or want to partner with EventHene? Send us a note.
       </p>
       <div className="card p-7 space-y-5">
-        <Row label="Support" value="support@eventhene.com" />
-        <Row label="Partnerships" value="partners@eventhene.com" />
-        <Row label="Press" value="press@eventhene.com" />
+        <Row label="Support" value={brandEmail("support")} />
+        <Row label="Partnerships" value={brandEmail("partners")} />
+        <Row label="Press" value={brandEmail("press")} />
         <Row label="Office" value="Accra, Ghana" />
       </div>
     </div>

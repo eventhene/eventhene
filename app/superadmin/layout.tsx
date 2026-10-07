@@ -16,6 +16,7 @@ import {
   ListChecks,
   Mail,
   Ticket,
+  Globe,
 } from "lucide-react";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -45,6 +46,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <NavLink href="/superadmin/support" icon={<Headphones className="w-[18px] h-[18px]" />}>Support</NavLink>
             <NavLink href="/superadmin/coupons" icon={<Ticket className="w-[18px] h-[18px]" />}>Coupons</NavLink>
             <NavLink href="/superadmin/email" icon={<Mail className="w-[18px] h-[18px]" />}>Email setup</NavLink>
+            <NavLink href="/superadmin/domain" icon={<Globe className="w-[18px] h-[18px]" />}>Domain</NavLink>
 
             <SideSection label="Account" />
             <NavLink href="/dashboard" icon={<ArrowLeft className="w-[18px] h-[18px]" />}>My dashboard</NavLink>

@@ -1,3 +1,4 @@
+import { getAppUrl } from "@/lib/app-url";
 import { db } from "@/lib/db";
 import { computeOrderTotals } from "@/lib/fees";
 import { paystack } from "@/lib/payments/paystack";
@@ -120,7 +121,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
       amountMinor: totals.totalMinor,
       currency: event.currency,
       reference: order.id,
-      callbackUrl: `${process.env.NEXT_PUBLIC_APP_URL}/orders/${order.id}/success`,
+      callbackUrl: `${getAppUrl()}/orders/${order.id}/success`,
       metadata: { eventId: event.id, buyerName: input.buyerName },
     };
 

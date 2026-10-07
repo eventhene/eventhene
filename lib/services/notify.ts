@@ -1,3 +1,4 @@
+import { getAppUrl } from "@/lib/app-url";
 import { db } from "@/lib/db";
 import { sendEmailDetailed, ticketIssuedEmail } from "@/lib/email";
 import { formatDate } from "@/lib/utils";
@@ -100,7 +101,7 @@ export async function sendTicketEmails(orderId: string, pdfBuffers?: Map<string,
   });
   if (!order) return;
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://eventhene.vercel.app";
+  const appUrl = getAppUrl();
   const eventDate = formatDate(order.event.startsAt, order.event.timezone);
 
   // Who pays for the confirmation SMS:

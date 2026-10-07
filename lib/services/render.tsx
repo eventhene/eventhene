@@ -1,3 +1,4 @@
+import { getAppUrl } from "@/lib/app-url";
 import React from "react";
 import fs from "fs";
 import path from "path";
@@ -580,7 +581,7 @@ async function publicImage(name: string): Promise<string | null> {
     result = `data:image/png;base64,${fs.readFileSync(file).toString("base64")}`;
   } catch {
     try {
-      const base = process.env.NEXT_PUBLIC_APP_URL || "https://eventhene.vercel.app";
+      const base = getAppUrl();
       const ctrl = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), 3000);
       const res = await fetch(`${base}/${name}`, { signal: ctrl.signal });

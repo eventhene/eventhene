@@ -1,3 +1,4 @@
+import { getAppUrl } from "@/lib/app-url";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
@@ -30,7 +31,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         html: freeEventEditsRequestedEmail({
           eventTitle: event.title,
           note,
-          dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/events/${event.id}`
+          dashboardUrl: `${getAppUrl()}/dashboard/events/${event.id}`
         })
       }).catch(() => {});
     }

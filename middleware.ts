@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { getAppUrl, isCustomDomain } from "@/lib/app-url";
 
 const PROTECTED_PREFIXES = [
   "/dashboard",
@@ -10,6 +11,15 @@ const PROTECTED_PREFIXES = [
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  // Once a custom domain is live, send visitors on the old *.vercel.app address (for example from
+  // old SMS links) to the new domain. Pages only: API calls are never redirected.
+  if (process.env.VERCEL_ENV === "production" && isCustomDomain() && (req.method === "GET" || req.method === "HEAD")) {
+    const host = req.headers.get("host") || "";
+    if (host.endsWith(".vercel.app")) {
+      return NextResponse.redirect(`${getAppUrl()}${pathname}${req.nextUrl.search}`, 308);
+    }
+  }
 
   const isProtected = PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"));
   if (!isProtected) return NextResponse.next();

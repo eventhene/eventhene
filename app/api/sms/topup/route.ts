@@ -1,3 +1,4 @@
+import { getAppUrl } from "@/lib/app-url";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireOrganizer } from "@/lib/auth";
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
     if (!pkg) return NextResponse.json({ error: "Invalid package." }, { status: 400 });
 
     const reference = `sms_${organizer.id}_${nanoid(12)}`;
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const appUrl = getAppUrl();
 
     const result = await paystack.initialize({
       email: user.email,

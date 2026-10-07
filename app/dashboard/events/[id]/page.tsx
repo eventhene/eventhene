@@ -1,3 +1,4 @@
+import { getAppUrl } from "@/lib/app-url";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
@@ -24,7 +25,7 @@ export default async function EventOverviewPage({ params }: { params: { id: stri
   const revenue = event.ticketTypes.reduce((s, t) => s + t.sold * t.priceMinor, 0);
   const total = event.ticketTypes.reduce((s, t) => s + t.quantity, 0);
   const attended = event.tickets.filter((t) => t.status === "ATTENDED").length;
-  const publicUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/events/${event.slug}`;
+  const publicUrl = `${getAppUrl()}/events/${event.slug}`;
 
   return (
     <div className="space-y-8">

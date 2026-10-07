@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import nodemailer from "nodemailer";
+import { getAppUrl, getApexDomain, isCustomDomain } from "@/lib/app-url";
 
 /**
  * Email delivery, fully driven by environment variables so nothing needs a code
@@ -43,12 +44,28 @@ function getMode(): string {
   return ["auto", "resend", "smtp"].includes(m) ? m : "auto";
 }
 
+/**
+ * The sender follows the active domain: tickets@<your-domain> once a custom domain is live.
+ * EMAIL_FROM is only honoured if it already belongs to the active domain, so a stale value can
+ * never send mail "from" a domain you do not own. Until the domain is verified in Resend, sends
+ * automatically fall back (Resend sandbox, then SMTP).
+ */
 function resendFrom(): string {
-  return process.env.EMAIL_FROM?.trim() || SANDBOX_FROM;
+  if (!isCustomDomain()) return SANDBOX_FROM;
+  const apex = getApexDomain();
+  const configured = process.env.EMAIL_FROM?.trim();
+  if (configured && configured.toLowerCase().includes(`@${apex}`)) return configured;
+  return `EventHene <tickets@${apex}>`;
+}
+
+function replyTo(): string | undefined {
+  const configured = process.env.EMAIL_REPLY_TO?.trim();
+  if (configured) return configured;
+  return isCustomDomain() ? `support@${getApexDomain()}` : undefined;
 }
 
 function smtpFrom(): string {
-  return process.env.SMTP_FROM?.trim() || process.env.EMAIL_FROM?.trim() || process.env.SMTP_USER?.trim() || SANDBOX_FROM;
+  return process.env.SMTP_FROM?.trim() || process.env.SMTP_USER?.trim() || SANDBOX_FROM;
 }
 
 function smtpConfigured(): boolean {
@@ -67,7 +84,7 @@ export function getEmailConfigStatus(): EmailConfigStatus {
       user: process.env.SMTP_USER,
       from: smtp ? smtpFrom() : undefined,
     },
-    replyTo: process.env.EMAIL_REPLY_TO,
+    replyTo: replyTo(),
     anyConfigured: resendConfigured || smtp,
   };
 }
@@ -83,7 +100,7 @@ async function viaResend(input: SendEmailInput): Promise<void> {
       to: input.to,
       subject: input.subject,
       html: input.html,
-      replyTo: process.env.EMAIL_REPLY_TO || undefined,
+      replyTo: replyTo(),
       attachments: input.attachments,
     });
 
@@ -110,7 +127,7 @@ async function viaSmtp(input: SendEmailInput): Promise<void> {
     to: input.to,
     subject: input.subject,
     html: input.html,
-    replyTo: process.env.EMAIL_REPLY_TO || undefined,
+    replyTo: replyTo(),
     attachments: input.attachments?.map((a) => ({ filename: a.filename, content: a.content })),
   });
 }
@@ -152,7 +169,7 @@ export async function sendEmail(input: SendEmailInput): Promise<void> {
 
 // ---------------- Templates ----------------
 
-const APP_URL = () => process.env.NEXT_PUBLIC_APP_URL || "https://eventhene.vercel.app";
+const APP_URL = () => getAppUrl();
 
 const wrap = (body: string) => `
 <!doctype html>

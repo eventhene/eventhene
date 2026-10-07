@@ -1,3 +1,4 @@
+import { getAppUrl } from "@/lib/app-url";
 import { customAlphabet } from "nanoid";
 import { db } from "@/lib/db";
 import { sendSMS } from "@/lib/sms/hubtel";
@@ -14,7 +15,7 @@ export const ROLE_LABEL: Record<TeamRole, string> = {
 };
 
 export function appUrl(): string {
-  return process.env.NEXT_PUBLIC_APP_URL || "https://eventhene.vercel.app";
+  return getAppUrl();
 }
 
 export function inviteLink(token: string): string {

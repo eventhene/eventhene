@@ -1,4 +1,5 @@
 import "./globals.css";
+import { getAppUrl } from "@/lib/app-url";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -8,7 +9,7 @@ export const metadata: Metadata = {
   },
   description:
     "Premium event ticketing, registration, attendance tracking & promotion for organizers in Ghana and beyond.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
+  metadataBase: new URL(getAppUrl()),
   openGraph: {
     title: "EventHene - Run a kingly event",
     description:

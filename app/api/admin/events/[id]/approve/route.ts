@@ -1,3 +1,4 @@
+import { getAppUrl } from "@/lib/app-url";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
@@ -32,7 +33,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         subject: `🎉 Your event "${event.title}" is live on EventHene`,
         html: freeEventApprovedEmail({
           eventTitle: event.title,
-          url: `${process.env.NEXT_PUBLIC_APP_URL}/events/${event.slug}`
+          url: `${getAppUrl()}/events/${event.slug}`
         })
       }).catch(() => {});
     }

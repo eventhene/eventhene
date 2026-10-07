@@ -1,3 +1,4 @@
+import { getAppUrl } from "@/lib/app-url";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
@@ -46,7 +47,7 @@ export default async function EventPage({ params }: { params: { slug: string } }
     notFound();
   }
 
-  const eventUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/events/${event.slug}`;
+  const eventUrl = `${getAppUrl()}/events/${event.slug}`;
   const isPast = event.endsAt < new Date();
 
   return (

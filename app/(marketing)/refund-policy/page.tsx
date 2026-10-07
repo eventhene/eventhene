@@ -1,3 +1,4 @@
+import { brandEmail } from "@/lib/app-url";
 export const metadata = { title: "Refund Policy" };
 
 export default function RefundPage() {
@@ -8,7 +9,7 @@ export default function RefundPage() {
         Refunds are issued at the organizer's discretion. If an event is cancelled, organizers are expected to issue full refunds.
         EventHene can facilitate refunds via the original payment method. Platform and payment processor fees may not be refundable.
       </p>
-      <p>For refund requests, please contact the organizer first, then email support@eventhene.com if unresolved.</p>
+      <p>For refund requests, please contact the organizer first, then email {brandEmail("support")} if unresolved.</p>
     </div>
   );
 }
