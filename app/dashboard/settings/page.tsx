@@ -5,6 +5,7 @@ import { SignOutButton } from "@/components/SignOutButton";
 import { SettingsForm } from "@/components/settings/SettingsForm";
 import { PayoutForm } from "@/components/settings/PayoutForm";
 import { AccountVerification } from "@/components/settings/AccountVerification";
+import { SecuritySettings } from "@/components/settings/SecuritySettings";
 import { Banknote } from "lucide-react";
 
 export const metadata = { title: "Settings" };
@@ -30,6 +31,8 @@ export default async function SettingsPage() {
         email={user.email}
         emailVerified={user.emailVerified}
       />
+
+      <SecuritySettings email={user.email} emailVerified={user.emailVerified} />
 
       <SettingsForm
         user={{

@@ -21,6 +21,7 @@ import {
   Shield,
   ArrowLeft,
   ScrollText,
+  UserCircle,
 } from "lucide-react";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -110,6 +111,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
               <NavLink href="/dashboard/audit" icon={<ScrollText className="w-[18px] h-[18px]" />}>Activity log</NavLink>
 
               <SideSection label="Account" />
+              <NavLink href="/account" icon={<UserCircle className="w-[18px] h-[18px]" />}>My account</NavLink>
               {isOwner && (
                 <NavLink href="/dashboard/settings" icon={<Settings className="w-[18px] h-[18px]" />}>Settings</NavLink>
               )}

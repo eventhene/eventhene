@@ -7,6 +7,7 @@ const PROTECTED_PREFIXES = [
   "/me",
   "/onboarding",
   "/scan",
+  "/account",
 ];
 
 export function middleware(req: NextRequest) {

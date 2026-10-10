@@ -70,7 +70,7 @@ export function SettingsForm({ user, organizer }: Props) {
           <h2 className="text-sm font-bold text-white uppercase tracking-wider">Account</h2>
         </div>
         <div className="card-glass rounded-2xl p-6 space-y-4">
-          <Field label="Email" value={user.email} disabled hint="Contact support to change" />
+          <Field label="Email" value={user.email} disabled hint="Change it under Sign-in security below" />
           <Field label="Role" value={user.role} disabled />
           <div>
             <label className="block text-xs font-semibold text-white/50 mb-1.5">Full name</label>

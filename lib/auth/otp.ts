@@ -12,16 +12,23 @@ function generateOtp(): string {
 
 export type OtpChannel = "email" | "sms";
 
-export async function createAndSendOtp(userId: string, channel: OtpChannel, destination: string) {
+/**
+ * `purpose` keeps codes for different jobs apart (sign-in, password reset, email change) even when they
+ * travel over the same channel, so a reset code can never be used to confirm an email change.
+ */
+const keyFor = (channel: OtpChannel, purpose?: string) => (purpose ? `${channel}:${purpose}` : channel);
+
+export async function createAndSendOtp(userId: string, channel: OtpChannel, destination: string, purpose?: string) {
+  const dbChannel = keyFor(channel, purpose);
   await db.otp.deleteMany({
-    where: { userId, channel, verified: false },
+    where: { userId, channel: dbChannel, verified: false },
   });
 
   const code = generateOtp();
   const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
 
   await db.otp.create({
-    data: { userId, code, channel, expiresAt },
+    data: { userId, code, channel: dbChannel, expiresAt },
   });
 
   if (channel === "email") {
@@ -45,9 +52,9 @@ export async function createAndSendOtp(userId: string, channel: OtpChannel, dest
   return { sent: true, channel, expiresInSeconds: OTP_EXPIRY_MINUTES * 60 };
 }
 
-export async function verifyOtp(userId: string, channel: OtpChannel, code: string): Promise<{ valid: boolean; reason?: string }> {
+export async function verifyOtp(userId: string, channel: OtpChannel, code: string, purpose?: string): Promise<{ valid: boolean; reason?: string }> {
   const otp = await db.otp.findFirst({
-    where: { userId, channel, verified: false },
+    where: { userId, channel: keyFor(channel, purpose), verified: false },
     orderBy: { createdAt: "desc" },
   });
 

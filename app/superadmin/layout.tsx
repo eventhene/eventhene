@@ -19,6 +19,7 @@ import {
   Ticket,
   Globe,
   ScrollText,
+  UserCircle,
 } from "lucide-react";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -52,6 +53,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <NavLink href="/superadmin/domain" icon={<Globe className="w-[18px] h-[18px]" />}>Domain</NavLink>
 
             <SideSection label="Account" />
+            <NavLink href="/account" icon={<UserCircle className="w-[18px] h-[18px]" />}>My account</NavLink>
             <NavLink href="/dashboard" icon={<ArrowLeft className="w-[18px] h-[18px]" />}>My dashboard</NavLink>
             <SignOutButton className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/40 hover:text-white/70 hover:bg-white/5 transition font-medium w-full text-left" />
           </div>

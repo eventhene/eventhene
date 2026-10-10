@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Menu, X, Shield, LayoutDashboard, ListChecks, CalendarDays, Users, MessageSquare, Briefcase,
-  Headphones, Ticket, Mail, Globe, ArrowLeft, ScrollText,
+  Headphones, Ticket, Mail, Globe, ArrowLeft, ScrollText, UserCircle,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { SignOutButton } from "@/components/SignOutButton";
@@ -105,6 +105,10 @@ export function AdminMobileNav({ email, role }: { email: string; role: string })
 
             <div className="mt-3">
               <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-white/30">Account</p>
+              <Link href="/account" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-white/65 hover:bg-white/5">
+                <UserCircle className="w-5 h-5" />
+                My account
+              </Link>
               <Link href="/dashboard" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-white/65 hover:bg-white/5">
                 <ArrowLeft className="w-5 h-5" />
                 My dashboard

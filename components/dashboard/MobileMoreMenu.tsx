@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MoreHorizontal, PlusCircle, Users, Briefcase, Settings, X, ScrollText } from "lucide-react";
+import { MoreHorizontal, PlusCircle, Users, Briefcase, Settings, X, ScrollText, UserCircle } from "lucide-react";
 import { SignOutButton } from "@/components/SignOutButton";
 
 export function MobileMoreMenu({ isOwner }: { isOwner: boolean }) {
@@ -62,6 +62,10 @@ export function MobileMoreMenu({ isOwner }: { isOwner: boolean }) {
             <Link href="/dashboard/audit" className={item}>
               <ScrollText className="w-5 h-5" />
               Activity log
+            </Link>
+            <Link href="/account" className={item}>
+              <UserCircle className="w-5 h-5" />
+              My account
             </Link>
             {isOwner && (
               <Link href="/dashboard/settings" className={item}>

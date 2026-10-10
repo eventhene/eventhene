@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 
 export function SignInForm({ next }: { next?: string }) {
@@ -191,6 +192,10 @@ export function SignInForm({ next }: { next?: string }) {
             Email
           </button>
         </div>
+      </div>
+
+      <div className="-mt-1 text-right">
+        <Link href="/forgot-password" className="text-xs font-semibold text-accent hover:underline">Forgot password?</Link>
       </div>
 
       {err && <div className="rounded-xl bg-crimson/5 border border-crimson/20 text-crimson text-sm px-4 py-3 font-semibold">{err}</div>}
