@@ -36,6 +36,7 @@ const EditEventBody = z.object({
   type: z.enum(["PAID", "FREE"]),
   buyerPaysFee: z.boolean(),
   welcomeSms: z.boolean().default(true),
+  collectBuyerInfo: z.boolean().optional(),
   ticketTypes: z.array(TicketTypeSchema).min(1).max(20),
   attendeeFields: z.array(AttendeeFieldSchema).min(1).max(30),
 });
@@ -142,6 +143,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
           type: body.type,
           buyerPaysFee: body.buyerPaysFee,
           welcomeSms: body.welcomeSms,
+          ...(body.collectBuyerInfo !== undefined && { collectBuyerInfo: body.collectBuyerInfo }),
           status: nextStatus,
         },
       });

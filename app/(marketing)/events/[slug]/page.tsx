@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { formatDate } from "@/lib/utils";
 import { ShareRow } from "@/components/events/ShareRow";
 import { TicketSelector } from "@/components/events/TicketSelector";
+import { CheckoutForm } from "@/components/checkout/CheckoutForm";
 import type { Metadata } from "next";
 
 export async function generateMetadata({
@@ -96,12 +97,29 @@ export default async function EventPage({ params }: { params: { slug: string } }
           </div>
 
           {!isPast && event.ticketTypes.length > 0 && (
-            <div className="card-glass rounded-2xl p-7 sticky top-24 shadow-lg">
-              <h2 className="font-display text-2xl mb-4">
-                {event.type === "FREE" ? "Reserve your seat" : "Get tickets"}
-              </h2>
-              <TicketSelector event={event as any} />
-            </div>
+            event.type === "FREE" && event.ticketTypes.length === 1 ? (
+              // Free events are plain registration: no tickets, no quantities, just the form.
+              <div className="card-glass rounded-2xl p-7 shadow-lg">
+                <h2 className="font-display text-2xl mb-1">Register for this event</h2>
+                <p className="text-sm text-ink-muted mb-5">It is free. Fill in the form to confirm your spot.</p>
+                {event.ticketTypes[0].sold >= event.ticketTypes[0].quantity ? (
+                  <p className="rounded-xl bg-white/5 p-4 text-sm text-ink-muted">Registration is full.</p>
+                ) : (
+                  <CheckoutForm
+                    mode="registration"
+                    event={event as any}
+                    items={[{ ticketType: event.ticketTypes[0] as any, quantity: 1 }]}
+                  />
+                )}
+              </div>
+            ) : (
+              <div className="card-glass rounded-2xl p-7 sticky top-24 shadow-lg">
+                <h2 className="font-display text-2xl mb-4">
+                  {event.type === "FREE" ? "Reserve your seat" : "Get tickets"}
+                </h2>
+                <TicketSelector event={event as any} />
+              </div>
+            )
           )}
 
           {isPast && (

@@ -1,4 +1,5 @@
 import { getAppUrl } from "@/lib/app-url";
+import { isPlaceholderEmail } from "@/lib/guest-email";
 import { db } from "@/lib/db";
 import { sendEmailDetailed, ticketIssuedEmail } from "@/lib/email";
 import { formatDate } from "@/lib/utils";
@@ -14,11 +15,11 @@ function shortDate(d: Date, tz: string): string {
 }
 
 /** Builds the confirmation text and trims the title until it fits in ONE SMS segment. */
-function confirmationSms(opts: { title: string; date: string; ref: string; url: string }): string {
+function confirmationSms(opts: { title: string; date: string; ref: string; url: string; registration?: boolean }): string {
   let title = opts.title;
   for (;;) {
     const msg = [
-      "EventHene ticket confirmed!",
+      opts.registration ? "EventHene registration confirmed!" : "EventHene ticket confirmed!",
       title,
       opts.date,
       `Ref: ${opts.ref}`,
@@ -128,6 +129,7 @@ export async function sendTicketEmails(orderId: string, pdfBuffers?: Map<string,
         date: shortDate(order.event.startsAt, order.event.timezone),
         ref: ticket.visibleRef,
         url: `${appUrl}/t/${ticket.visibleRef}`,
+        registration: order.event.type === "FREE",
       }),
     });
   }
@@ -174,8 +176,9 @@ export async function sendTicketEmails(orderId: string, pdfBuffers?: Map<string,
   for (const ticket of order.tickets) {
 
     // 2) Email with the PDF attached
+    // Each ticket goes to its own holder if they gave an email, otherwise to the buyer. Never to a placeholder.
     const emailTo = ticket.attendee.email || order.buyerEmail;
-    if (emailTo) {
+    if (emailTo && !isPlaceholderEmail(emailTo)) {
       let pdfBuffer = pdfBuffers?.get(ticket.id);
       if (!pdfBuffer) {
         try {
@@ -186,7 +189,7 @@ export async function sendTicketEmails(orderId: string, pdfBuffers?: Map<string,
       }
       const result = await sendEmailDetailed({
         to: emailTo,
-        subject: `Your ticket for ${order.event.title}`,
+        subject: order.event.type === "FREE" ? `Your registration for ${order.event.title}` : `Your ticket for ${order.event.title}`,
         html: ticketIssuedEmail({
           attendeeName: ticket.attendee.fullName,
           eventTitle: order.event.title,

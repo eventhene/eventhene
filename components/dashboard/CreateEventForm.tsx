@@ -48,6 +48,7 @@ export interface InitialEvent {
   type: "PAID" | "FREE";
   buyerPaysFee: boolean;
   welcomeSms: boolean;
+  collectBuyerInfo: boolean;
   ticketTypes: { id: string; name: string; priceMinor: number; quantity: number; notes: string | null; sold: number }[];
   attendeeFields: { key: string; label: string; type: string; required: boolean; options: string[] }[];
 }
@@ -91,6 +92,9 @@ export function CreateEventForm({
   const [type, setType] = useState<"PAID" | "FREE">(initial?.type ?? "PAID");
   const [buyerPaysFee, setBuyerPaysFee] = useState(initial?.buyerPaysFee ?? true);
   const [welcomeSms, setWelcomeSms] = useState(initial?.welcomeSms ?? true);
+  // Ask for the buyer's name, email and phone before the guest details. New free events default to off.
+  const [collectBuyerInfo, setCollectBuyerInfo] = useState(initial?.collectBuyerInfo ?? true);
+  const [buyerInfoTouched, setBuyerInfoTouched] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [couponValid, setCouponValid] = useState<boolean | null>(null);
   const [couponMsg, setCouponMsg] = useState("");
@@ -160,6 +164,30 @@ export function CreateEventForm({
     if (fileRef.current) fileRef.current.value = "";
   }
 
+  /** Free events are plain registration (no ticket types). Keep one hidden category and a capacity. */
+  function chooseType(next: "PAID" | "FREE") {
+    setType(next);
+    if (!isEdit && !buyerInfoTouched) setCollectBuyerInfo(next === "PAID");
+    if (next === "FREE") {
+      setTickets((prev) =>
+        prev.length === 1 ? [{ ...prev[0], name: prev[0].id ? prev[0].name : "Registration", priceMajor: "0" }] : prev
+      );
+    } else {
+      setTickets((prev) =>
+        prev.length === 1 && !prev[0].id && prev[0].name === "Registration" ? [{ ...prev[0], name: "Regular" }] : prev
+      );
+    }
+  }
+
+  /** With the contact step off, every guest needs phone/email inputs, so make sure those fields exist. */
+  function withContactFields(list: FieldRow[]): FieldRow[] {
+    if (collectBuyerInfo) return list;
+    const out = [...list];
+    if (!out.some((f) => f.key === "PHONE")) out.push({ key: "PHONE", label: "Phone number", type: "PHONE", required: false, options: [] });
+    if (!out.some((f) => f.key === "EMAIL")) out.push({ key: "EMAIL", label: "Email", type: "EMAIL", required: false, options: [] });
+    return out;
+  }
+
   function addTicket() {
     setTickets([...tickets, { name: "", priceMajor: "0", quantity: "50", notes: "" }]);
   }
@@ -210,6 +238,7 @@ export function CreateEventForm({
             type,
             buyerPaysFee,
             welcomeSms,
+            collectBuyerInfo,
             ticketTypes: tickets.map((t, idx) => ({
               id: t.id,
               name: t.name.trim(),
@@ -219,7 +248,7 @@ export function CreateEventForm({
               isActive: true,
               sortOrder: idx,
             })),
-            attendeeFields: fields.map((f, idx) => ({
+            attendeeFields: withContactFields(fields).map((f, idx) => ({
               key: f.key,
               label: f.label,
               type: f.type,
@@ -253,6 +282,7 @@ export function CreateEventForm({
         type,
         buyerPaysFee,
         welcomeSms,
+        collectBuyerInfo,
         couponCode: couponCode.trim() || undefined,
         ticketTypes: tickets.map((t, idx) => ({
           name: t.name.trim(),
@@ -262,7 +292,7 @@ export function CreateEventForm({
           isActive: true,
           sortOrder: idx
         })),
-        attendeeFields: fields.map((f, idx) => ({
+        attendeeFields: withContactFields(fields).map((f, idx) => ({
           key: f.key,
           label: f.label,
           type: f.type,
@@ -310,8 +340,8 @@ export function CreateEventForm({
           <div>
             <label className="label">Event type</label>
             <div className="flex gap-2">
-              <button type="button" disabled={isEdit && hasOrders} onClick={() => setType("PAID")} className={`btn-md flex-1 ${type === "PAID" ? "btn-primary" : "btn-ghost"}`}>Paid</button>
-              <button type="button" disabled={isEdit && hasOrders} onClick={() => setType("FREE")} className={`btn-md flex-1 ${type === "FREE" ? "btn-primary" : "btn-ghost"}`}>Free</button>
+              <button type="button" disabled={isEdit && hasOrders} onClick={() => chooseType("PAID")} className={`btn-md flex-1 ${type === "PAID" ? "btn-primary" : "btn-ghost"}`}>Paid</button>
+              <button type="button" disabled={isEdit && hasOrders} onClick={() => chooseType("FREE")} className={`btn-md flex-1 ${type === "FREE" ? "btn-primary" : "btn-ghost"}`}>Free</button>
             </div>
             {isEdit && hasOrders && <p className="help">Locked because tickets have already been ordered.</p>}
             {!isEdit && type === "FREE" && <p className="help text-sky">Free events are reviewed by EventHene before going live.</p>}
@@ -407,40 +437,70 @@ export function CreateEventForm({
         </div>
       </section>
 
-      {/* SECTION: Tickets */}
+      {/* SECTION: Tickets / Registration */}
       <section className="card p-7 space-y-5">
-        <h2 className="font-display text-2xl">Tickets</h2>
-        {tickets.map((t, i) => (
-          <div key={i} className="grid grid-cols-12 gap-2 items-end">
-            <div className="col-span-4">
-              <label className="label">Name</label>
-              <input required value={t.name} onChange={(e) => updateTicket(i, "name", e.target.value)} className="input" placeholder="Regular / VIP / VVIP" />
-            </div>
-            {type === "PAID" && (
-              <div className="col-span-3">
-                <label className="label">Price (GHS)</label>
-                <input type="number" min="0" step="0.01" required value={t.priceMajor} onChange={(e) => updateTicket(i, "priceMajor", e.target.value)} className="input" />
-              </div>
-            )}
-            <div className={type === "PAID" ? "col-span-3" : "col-span-6"}>
-              <label className="label">Quantity</label>
-              <input type="number" min={Math.max(1, t.sold ?? 0)} required value={t.quantity} onChange={(e) => updateTicket(i, "quantity", e.target.value)} className="input" />
-            </div>
-            <div className="col-span-2 flex">
-              {tickets.length > 1 && (t.sold ?? 0) === 0 && (
-                <button type="button" onClick={() => removeTicket(i)} className="btn-danger btn-sm w-full">Remove</button>
-              )}
-              {(t.sold ?? 0) > 0 && (
-                <p className="text-[11px] text-ink-muted self-end pb-3">{t.sold} sold</p>
-              )}
-            </div>
-            <div className="col-span-12">
-              <label className="label">Notes (optional)</label>
-              <input value={t.notes} onChange={(e) => updateTicket(i, "notes", e.target.value)} className="input" placeholder="Includes welcome drink, table for 4, etc." />
-            </div>
+        <h2 className="font-display text-2xl">{type === "FREE" && tickets.length <= 1 ? "Registration" : "Tickets"}</h2>
+        {type === "FREE" && tickets.length <= 1 ? (
+          <div>
+            <label className="label">How many people can register?</label>
+            <input
+              type="number"
+              min={Math.max(1, tickets[0]?.sold ?? 0)}
+              required
+              value={tickets[0]?.quantity ?? ""}
+              onChange={(e) => updateTicket(0, "quantity", e.target.value)}
+              className="input max-w-xs"
+              placeholder="e.g. 500"
+            />
+            <p className="help">
+              Free events are plain registration: guests just fill the form, there are no ticket types to set up.
+              {(tickets[0]?.sold ?? 0) > 0 ? ` ${tickets[0]?.sold} registered so far.` : ""}
+            </p>
           </div>
-        ))}
-        <button type="button" onClick={addTicket} className="btn-ghost btn-md">+ Add ticket type</button>
+        ) : (
+          <>
+            {tickets.map((t, i) => (
+              <div key={i} className="grid grid-cols-12 gap-2 items-end">
+                <div className="col-span-4">
+                  <label className="label">Name</label>
+                  <input required value={t.name} onChange={(e) => updateTicket(i, "name", e.target.value)} className="input" placeholder="Regular / VIP / VVIP" />
+                </div>
+                {type === "PAID" && (
+                  <div className="col-span-3">
+                    <label className="label">Price (GHS)</label>
+                    <input type="number" min="0" step="0.01" required value={t.priceMajor} onChange={(e) => updateTicket(i, "priceMajor", e.target.value)} className="input" />
+                  </div>
+                )}
+                <div className={type === "PAID" ? "col-span-3" : "col-span-6"}>
+                  <label className="label">Quantity</label>
+                  <input type="number" min={Math.max(1, t.sold ?? 0)} required value={t.quantity} onChange={(e) => updateTicket(i, "quantity", e.target.value)} className="input" />
+                </div>
+                <div className="col-span-2 flex">
+                  {tickets.length > 1 && (t.sold ?? 0) === 0 && (
+                    <button type="button" onClick={() => removeTicket(i)} className="btn-danger btn-sm w-full">Remove</button>
+                  )}
+                  {(t.sold ?? 0) > 0 && (
+                    <p className="text-[11px] text-ink-muted self-end pb-3">{t.sold} sold</p>
+                  )}
+                </div>
+                <div className="col-span-12">
+                  <label className="label">Notes (optional)</label>
+                  <input value={t.notes} onChange={(e) => updateTicket(i, "notes", e.target.value)} className="input" placeholder="Includes welcome drink, table for 4, etc." />
+                </div>
+              </div>
+            ))}
+            <button type="button" onClick={addTicket} className="btn-ghost btn-md">+ Add ticket type</button>
+          </>
+        )}
+        <div className="flex items-start gap-2 pt-4 border-t border-border">
+          <input id="cbi" type="checkbox" className="mt-1" checked={collectBuyerInfo} onChange={(e) => { setCollectBuyerInfo(e.target.checked); setBuyerInfoTouched(true); }} />
+          <label htmlFor="cbi" className="text-sm">
+            Ask for the buyer's name, email and phone first
+            <span className="block text-xs text-ink-muted">
+              Turn this off to keep the form short: guests only fill their own details. Each guest then needs a phone number or an email (phone is best), and their {type === "FREE" ? "confirmation" : "ticket"} goes to them directly.
+            </span>
+          </label>
+        </div>
         <div className="flex items-start gap-2 pt-4 border-t border-border">
           <input id="wsms" type="checkbox" className="mt-1" checked={welcomeSms} onChange={(e) => setWelcomeSms(e.target.checked)} />
           <label htmlFor="wsms" className="text-sm">

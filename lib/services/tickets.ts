@@ -3,6 +3,7 @@ import { buildVisibleRef } from "@/lib/refs";
 import { generateTicketToken, verifyQrPayload, hashToken } from "@/lib/qr";
 import type { Prisma } from "@prisma/client";
 import { sendWelcomeSms } from "@/lib/services/notify";
+import { isPlaceholderEmail } from "@/lib/guest-email";
 
 /** Send the welcome text, but never let a slow SMS hold up the gate: give it 2.5s at most. */
 async function welcomeWithoutBlocking(ticketId: string): Promise<void> {
@@ -57,7 +58,7 @@ export async function issueTicketsForOrder(orderId: string): Promise<IssuedTicke
               eventId: order.eventId,
               orderId: order.id,
               fullName: a.fullName,
-              email: a.email ?? order.buyerEmail,
+              email: a.email ?? (isPlaceholderEmail(order.buyerEmail) ? null : order.buyerEmail),
               phone: a.phone ?? order.buyerPhone,
               gender: a.gender,
               city: a.city,

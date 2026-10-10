@@ -35,6 +35,7 @@ export default async function EditEventPage({ params }: { params: { id: string }
     type: event.type as "PAID" | "FREE",
     buyerPaysFee: event.buyerPaysFee,
     welcomeSms: event.welcomeSms,
+    collectBuyerInfo: event.collectBuyerInfo,
     ticketTypes: event.ticketTypes.map((t) => ({
       id: t.id,
       name: t.name,

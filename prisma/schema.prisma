@@ -278,6 +278,7 @@ model Event {
   status          EventStatus @default(DRAFT)
   buyerPaysFee    Boolean     @default(true)
   welcomeSms      Boolean     @default(true)
+  collectBuyerInfo Boolean    @default(true)
   adminNote       String?     @db.Text
   rejectionReason String?
   couponCode      String?

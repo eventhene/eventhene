@@ -4,6 +4,7 @@ import { CheckCircle, Mail, Ticket, Smartphone } from "lucide-react";
 import { db } from "@/lib/db";
 import { formatMinorAmount } from "@/lib/utils";
 import { PaymentPoller } from "@/components/orders/PaymentPoller";
+import { isPlaceholderEmail } from "@/lib/guest-email";
 
 export const metadata = { title: "Confirmed" };
 export const dynamic = "force-dynamic";
@@ -41,7 +42,12 @@ export default async function OrderSuccessPage({ params }: { params: { id: strin
             </div>
             <h1 className="h-section">You're all set.</h1>
             <p className="text-ink-muted mt-3">
-              Your ticket{order.tickets.length > 1 ? "s are" : " is"} confirmed and sent to <strong className="text-ink">{order.buyerEmail}</strong> and by SMS.
+              {order.event.type === "FREE"
+                ? "You are registered. "
+                : `Your ticket${order.tickets.length > 1 ? "s are" : " is"} confirmed. `}
+              {isPlaceholderEmail(order.buyerEmail)
+                ? "We sent the details by SMS."
+                : <>Sent to <strong className="text-ink">{order.buyerEmail}</strong> and by SMS.</>}
             </p>
           </div>
 
@@ -74,7 +80,7 @@ export default async function OrderSuccessPage({ params }: { params: { id: strin
           <div className="card-glass rounded-2xl p-6 text-sm">
             <p className="font-semibold mb-3">What's next?</p>
             <ul className="space-y-2 text-ink-muted">
-              <li className="flex items-start gap-2"><Mail className="w-4 h-4 text-accent mt-0.5 shrink-0" /> Check your email for the ticket PDF (also check spam)</li>
+              {!isPlaceholderEmail(order.buyerEmail) && <li className="flex items-start gap-2"><Mail className="w-4 h-4 text-accent mt-0.5 shrink-0" /> Check your email for the ticket PDF (also check spam)</li>}
               <li className="flex items-start gap-2"><Ticket className="w-4 h-4 text-accent mt-0.5 shrink-0" /> Save your reference: <span className="font-mono text-ink">{order.tickets[0]?.visibleRef}</span></li>
               <li className="flex items-start gap-2"><Smartphone className="w-4 h-4 text-accent mt-0.5 shrink-0" /> Show the QR at the gate - that's your entry</li>
             </ul>

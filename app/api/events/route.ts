@@ -40,6 +40,7 @@ const CreateEventBody = z.object({
   type: z.enum(["PAID", "FREE"]),
   buyerPaysFee: z.boolean().default(true),
   welcomeSms: z.boolean().default(true),
+  collectBuyerInfo: z.boolean().default(true),
   couponCode: z.string().max(30).optional(),
   ticketTypes: z.array(TicketTypeSchema).min(1).max(20),
   attendeeFields: z.array(AttendeeFieldSchema).min(1).max(30)
@@ -105,6 +106,7 @@ export async function POST(req: NextRequest) {
         type: body.type,
         buyerPaysFee: body.buyerPaysFee,
         welcomeSms: body.welcomeSms,
+        collectBuyerInfo: body.collectBuyerInfo,
         couponCode: body.couponCode?.toUpperCase().trim() || null,
         status: autoPublish ? "PUBLISHED" : "DRAFT",
         publishedAt: autoPublish ? new Date() : null,
