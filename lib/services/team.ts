@@ -132,5 +132,5 @@ export async function acceptTeamInvite(token: string, user: { id: string; phone:
   });
   await markPhoneVerified(user.id);
 
-  return { role: invite.role };
+  return { role: invite.role, organizerId: invite.organizerId };
 }

@@ -2,6 +2,7 @@
 // Replaces the previous Clerk-based module. No external auth provider.
 
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { db } from "./db";
 import type { User, UserRole } from "@prisma/client";
 import { readSession, readSessionFromRequest, destroySession } from "./auth/session";
@@ -69,23 +70,47 @@ export async function requireRole(role: UserRole | UserRole[], req?: ReqWithCook
 }
 
 export type OrganizerAccess = "OWNER" | "MANAGER";
+export const ORG_COOKIE = "eh_org";
 
-/** The organizer a user acts for: their own, or the one that made them a team manager. */
-export async function resolveOrganizerAccess(userId: string) {
+/** Every organizer a user can work in: their own (owner) plus any they manage. Own comes first. */
+export async function listAccessibleOrganizers(userId: string) {
   const own = await db.organizer.findUnique({ where: { userId } });
-  if (own) return { organizer: own, access: "OWNER" as OrganizerAccess };
-  const membership = await db.teamMember.findFirst({
+  const memberships = await db.teamMember.findMany({
     where: { userId, role: "MANAGER" },
     include: { organizer: true },
     orderBy: { createdAt: "asc" },
   });
-  if (membership) return { organizer: membership.organizer, access: "MANAGER" as OrganizerAccess };
-  return null;
+  const list: Array<{ organizer: NonNullable<typeof own>; access: OrganizerAccess }> = [];
+  if (own) list.push({ organizer: own, access: "OWNER" });
+  for (const m of memberships) {
+    if (!own || m.organizerId !== own.id) list.push({ organizer: m.organizer, access: "MANAGER" });
+  }
+  return list;
+}
+
+function preferredOrganizerId(req?: ReqWithCookies): string | undefined {
+  try {
+    const fromReq = req?.cookies.get(ORG_COOKIE)?.value;
+    if (fromReq) return fromReq;
+  } catch {}
+  try {
+    return cookies().get(ORG_COOKIE)?.value;
+  } catch {
+    return undefined;
+  }
+}
+
+/** The organizer the user is currently working in (their pick from the switcher, else their own). */
+export async function resolveOrganizerAccess(userId: string, req?: ReqWithCookies) {
+  const all = await listAccessibleOrganizers(userId);
+  if (all.length === 0) return null;
+  const wanted = preferredOrganizerId(req);
+  return (wanted && all.find((a) => a.organizer.id === wanted)) || all[0];
 }
 
 export async function requireOrganizer(req?: ReqWithCookies) {
   const user = await requireUser(req);
-  const resolved = await resolveOrganizerAccess(user.id);
+  const resolved = await resolveOrganizerAccess(user.id, req);
   if (!resolved) throw new ForbiddenError("No organizer profile");
   if (resolved.organizer.isSuspended) throw new ForbiddenError("Organizer account is suspended");
   return { user, organizer: resolved.organizer, access: resolved.access };

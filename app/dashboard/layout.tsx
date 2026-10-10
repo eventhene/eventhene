@@ -2,7 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { db } from "@/lib/db";
-import { requireUserOrRedirect, resolveOrganizerAccess, isAdmin } from "@/lib/auth";
+import { requireUserOrRedirect, resolveOrganizerAccess, listAccessibleOrganizers, isAdmin } from "@/lib/auth";
+import { OrgSwitcher } from "@/components/dashboard/OrgSwitcher";
 import { Logo } from "@/components/Logo";
 import { SignOutButton } from "@/components/SignOutButton";
 import {
@@ -52,6 +53,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   const org = organizer!;
+  const accessible = access === "ADMIN" ? [] : await listAccessibleOrganizers(user.id);
+  const switcherOrgs = accessible.map((a) => ({ id: a.organizer.id, name: a.organizer.displayName, access: a.access }));
   const isOwner = access === "OWNER";
   const isAdminView = access === "ADMIN";
 
@@ -60,6 +63,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <aside className="fixed left-0 top-0 h-screen w-[260px] hidden md:flex flex-col">
         <div className="m-3 flex-1 flex flex-col rounded-2xl card-glass p-5 overflow-y-auto">
           <Logo variant="icon" size="md" />
+          {switcherOrgs.length > 1 && (
+            <div className="mt-4">
+              <OrgSwitcher currentId={org.id} orgs={switcherOrgs} />
+            </div>
+          )}
 
           {isAdminView ? (
             <div className="mt-6 flex-1 flex flex-col gap-0.5">
@@ -116,6 +124,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       <header className="md:hidden sticky top-0 z-30 glass-dark px-4 py-3 flex items-center justify-between">
         <Logo variant="icon" size="md" />
+        {switcherOrgs.length > 1 && (
+          <div className="flex-1 mx-3 max-w-[220px]">
+            <OrgSwitcher currentId={org.id} orgs={switcherOrgs} compact />
+          </div>
+        )}
         {isAdminView ? (
           <Link href="/superadmin/events" className="text-xs text-white/60 font-semibold">Back to admin</Link>
         ) : (

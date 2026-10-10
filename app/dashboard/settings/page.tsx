@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { requireUserOrRedirect } from "@/lib/auth";
+import { requireUserOrRedirect, resolveOrganizerAccess } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { SignOutButton } from "@/components/SignOutButton";
 import { SettingsForm } from "@/components/settings/SettingsForm";
@@ -12,8 +12,10 @@ export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
   const user = await requireUserOrRedirect("/dashboard/settings");
-  const organizer = await db.organizer.findUnique({ where: { userId: user.id } });
-  if (!organizer) redirect("/dashboard");
+  const ctx = await resolveOrganizerAccess(user.id);
+  // Settings (payouts, profile) belong to the owner: switch to your own organizer to open them.
+  if (!ctx || ctx.access !== "OWNER") redirect("/dashboard");
+  const organizer = ctx.organizer;
 
   return (
     <div className="space-y-8">
