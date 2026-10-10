@@ -325,7 +325,7 @@ export function RecycleBin({ scopeId }: { scopeId: string }) {
             />
             <path d="M20 24v10M24 24v10M28 24v10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             <motion.g
-              animate={{ rotate: lidOpen ? -38 : 0, y: lidOpen ? -1 : 0 }}
+              animate={{ rotate: lidOpen || open ? -38 : 0, y: lidOpen || open ? -1 : 0 }}
               transition={{ type: "spring", stiffness: 420, damping: 18 }}
               style={{ transformBox: "fill-box", transformOrigin: "0% 100%" }}
             >

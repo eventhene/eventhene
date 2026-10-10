@@ -4,9 +4,8 @@ import { db } from "@/lib/db";
 import { SignOutButton } from "@/components/SignOutButton";
 import { SettingsForm } from "@/components/settings/SettingsForm";
 import { PayoutForm } from "@/components/settings/PayoutForm";
-import { AccountVerification } from "@/components/settings/AccountVerification";
-import { SecuritySettings } from "@/components/settings/SecuritySettings";
-import { Banknote } from "lucide-react";
+import Link from "next/link";
+import { Banknote, UserCircle, ChevronRight } from "lucide-react";
 
 export const metadata = { title: "Settings" };
 export const dynamic = "force-dynamic";
@@ -25,14 +24,16 @@ export default async function SettingsPage() {
         <h1 className="h-section mt-1 text-white">Settings</h1>
       </div>
 
-      <AccountVerification
-        phone={user.phone}
-        phoneVerified={user.phoneVerified}
-        email={user.email}
-        emailVerified={user.emailVerified}
-      />
-
-      <SecuritySettings email={user.email} emailVerified={user.emailVerified} />
+      <Link href="/account" className="card-glass flex items-center justify-between gap-3 rounded-2xl p-5 transition hover:bg-white/[0.04]">
+        <div className="flex items-center gap-3">
+          <UserCircle className="h-5 w-5 text-accent" />
+          <div>
+            <p className="text-sm font-semibold text-white">Email, password and verification</p>
+            <p className="text-xs text-white/40">Manage your sign-in details in My account</p>
+          </div>
+        </div>
+        <ChevronRight className="h-4 w-4 text-white/30" />
+      </Link>
 
       <SettingsForm
         user={{
