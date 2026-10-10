@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useAnimationControls } from "framer-motion";
-import { User, Phone, ListChecks, Users, Loader2, RotateCcw, X, Info } from "lucide-react";
+import { User, Phone, ListChecks, Users, Loader2, RotateCcw, X, Info, CheckCircle2 } from "lucide-react";
 import { PagedList } from "./PagedList";
 import {
   onBinChanged,
@@ -65,6 +65,7 @@ export function RecycleBin({ scopeId }: { scopeId: string }) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [rowError, setRowError] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
   const [confirmEmpty, setConfirmEmpty] = useState(false);
   const [emptying, setEmptying] = useState(false);
 
@@ -129,7 +130,9 @@ export function RecycleBin({ scopeId }: { scopeId: string }) {
       if (res.ok && data.ok) {
         setItems((list) => list.filter((i) => i.id !== item.id));
         setNotice(data.note ? `Restored. ${data.note}` : "Restored.");
+        setToast(`${item.label || KIND_NAME[item.kind]} restored`);
         setTimeout(() => setNotice(null), 3500);
+        setTimeout(() => setToast(null), 3500);
         binRestored(item.kind);
       } else {
         setRowError((e) => ({ ...e, [item.id]: data.reason || "Could not restore this item." }));
@@ -302,6 +305,22 @@ export function RecycleBin({ scopeId }: { scopeId: string }) {
               </p>
             </motion.div>
           </>
+        )}
+      </AnimatePresence>
+
+      {/* ---------- restored toast (visible even with the panel closed) ---------- */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            role="status"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 12 }}
+            className="fixed bottom-[144px] right-4 z-[46] flex max-w-[calc(100vw-2rem)] items-center gap-2 rounded-xl border border-emerald-500/30 bg-[#17171c] px-4 py-2.5 text-sm font-semibold text-emerald-400 shadow-xl md:bottom-24 md:right-6"
+          >
+            <CheckCircle2 className="h-4 w-4 shrink-0" />
+            <span className="truncate">{toast}</span>
+          </motion.div>
         )}
       </AnimatePresence>
 
