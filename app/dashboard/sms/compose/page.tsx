@@ -5,7 +5,7 @@ import { BulkSmsComposer } from "@/components/dashboard/BulkSmsComposer";
 export const metadata = { title: "Compose SMS" };
 export const dynamic = "force-dynamic";
 
-export default async function ComposeSmsPage() {
+export default async function ComposeSmsPage({ searchParams }: { searchParams: { event?: string } }) {
   const { organizer } = await requireOrganizer();
 
   const events = await db.event.findMany({
@@ -37,6 +37,7 @@ export default async function ComposeSmsPage() {
           ticketTypes: e.ticketTypes,
           attendeeCount: e._count.tickets,
         }))}
+        initialEventId={events.some((e) => e.id === searchParams.event) ? searchParams.event : undefined}
         initialLists={lists.map((l) => ({ id: l.id, name: l.name, count: l._count.contacts }))}
       />
     </div>

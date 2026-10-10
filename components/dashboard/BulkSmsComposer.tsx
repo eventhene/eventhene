@@ -33,7 +33,7 @@ const TAG_BUTTONS = [
 
 type Phase = "idle" | "creating" | "sending" | "done" | "paused";
 
-export function BulkSmsComposer({ events, initialLists }: { events: EventInfo[]; initialLists: ContactListSummary[] }) {
+export function BulkSmsComposer({ events, initialLists, initialEventId }: { events: EventInfo[]; initialLists: ContactListSummary[]; initialEventId?: string }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const [campaignName, setCampaignName] = useState("");
@@ -42,12 +42,12 @@ export function BulkSmsComposer({ events, initialLists }: { events: EventInfo[];
   // Audience sources (any combination)
   const [useRegistered, setUseRegistered] = useState(events.length > 0);
   const [regScope, setRegScope] = useState<"event" | "all">("event");
-  const [regEventId, setRegEventId] = useState(events[0]?.id || "");
+  const [regEventId, setRegEventId] = useState(initialEventId || events[0]?.id || "");
   const [regFilter, setRegFilter] = useState("ALL");
   const [lists, setLists] = useState<ContactListSummary[]>(initialLists);
   const [selectedListIds, setSelectedListIds] = useState<string[]>([]);
   const [typed, setTyped] = useState("");
-  const [contextEventId, setContextEventId] = useState(events[0]?.id || "");
+  const [contextEventId, setContextEventId] = useState(initialEventId || events[0]?.id || "");
 
   // Preview
   const [preview, setPreview] = useState<any>(null);

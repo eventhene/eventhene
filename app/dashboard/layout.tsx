@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { db } from "@/lib/db";
 import { requireUserOrRedirect, resolveOrganizerAccess, listAccessibleOrganizers, isAdmin } from "@/lib/auth";
 import { OrgSwitcher } from "@/components/dashboard/OrgSwitcher";
+import { MobileMoreMenu } from "@/components/dashboard/MobileMoreMenu";
 import { Logo } from "@/components/Logo";
 import { SignOutButton } from "@/components/SignOutButton";
 import {
@@ -160,13 +161,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <nav className="md:hidden fixed bottom-0 inset-x-0 glass-dark grid grid-cols-5 py-2 z-30">
           <MobileTab href="/dashboard" icon={<LayoutDashboard className="w-4 h-4" />} label="Home" />
           <MobileTab href="/dashboard/events" icon={<CalendarDays className="w-4 h-4" />} label="Events" />
-          <MobileTab href="/dashboard/events/new" icon={<PlusCircle className="w-4 h-4" />} label="New" accent />
+          <MobileTab href="/dashboard/sms" icon={<MessageSquare className="w-4 h-4" />} label="SMS" />
           <MobileTab href="/scan" icon={<ScanLine className="w-4 h-4" />} label="Scan" />
-          {isOwner ? (
-            <MobileTab href="/dashboard/team" icon={<UserPlus className="w-4 h-4" />} label="Team" />
-          ) : (
-            <MobileTab href="/dashboard/sms" icon={<MessageSquare className="w-4 h-4" />} label="SMS" />
-          )}
+          <MobileMoreMenu isOwner={isOwner} />
         </nav>
       )}
     </div>

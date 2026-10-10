@@ -43,7 +43,7 @@ export default async function EventOverviewPage({ params }: { params: { id: stri
         <Link href={`/dashboard/events/${event.id}/edit`} className="btn-primary btn-md">Edit event</Link>
         <Link href={`/events/${event.slug}`} target="_blank" className="btn-ghost btn-md">View public page</Link>
         <Link href={`/dashboard/events/${event.id}/attendees`} className="btn-ghost btn-md">Attendees</Link>
-        <Link href={`/dashboard/events/${event.id}/sms`} className="btn-ghost btn-md">Bulk SMS</Link>
+        <Link href={`/dashboard/sms/compose?event=${event.id}`} className="btn-ghost btn-md">Bulk SMS</Link>
         <Link href={`/scan/${event.id}`} className="btn-primary btn-md">Open scanner</Link>
       </div>
 
@@ -94,7 +94,7 @@ export default async function EventOverviewPage({ params }: { params: { id: stri
             <p className="text-white/60 text-sm mb-4">
               Blast a reminder, update, or thank-you to everyone who registered.
             </p>
-            <Link href={`/dashboard/events/${event.id}/sms`} className="btn-gold btn-md">
+            <Link href={`/dashboard/sms/compose?event=${event.id}`} className="btn-gold btn-md">
               Open SMS composer
             </Link>
           </div>
