@@ -63,7 +63,7 @@ export default async function DashboardHome() {
             <Link href="/dashboard/events/new" className="btn-primary btn-lg">Create event</Link>
           </div>
         ) : (
-          <div className="grid gap-3">
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
             {events.slice(0, 6).map((e) => {
               const sold = e.ticketTypes.reduce((s, t) => s + t.sold, 0);
               const total = e.ticketTypes.reduce((s, t) => s + t.quantity, 0);
@@ -71,16 +71,16 @@ export default async function DashboardHome() {
                 <Link
                   key={e.id}
                   href={`/dashboard/events/${e.id}`}
-                  className="card p-5 flex items-center gap-4 hover:border-ink/20 transition group"
+                  className="card p-4 sm:p-5 min-w-0 flex items-center gap-3 sm:gap-4 hover:border-ink/20 transition group"
                 >
-                  <div className="w-16 h-16 rounded-lg bg-surface-2 shrink-0 overflow-hidden">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg bg-surface-2 shrink-0 overflow-hidden">
                     {e.flyerUrl && (
                       <img src={e.flyerUrl} alt="" className="w-full h-full object-cover" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-lg truncate group-hover:text-accent transition">{e.title}</p>
-                    <p className="text-xs text-ink-muted mt-0.5 font-medium">
+                    <p className="font-bold text-base sm:text-lg truncate group-hover:text-accent transition">{e.title}</p>
+                    <p className="text-xs text-ink-muted mt-0.5 font-medium truncate">
                       {formatDateShort(e.startsAt, e.timezone)} - {e.venue}
                     </p>
                   </div>

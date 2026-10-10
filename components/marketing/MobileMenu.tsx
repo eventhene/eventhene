@@ -56,7 +56,7 @@ export function MobileMenu({ isLoggedIn }: { isLoggedIn: boolean }) {
           {/* Menu panel */}
           <div
             id="mobile-nav-panel"
-            className="fixed top-16 inset-x-0 z-40 bg-[#0a0a0c]/95 backdrop-blur-xl border-t border-white/10 px-5 py-6 animate-fade-up"
+            className="fixed top-16 inset-x-0 z-40 bg-[#0a0a0c] border-t border-white/10 px-5 py-6 animate-fade-up"
           >
             <div className="flex flex-col gap-1 text-sm font-semibold">
               <MLink href="/events" onClick={close}>Discover</MLink>

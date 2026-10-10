@@ -58,7 +58,28 @@ export default async function AttendeesPage({
       {tickets.length === 0 ? (
         <div className="card p-16 text-center text-ink-muted">No attendees yet.</div>
       ) : (
-        <div className="card overflow-hidden">
+        <>
+        <div className="md:hidden space-y-2.5">
+          {tickets.map((t) => (
+            <div key={t.id} className="card p-4 min-w-0">
+              <div className="flex items-start justify-between gap-3">
+                <p className="font-semibold min-w-0 break-words">{t.attendee.fullName}</p>
+                {t.status === "ATTENDED" ? (
+                  <span className="chip-emerald shrink-0">Attended</span>
+                ) : (
+                  <span className="chip-outline shrink-0">{t.status.replace("_", " ").toLowerCase()}</span>
+                )}
+              </div>
+              <p className="font-mono text-xs text-ink-muted mt-1 break-all">{t.visibleRef}</p>
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-muted">
+                <span className="chip-outline">{t.ticketType.name}</span>
+                <span className="font-mono">{t.attendee.phone ?? "-"}</span>
+                <span>{formatDateShort(t.createdAt)}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="card overflow-hidden hidden md:block">
           <table className="w-full text-sm">
             <thead className="bg-surface-2 text-left">
               <tr>
@@ -90,6 +111,7 @@ export default async function AttendeesPage({
             </tbody>
           </table>
         </div>
+        </>
       )}
     </div>
   );

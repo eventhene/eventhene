@@ -30,7 +30,24 @@ export default async function EventsListPage() {
           <Link href="/dashboard/events/new" className="btn-primary btn-lg">Create event</Link>
         </div>
       ) : (
-        <div className="card overflow-hidden">
+        <>
+        <div className="md:hidden space-y-3">
+          {events.map((e) => {
+            const sold = e.ticketTypes.reduce((s, t) => s + t.sold, 0);
+            const total = e.ticketTypes.reduce((s, t) => s + t.quantity, 0);
+            return (
+              <Link key={e.id} href={`/dashboard/events/${e.id}`} className="card block p-4 min-w-0">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="font-bold text-base leading-snug min-w-0 break-words">{e.title}</p>
+                  <StatusChip status={e.status} />
+                </div>
+                <p className="text-xs text-ink-muted mt-1 truncate">{formatDateShort(e.startsAt, e.timezone)} - {e.venue}</p>
+                <p className="text-xs font-mono font-semibold mt-2">{sold} / {total} registered</p>
+              </Link>
+            );
+          })}
+        </div>
+        <div className="card overflow-hidden hidden md:block">
           <table className="w-full text-sm">
             <thead className="bg-surface-2 text-left">
               <tr>
@@ -61,6 +78,7 @@ export default async function EventsListPage() {
             </tbody>
           </table>
         </div>
+        </>
       )}
     </div>
   );

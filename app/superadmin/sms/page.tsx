@@ -70,7 +70,24 @@ export default async function AdminSmsPage() {
       {/* History */}
       <section>
         <h2 className="h-card mb-4">All Sender IDs</h2>
-        <div className="card overflow-hidden">
+        <div className="md:hidden space-y-2.5">
+          {otherStatuses.map((o) => (
+            <div key={o.id} className="card p-4 min-w-0">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-medium break-words">{o.displayName}</p>
+                  <p className="text-xs text-ink-muted break-all">{o.user.email}</p>
+                </div>
+                <StatusChip status={o.senderIdStatus} />
+              </div>
+              <div className="mt-2 flex items-center justify-between text-xs">
+                <span className="font-mono">{o.senderId ?? "No sender ID"}</span>
+                <span className="font-mono text-ink-muted">{o.smsBalance} credits</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="card overflow-hidden hidden md:block">
           <table className="w-full text-sm">
             <thead className="bg-surface-2 text-left">
               <tr>
@@ -102,7 +119,20 @@ export default async function AdminSmsPage() {
         {recentCampaigns.length === 0 ? (
           <p className="text-sm text-ink-muted">None yet.</p>
         ) : (
-          <div className="card overflow-hidden">
+          <>
+          <div className="md:hidden space-y-2.5">
+            {recentCampaigns.map((c) => (
+              <div key={c.id} className="card p-4 min-w-0">
+                <p className="font-medium break-words">{c.name}</p>
+                <p className="text-xs text-ink-muted mt-0.5">{c.organizer.displayName} - {formatDate(c.createdAt)}</p>
+                <div className="mt-2 flex items-center justify-between text-xs">
+                  <span className="font-mono">{c.senderId}</span>
+                  <span className="font-mono text-ink-muted">{c.totalSent} sent / {c.totalFailed} failed</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="card overflow-hidden hidden md:block">
             <table className="w-full text-sm">
               <thead className="bg-surface-2 text-left">
                 <tr>
@@ -126,6 +156,7 @@ export default async function AdminSmsPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </section>
     </div>

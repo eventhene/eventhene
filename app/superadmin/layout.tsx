@@ -4,6 +4,7 @@ import { requireUserOrRedirect, isAdmin } from "@/lib/auth";
 import { Logo } from "@/components/Logo";
 import { SignOutButton } from "@/components/SignOutButton";
 import { PhoneVerifyCard } from "@/components/admin/PhoneVerifyCard";
+import { AdminMobileNav } from "@/components/admin/AdminMobileNav";
 import {
   LayoutDashboard,
   CalendarDays,
@@ -59,6 +60,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </div>
         </div>
       </aside>
+      <AdminMobileNav email={user.email} role={user.role} />
       <main className="md:ml-[260px] p-5 md:p-10 max-w-6xl">
         {!user.phoneVerified && <PhoneVerifyCard defaultPhone={user.phone} />}
         {children}

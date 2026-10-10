@@ -16,7 +16,22 @@ export default async function AllEventsAdmin() {
         <p className="text-sm text-white/40">Admin</p>
         <h1 className="h-section mt-1 text-white">All events</h1>
       </div>
-      <div className="card-glass rounded-2xl overflow-hidden overflow-x-auto">
+      <div className="md:hidden space-y-3">
+        {events.map((e) => (
+          <div key={e.id} className="card-glass rounded-2xl p-4 min-w-0">
+            <div className="flex items-start justify-between gap-3">
+              <Link href={`/events/${e.slug}`} className="font-semibold text-white leading-snug min-w-0 break-words">{e.title}</Link>
+              <StatusChip status={e.status} />
+            </div>
+            <p className="text-xs text-white/40 mt-1">{e.organizer.displayName} - {new Date(e.startsAt).toLocaleDateString()}</p>
+            <div className="mt-3 flex items-center justify-between">
+              <span className="text-xs font-mono text-white/60">{e._count.tickets} registered</span>
+              <Link href={`/dashboard/events/${e.id}`} className="btn-gold btn-sm">Open as admin</Link>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="card-glass rounded-2xl overflow-hidden overflow-x-auto hidden md:block">
         <table className="w-full text-sm">
           <thead className="bg-white/5 text-left text-white/60">
             <tr>
