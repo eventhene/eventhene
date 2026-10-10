@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireOrganizer } from "@/lib/auth";
+import { actorFor, logAudit } from "@/lib/audit";
+import { snapshotDeleted } from "@/lib/recycle";
 
 function handleError(e: any, tag: string) {
   if (e?.name === "UnauthorizedError") return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -55,8 +57,20 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   try {
     const list = await ownList(req, params.id);
     if (!list) return NextResponse.json({ error: "List not found." }, { status: 404 });
+    const { user, organizer } = await requireOrganizer(req);
+    const actor = actorFor(user, organizer.userId);
+    const contacts = await db.contact.findMany({ where: { listId: list.id } });
+    const binId = await snapshotDeleted({
+      organizerId: list.organizerId,
+      kind: "contact_list",
+      recordId: list.id,
+      label: `${list.name} (${contacts.length} contact${contacts.length === 1 ? "" : "s"})`,
+      snapshot: { list, contacts },
+      actor,
+    });
     await db.contactList.delete({ where: { id: list.id } });
-    return NextResponse.json({ ok: true });
+    await logAudit({ organizerId: list.organizerId, actor, action: "contact_list.delete", targetType: "contact_list", targetId: list.id, label: `Deleted contact list ${list.name} (${contacts.length} contacts)`, meta: { recoverable: !!binId, contacts: contacts.length } });
+    return NextResponse.json({ ok: true, binId });
   } catch (e) {
     return handleError(e, "[sms/contact-lists/:id DELETE]");
   }

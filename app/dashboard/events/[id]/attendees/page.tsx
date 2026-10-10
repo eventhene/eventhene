@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { requireEventOwner } from "@/lib/auth";
-import { formatDateShort } from "@/lib/utils";
+import { AttendeesTable, type AttendeeRow, type AttendeeCol } from "@/components/dashboard/AttendeesTable";
 
 export const dynamic = "force-dynamic";
 
@@ -19,19 +19,61 @@ export default async function AttendeesPage({
   if (filter === "attended") where.status = "ATTENDED";
   if (filter === "unattended") where.status = { in: ["TICKET_ISSUED", "PAID", "REGISTERED"] };
 
-  const tickets = await db.ticket.findMany({
-    where,
-    include: { attendee: true, ticketType: true },
-    orderBy: { createdAt: "desc" },
-    take: 500,
+  const [tickets, fields] = await Promise.all([
+    db.ticket.findMany({
+      where,
+      include: { attendee: true, ticketType: true },
+      orderBy: { createdAt: "desc" },
+      take: 1000,
+    }),
+    db.attendeeField.findMany({ where: { eventId: params.id }, orderBy: { sortOrder: "asc" } }),
+  ]);
+
+  // one column for every field the organizer collected (custom fields by their label)
+  const cols: AttendeeCol[] = fields
+    .filter((f) => f.key !== "FULL_NAME")
+    .map((f) => ({ key: f.key === "CUSTOM" ? `c:${f.label}` : f.key, label: f.label }));
+
+  const rows: AttendeeRow[] = tickets.map((t) => {
+    const a = t.attendee;
+    const custom = (a.customAnswers ?? {}) as Record<string, unknown>;
+    const values: Record<string, string> = {
+      PHONE: a.phone ?? "",
+      EMAIL: a.email ?? "",
+      GENDER: a.gender ?? "",
+      CITY: a.city ?? "",
+      ADDRESS: a.address ?? "",
+      ORGANIZATION: a.organization ?? "",
+      AGE_RANGE: a.ageRange ?? "",
+      EMERGENCY_CONTACT: a.emergencyContact ?? "",
+    };
+    for (const [k, v] of Object.entries(custom)) values[`c:${k}`] = v == null ? "" : String(v);
+    return {
+      id: t.id,
+      ref: t.visibleRef,
+      name: a.fullName,
+      typeName: t.ticketType.name,
+      status: t.status,
+      registeredAt: t.createdAt.toISOString(),
+      checkedInAt: t.usedAt ? t.usedAt.toISOString() : null,
+      values,
+    };
   });
+
+  // phone and email are always worth showing if any guest has them, even if the form did not ask
+  for (const key of ["PHONE", "EMAIL"]) {
+    if (!cols.some((c) => c.key === key) && rows.some((r) => r.values[key])) {
+      cols.unshift({ key, label: key === "PHONE" ? "Phone number" : "Email" });
+    }
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-end justify-between flex-wrap gap-4">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-sm text-ink-muted">{event.title}</p>
-          <h1 className="h-section mt-1">Attendees</h1>
+          <h1 className="h-section mt-1">{event.type === "FREE" ? "Registered guests" : "Attendees"}</h1>
+          <p className="mt-1 text-xs text-ink-muted">{tickets.length} shown</p>
         </div>
         <div className="flex gap-2">
           <a href={`/api/events/${params.id}/attendees/export?filter=${filter}&format=xlsx`} className="btn-primary btn-md">
@@ -43,76 +85,19 @@ export default async function AttendeesPage({
         </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {(["all", "attended", "unattended"] as const).map((f) => (
           <Link
             key={f}
             href={`/dashboard/events/${params.id}/attendees?filter=${f}`}
             className={`chip ${filter === f ? "chip-ink" : "chip-outline"}`}
           >
-            {f === "all" ? "All" : f === "attended" ? "Attended" : "Not attended yet"}
+            {f === "all" ? "All" : f === "attended" ? "Checked in" : "Not checked in yet"}
           </Link>
         ))}
       </div>
 
-      {tickets.length === 0 ? (
-        <div className="card p-16 text-center text-ink-muted">No attendees yet.</div>
-      ) : (
-        <>
-        <div className="md:hidden space-y-2.5">
-          {tickets.map((t) => (
-            <div key={t.id} className="card p-4 min-w-0">
-              <div className="flex items-start justify-between gap-3">
-                <p className="font-semibold min-w-0 break-words">{t.attendee.fullName}</p>
-                {t.status === "ATTENDED" ? (
-                  <span className="chip-emerald shrink-0">Attended</span>
-                ) : (
-                  <span className="chip-outline shrink-0">{t.status.replace("_", " ").toLowerCase()}</span>
-                )}
-              </div>
-              <p className="font-mono text-xs text-ink-muted mt-1 break-all">{t.visibleRef}</p>
-              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-muted">
-                <span className="chip-outline">{t.ticketType.name}</span>
-                <span className="font-mono">{t.attendee.phone ?? "-"}</span>
-                <span>{formatDateShort(t.createdAt)}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="card overflow-hidden hidden md:block">
-          <table className="w-full text-sm">
-            <thead className="bg-surface-2 text-left">
-              <tr>
-                <th className="px-5 py-4">Reference</th>
-                <th className="px-5 py-4">Name</th>
-                <th className="px-5 py-4">Type</th>
-                <th className="px-5 py-4">Phone</th>
-                <th className="px-5 py-4">Status</th>
-                <th className="px-5 py-4">Booked</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tickets.map((t) => (
-                <tr key={t.id} className="border-t border-border hover:bg-surface-2/50">
-                  <td className="px-5 py-4 font-mono text-xs">{t.visibleRef}</td>
-                  <td className="px-5 py-4">{t.attendee.fullName}</td>
-                  <td className="px-5 py-4"><span className="chip-outline">{t.ticketType.name}</span></td>
-                  <td className="px-5 py-4 text-ink-muted font-mono text-xs">{t.attendee.phone ?? "-"}</td>
-                  <td className="px-5 py-4">
-                    {t.status === "ATTENDED" ? (
-                      <span className="chip-emerald">Attended</span>
-                    ) : (
-                      <span className="chip-outline">{t.status.replace("_", " ").toLowerCase()}</span>
-                    )}
-                  </td>
-                  <td className="px-5 py-4 text-ink-muted">{formatDateShort(t.createdAt)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        </>
-      )}
+      <AttendeesTable eventId={params.id} eventType={event.type as "PAID" | "FREE"} timezone={event.timezone} cols={cols} rows={rows} />
     </div>
   );
 }

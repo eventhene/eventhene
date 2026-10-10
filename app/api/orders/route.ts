@@ -59,20 +59,13 @@ export async function POST(req: NextRequest) {
       if (!buyerName) return NextResponse.json({ error: "Please enter your full name." }, { status: 400 });
       if (!buyerEmail) return NextResponse.json({ error: "Please enter your email address." }, { status: 400 });
     } else {
-      // Contact step is off: every guest must give a phone number or an email (phone is best).
+      // Contact step is off: each guest's own details are what we have. What is required is the
+      // organizer's choice (the form already enforces it); we only check a name and a sane phone.
       for (const [i, a] of allAttendees.entries()) {
-        const hasPhone = !!a.phone && !!normalizeGhPhone(a.phone);
-        const hasEmail = !!a.email;
         if (!a.fullName?.trim()) {
           return NextResponse.json({ error: `Please enter the name for guest ${i + 1}.` }, { status: 400 });
         }
-        if (!hasPhone && !hasEmail) {
-          return NextResponse.json(
-            { error: `Please add a phone number or an email for ${a.fullName || `guest ${i + 1}`}. Phone is best, it is how the ticket reaches them.` },
-            { status: 400 }
-          );
-        }
-        if (a.phone && !hasPhone) {
+        if (a.phone && !normalizeGhPhone(a.phone)) {
           return NextResponse.json({ error: `The phone number for ${a.fullName} does not look right.` }, { status: 400 });
         }
       }

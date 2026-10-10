@@ -67,15 +67,21 @@ export function CheckoutForm({
     ? attendees.map(() => items[0].ticketType.id)
     : items.flatMap((item) => Array.from({ length: item.quantity }, () => item.ticketType.id));
 
-  // When the contact step is off, make sure phone and email inputs always exist.
-  const fields: Field[] = (() => {
-    if (collectBuyer) return event.attendeeFields;
-    const out = [...event.attendeeFields];
-    if (!out.some((f) => f.key === "PHONE")) out.splice(1, 0, { id: "v-phone", key: "PHONE", label: "Phone number", type: "PHONE", required: false, options: [] });
-    if (!out.some((f) => f.key === "EMAIL")) out.splice(2, 0, { id: "v-email", key: "EMAIL", label: "Email", type: "EMAIL", required: false, options: [] });
-    if (!out.some((f) => f.key === "FULL_NAME")) out.unshift({ id: "v-name", key: "FULL_NAME", label: "Full name", type: "TEXT", required: true, options: [] });
-    return out;
-  })();
+  // The form shows exactly what the organizer chose to collect. Only a name is always needed.
+  const fields: Field[] = event.attendeeFields.some((f) => f.key === "FULL_NAME")
+    ? event.attendeeFields
+    : [{ id: "v-name", key: "FULL_NAME", label: "Full name", type: "TEXT", required: true, options: [] }, ...event.attendeeFields];
+
+  // Where the confirmation can go depends on which contact fields the organizer included.
+  const hasPhoneField = fields.some((f) => f.key === "PHONE");
+  const hasEmailField = fields.some((f) => f.key === "EMAIL");
+  const confirmationNote = hasPhoneField && hasEmailField
+    ? "Confirmation will be sent to your phone number or email."
+    : hasPhoneField
+    ? "Confirmation will be sent to your phone number."
+    : hasEmailField
+    ? "Confirmation will be sent to your email."
+    : null;
 
   function setAttendeeField(idx: number, key: string, value: any) {
     setAttendees((prev) => prev.map((a, i) => (i === idx ? { ...a, [key]: value } : a)));
@@ -108,11 +114,8 @@ export function CheckoutForm({
 
     if (!collectBuyer) {
       for (let i = 0; i < attendees.length; i++) {
-        const a = attendees[i];
-        const who = attendees.length > 1 ? `guest ${i + 1}` : "you";
-        if (!a.fullName?.trim()) return setErr(`Please enter the name for ${who}.`);
-        if (!a.phone?.trim() && !a.email?.trim()) {
-          return setErr(`Please add a phone number or an email for ${who}. A phone number is best, it is how the ${registration ? "confirmation" : "ticket"} reaches you.`);
+        if (!attendees[i].fullName?.trim()) {
+          return setErr(attendees.length > 1 ? `Please enter the name for guest ${i + 1}.` : "Please enter your name.");
         }
       }
     }
@@ -183,12 +186,10 @@ export function CheckoutForm({
   }
 
   const subtotal = items.reduce((s, i) => s + i.ticketType.priceMinor * i.quantity, 0);
-  const isContactKey = (k: string) => k === "PHONE" || k === "EMAIL";
 
   function renderAttendeeField(idx: number, f: Field) {
     const val = getFieldValue(idx, f);
-    // With the contact step off, phone/email are "one of the two" and checked on submit.
-    const required = f.required && !(!collectBuyer && isContactKey(f.key));
+    const required = f.required;
 
     if (f.type === "TEXTAREA") {
       return (
@@ -253,10 +254,8 @@ export function CheckoutForm({
             </p>
           </>
         )}
-        {registration && !collectBuyer && (
-          <p className="text-sm text-ink-muted mb-4">
-            Add a phone number or an email so we can send your confirmation. A phone number is best.
-          </p>
+        {!collectBuyer && confirmationNote && (
+          <p className="text-sm text-ink-muted mb-4">{confirmationNote}</p>
         )}
         {attendees.map((_, idx) => {
           const tt = items.find((i) => i.ticketType.id === attendeeTicketMap[idx]);
@@ -279,8 +278,7 @@ export function CheckoutForm({
                   <div key={f.id} className={f.type === "TEXTAREA" ? "md:col-span-2" : ""}>
                     <label className="label">
                       {f.label}
-                      {f.required && !(!collectBuyer && isContactKey(f.key)) && <span className="text-danger"> *</span>}
-                      {!collectBuyer && f.key === "PHONE" && <span className="text-ink-muted font-normal"> (best)</span>}
+                      {f.required && <span className="text-danger"> *</span>}
                     </label>
                     {renderAttendeeField(idx, f)}
                   </div>

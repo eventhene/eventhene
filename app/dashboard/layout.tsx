@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { requireUserOrRedirect, resolveOrganizerAccess, listAccessibleOrganizers, isAdmin } from "@/lib/auth";
 import { OrgSwitcher } from "@/components/dashboard/OrgSwitcher";
 import { MobileMoreMenu } from "@/components/dashboard/MobileMoreMenu";
+import { RecycleBin } from "@/components/recycle/RecycleBin";
 import { Logo } from "@/components/Logo";
 import { SignOutButton } from "@/components/SignOutButton";
 import {
@@ -19,6 +20,7 @@ import {
   Settings,
   Shield,
   ArrowLeft,
+  ScrollText,
 } from "lucide-react";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -28,21 +30,28 @@ export default async function DashboardLayout({ children }: { children: React.Re
   let organizer = resolved?.organizer ?? null;
   let access: "OWNER" | "MANAGER" | "ADMIN" = resolved?.access ?? "OWNER";
 
+  // An event page always works in that event's organizer, whichever one you were last in.
+  const path = headers().get("x-pathname") || "";
+  const eventMatch = path.match(/^\/dashboard\/events\/([^/]+)/);
+  if (eventMatch && eventMatch[1] !== "new") {
+    const event = await db.event.findUnique({ where: { id: eventMatch[1] }, include: { organizer: true } });
+    if (event && event.organizerId !== organizer?.id) {
+      if (isAdmin(user.role)) {
+        organizer = event.organizer;
+        access = "ADMIN";
+      } else {
+        const mine = (await listAccessibleOrganizers(user.id)).find((a) => a.organizer.id === event.organizerId);
+        if (mine) {
+          organizer = mine.organizer;
+          access = mine.access;
+        }
+      }
+    }
+  }
+
   if (!organizer) {
     // Admins can step into any organizer's event from the admin panel.
     if (isAdmin(user.role)) {
-      const path = headers().get("x-pathname") || "";
-      const match = path.match(/^\/dashboard\/events\/([^/]+)/);
-      if (match && match[1] !== "new") {
-        const event = await db.event.findUnique({
-          where: { id: match[1] },
-          include: { organizer: true },
-        });
-        if (event) {
-          organizer = event.organizer;
-          access = "ADMIN";
-        }
-      }
       if (!organizer) redirect("/superadmin");
     } else {
       // Scanner-only team members and event staff go straight to the scanner.
@@ -98,6 +107,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
                 <NavLink href="/dashboard/team" icon={<Users className="w-[18px] h-[18px]" />}>Team</NavLink>
               )}
               <NavLink href="/dashboard/services" icon={<Briefcase className="w-[18px] h-[18px]" />}>Services</NavLink>
+              <NavLink href="/dashboard/audit" icon={<ScrollText className="w-[18px] h-[18px]" />}>Activity log</NavLink>
 
               <SideSection label="Account" />
               {isOwner && (
@@ -156,6 +166,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
         )}
         {children}
       </main>
+
+      <RecycleBin scopeId={org.id} />
 
       {!isAdminView && (
         <nav className="md:hidden fixed bottom-0 inset-x-0 glass-dark grid grid-cols-5 py-2 z-30">

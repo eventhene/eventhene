@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { binDeleted, onBinRestored, rectOf, type FlyDetail } from "@/lib/recycle-bus";
 import { Loader2, Send, Trash2, RefreshCw, ShieldCheck, ScanLine, CheckCircle2, Clock, UserPlus } from "lucide-react";
 
 interface Member {
@@ -72,7 +73,9 @@ export function TeamManager({
     }
   }
 
-  async function rowAction(key: string, url: string, method: "POST" | "DELETE", okText: string) {
+  useEffect(() => onBinRestored((k) => { if (k === "team_member") router.refresh(); }), [router]);
+
+  async function rowAction(key: string, url: string, method: "POST" | "DELETE", okText: string, onDone?: () => void) {
     setRowBusy(key);
     setNotice(null);
     try {
@@ -80,6 +83,7 @@ export function TeamManager({
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Something went wrong.");
       setNotice({ kind: data.smsSent === false ? "err" : "ok", text: data.smsSent === false ? "Could not send the SMS." : okText });
+      onDone?.();
       router.refresh();
     } catch (e: any) {
       setNotice({ kind: "err", text: e.message });
@@ -233,9 +237,11 @@ export function TeamManager({
                   </div>
                 </div>
                 <button
-                  onClick={() => {
-                    if (confirm(`Remove ${m.name} from your team?`)) {
-                      rowAction(`m-${m.id}`, `/api/team/members/${m.id}`, "DELETE", "Team member removed.");
+                  onClick={(e) => {
+                    // capture the button position synchronously, before anything changes
+                    const rect: FlyDetail["rect"] = rectOf(e.currentTarget);
+                    if (confirm(`Remove ${m.name} from your team? You can restore them from the recycle bin.`)) {
+                      rowAction(`m-${m.id}`, `/api/team/members/${m.id}`, "DELETE", "Team member removed.", () => binDeleted("team_member", rect));
                     }
                   }}
                   disabled={rowBusy === `m-${m.id}`}

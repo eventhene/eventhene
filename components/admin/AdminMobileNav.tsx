@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Menu, X, Shield, LayoutDashboard, ListChecks, CalendarDays, Users, MessageSquare, Briefcase,
-  Headphones, Ticket, Mail, Globe, ArrowLeft,
+  Headphones, Ticket, Mail, Globe, ArrowLeft, ScrollText,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { SignOutButton } from "@/components/SignOutButton";
@@ -28,6 +28,7 @@ const GROUPS: { label: string; items: { href: string; label: string; icon: React
       { href: "/superadmin/support", label: "Support", icon: <Headphones className="w-5 h-5" /> },
       { href: "/superadmin/coupons", label: "Coupons", icon: <Ticket className="w-5 h-5" /> },
       { href: "/superadmin/email", label: "Email setup", icon: <Mail className="w-5 h-5" /> },
+      { href: "/superadmin/audit", label: "Audit trail", icon: <ScrollText className="w-5 h-5" /> },
       { href: "/superadmin/domain", label: "Domain", icon: <Globe className="w-5 h-5" /> },
     ],
   },

@@ -51,7 +51,7 @@ export async function sendWelcomeSms(ticketId: string): Promise<void> {
       where: { id: ticketId },
       include: { attendee: true, event: true, order: { select: { buyerPhone: true } } },
     });
-    if (!ticket || !ticket.event.welcomeSms) return;
+    if (!ticket || !ticket.event.welcomeSms || ticket.welcomedAt) return;
     const phone = ticket.attendee.phone || ticket.order?.buyerPhone;
     if (!phone) return;
 
@@ -72,6 +72,9 @@ export async function sendWelcomeSms(ticketId: string): Promise<void> {
       }
     }
     const sms = await sendSMS(phone, msg);
+    if (sms.ok) {
+      await db.ticket.update({ where: { id: ticketId }, data: { welcomedAt: new Date() } }).catch(() => {});
+    }
     if (!sms.ok) {
       console.error("[notify] welcome SMS failed", sms.error);
       if (organizerPays) {

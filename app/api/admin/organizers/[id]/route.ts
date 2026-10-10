@@ -39,6 +39,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
           where: { organizerId: organizer.id },
           data: { organizerId: null },
         });
+        await tx.deletedRecord.deleteMany({ where: { organizerId: organizer.id } });
         await tx.event.deleteMany({ where: { organizerId: organizer.id } });
         await tx.organizer.delete({ where: { id: organizer.id } });
         await tx.user.update({

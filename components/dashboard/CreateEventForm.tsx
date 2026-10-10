@@ -179,15 +179,6 @@ export function CreateEventForm({
     }
   }
 
-  /** With the contact step off, every guest needs phone/email inputs, so make sure those fields exist. */
-  function withContactFields(list: FieldRow[]): FieldRow[] {
-    if (collectBuyerInfo) return list;
-    const out = [...list];
-    if (!out.some((f) => f.key === "PHONE")) out.push({ key: "PHONE", label: "Phone number", type: "PHONE", required: false, options: [] });
-    if (!out.some((f) => f.key === "EMAIL")) out.push({ key: "EMAIL", label: "Email", type: "EMAIL", required: false, options: [] });
-    return out;
-  }
-
   function addTicket() {
     setTickets([...tickets, { name: "", priceMajor: "0", quantity: "50", notes: "" }]);
   }
@@ -248,7 +239,7 @@ export function CreateEventForm({
               isActive: true,
               sortOrder: idx,
             })),
-            attendeeFields: withContactFields(fields).map((f, idx) => ({
+            attendeeFields: fields.map((f, idx) => ({
               key: f.key,
               label: f.label,
               type: f.type,
@@ -292,7 +283,7 @@ export function CreateEventForm({
           isActive: true,
           sortOrder: idx
         })),
-        attendeeFields: withContactFields(fields).map((f, idx) => ({
+        attendeeFields: fields.map((f, idx) => ({
           key: f.key,
           label: f.label,
           type: f.type,
@@ -497,7 +488,7 @@ export function CreateEventForm({
           <label htmlFor="cbi" className="text-sm">
             Ask for the buyer's name, email and phone first
             <span className="block text-xs text-ink-muted">
-              Turn this off to keep the form short: guests only fill their own details. Each guest then needs a phone number or an email (phone is best), and their {type === "FREE" ? "confirmation" : "ticket"} goes to them directly.
+              Turn this off to keep the form short: guests only fill their own details. Their {type === "FREE" ? "confirmation" : "ticket"} goes to the phone number or email you collect below, and you choose which of those to ask for and whether they are required.
             </span>
           </label>
         </div>

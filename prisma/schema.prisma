@@ -403,6 +403,7 @@ model Ticket {
   issuedAt        DateTime?
   usedAt          DateTime?
   scannedByUserId String?
+  welcomedAt      DateTime?
   pdfUrl          String?
   createdAt       DateTime     @default(now())
 
@@ -712,4 +713,45 @@ model TeamInvite {
   createdAt      DateTime         @default(now())
 
   @@index([organizerId, status])
+}
+
+// ============================================================
+// RECYCLE BIN + AUDIT TRAIL
+// ============================================================
+
+/// Full snapshot of anything deleted from an organizer's workspace, so it can be restored.
+model DeletedRecord {
+  id          String    @id @default(cuid())
+  organizerId String
+  eventId     String?
+  kind        String    // guest | contact | contact_list | team_member
+  recordId    String
+  label       String
+  snapshot    Json
+  actorId     String?
+  actorName   String
+  restored    Boolean   @default(false)
+  restoredAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([organizerId, createdAt(sort: Desc)])
+}
+
+/// Who did what, for organizers and platform admins to review later.
+model OrgAuditLog {
+  id          String   @id @default(cuid())
+  organizerId String
+  eventId     String?
+  actorId     String?
+  actorName   String
+  actorRole   String   // OWNER | MANAGER | ADMIN
+  action      String   // e.g. guest.delete, guest.restore, checkin.remove
+  targetType  String
+  targetId    String?
+  label       String
+  meta        Json?
+  createdAt   DateTime @default(now())
+
+  @@index([organizerId, createdAt(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
 }

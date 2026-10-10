@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Plus, Loader2, Trash2, ChevronDown, ChevronRight, Upload, UserPlus, Search, ListChecks, Check, X,
 } from "lucide-react";
 import { parseContactsText } from "@/lib/sms/parse-contacts";
+import { binDeleted, onBinRestored, rectOf, type FlyDetail } from "@/lib/recycle-bus";
 
 export interface ContactListSummary {
   id: string;
@@ -31,6 +32,8 @@ export function ContactListsPanel({ lists, selectedIds, onToggleSelect, onChange
   const [createBusy, setCreateBusy] = useState(false);
   const [error, setError] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  useEffect(() => onBinRestored((k) => { if (k === "contact" || k === "contact_list") onChanged(); }), [onChanged]);
 
   async function createList(e: React.FormEvent) {
     e.preventDefault();
@@ -173,6 +176,8 @@ function ListRow({
     }
   }
 
+  useEffect(() => onBinRestored((k) => { if (k === "contact" && expanded) load(); }), [expanded]);
+
   function toggleExpand() {
     if (!expanded && contacts === null) load();
     onToggleExpand();
@@ -219,12 +224,13 @@ function ListRow({
     reader.readAsText(file);
   }
 
-  async function removeContact(id: string) {
+  async function removeContact(id: string, rect: FlyDetail["rect"]) {
     setRemovingId(id);
     try {
       const res = await fetch(`/api/sms/contacts/${id}`, { method: "DELETE", credentials: "include" });
       if (!res.ok) throw new Error("Could not delete contact.");
       setContacts((c) => (c ? c.filter((x) => x.id !== id) : c));
+      binDeleted("contact", rect);
       await onChanged();
     } catch (e: any) {
       setNote({ kind: "err", text: e.message });
@@ -233,11 +239,12 @@ function ListRow({
     }
   }
 
-  async function deleteList() {
+  async function deleteList(rect: FlyDetail["rect"]) {
     setDeleting(true);
     try {
       const res = await fetch(`/api/sms/contact-lists/${list.id}`, { method: "DELETE", credentials: "include" });
       if (!res.ok) throw new Error("Could not delete the list.");
+      binDeleted("contact_list", rect);
       onDeleted();
       await onChanged();
     } catch (e: any) {
@@ -286,7 +293,7 @@ function ListRow({
           <div className="flex items-center gap-1 shrink-0">
             <button
               type="button"
-              onClick={deleteList}
+              onClick={(e) => deleteList(rectOf(e.currentTarget))}
               disabled={deleting}
               className="inline-flex items-center gap-1 rounded-lg bg-red-600 hover:bg-red-500 px-2 py-1 text-[11px] font-bold text-white disabled:opacity-70"
             >
@@ -361,7 +368,7 @@ function ListRow({
                     </div>
                     <button
                       type="button"
-                      onClick={() => removeContact(c.id)}
+                      onClick={(e) => removeContact(c.id, rectOf(e.currentTarget))}
                       disabled={removingId === c.id}
                       className="text-white/25 hover:text-red-400 transition shrink-0"
                       aria-label="Delete contact"
