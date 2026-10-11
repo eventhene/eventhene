@@ -8,16 +8,16 @@ export default function PricingPage() {
     <div className="section py-16 lg:py-24">
       <div className="text-center max-w-3xl mx-auto mb-16">
         <p className="text-xs font-bold uppercase tracking-widest text-accent mb-5">Pricing</p>
-        <h1 className="h-section text-balance">Built for organizers, not platforms.</h1>
-        <p className="text-ink-muted text-lg mt-5">No monthly fees. No setup fees. Pay only when you sell.</p>
+        <h1 className="h-section text-balance">Built for organizers.</h1>
+        <p className="text-ink-muted text-lg mt-5">No monthly fees. No setup fees.</p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-5 max-w-4xl mx-auto">
         <div className="card p-8">
           <p className="text-xs font-bold uppercase tracking-widest text-ink-muted mb-4">Most events</p>
           <h2 className="h-card">Free events</h2>
-          <p className="font-display text-6xl mt-6">GHS 0</p>
-          <p className="text-ink-muted text-sm mt-2 mb-7">Free forever. Subject to quick review for trust.</p>
+          <p className="font-display text-6xl mt-6">Agreed<span className="text-2xl text-ink-muted"> per event</span></p>
+          <p className="text-ink-muted text-sm mt-2 mb-7">Free to list. Because there are no ticket sales to earn from, we review every free event and agree a platform fee with you, based on the size of the event, before registration opens.</p>
           <ul className="space-y-2.5 text-sm">
             {[
               "Beautiful public event page",
@@ -25,7 +25,7 @@ export default function PricingPage() {
               "Email delivery",
               "Attendance tracking + export",
               "Bulk SMS (pay per message)",
-              "Reviewed within 24 hours",
+              "We reach out within 24 hours to agree your fee",
             ].map((f) => <li key={f} className="flex items-start gap-2"><Check className="w-4 h-4 text-emerald mt-0.5 shrink-0" /> {f}</li>)}
           </ul>
           <Link href="/sign-up" className="btn-ghost btn-lg w-full mt-7">Create a free event</Link>

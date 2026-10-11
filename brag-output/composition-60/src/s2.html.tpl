@@ -41,10 +41,10 @@
       <div id="root" data-composition-id="s2" data-width="1920" data-height="1080">
         <div class="w" id="s2-w">
           <div class="col">
-            <h2 class="sec-h" id="s2-h">Built for organizers, not platforms.</h2>
+            <h2 class="sec-h" id="s2-h">Built for organizers.</h2>
             <div id="s2-stats">
-              <div class="st card" id="st1"><p class="v">5 min</p><p class="l">to publish</p></div>
-              <div class="st card gold" id="st2"><p class="v">Free</p><p class="l">to list events</p></div>
+              <div class="st card" id="st1"><p class="v">5 min</p><p class="l">to set up</p></div>
+              <div class="st card gold" id="st2"><p class="v">GHS 0</p><p class="l">monthly fees</p></div>
               <div class="st card gold" id="st3"><p class="v">8%</p><p class="l">per paid ticket</p></div>
               <div class="st card" id="st4"><p class="v">24/7</p><p class="l">attendance exports</p></div>
             </div>

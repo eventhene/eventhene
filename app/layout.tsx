@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "EventHene - Run a kingly event",
     description:
-      "Sell tickets, track attendance, grow your event. Free to publish. 8% per paid ticket.",
+      "Sell tickets, track attendance, grow your event. No monthly fees. 8% per paid ticket.",
     type: "website",
     siteName: "EventHene",
   },

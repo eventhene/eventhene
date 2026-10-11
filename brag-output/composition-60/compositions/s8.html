@@ -38,9 +38,9 @@
             <h2 class="sec-h" id="s8-h">A full creative team, on call.</h2>
             <div id="svcs">
               <div class="sv card" id="sv1"><p class="t">Graphic design</p><p class="d">Flyers, stories, social kits</p></div>
-              <div class="sv card" id="sv2"><p class="t">Social media</p><p class="d">Targeted IG, TikTok, WA</p></div>
+              <div class="sv card" id="sv2"><p class="t">Blogging partners</p><p class="d">Featured on partner blogs</p></div>
               <div class="sv card" id="sv3"><p class="t">Livestream</p><p class="d">Multi-cam broadcast</p></div>
-              <div class="sv card" id="sv4"><p class="t">Photography</p><p class="d">Pro on the day</p></div>
+              <div class="sv card" id="sv4"><p class="t">Photography</p><p class="d">Pro edited gallery in 48 hrs</p></div>
             </div>
           </div>
         </div>

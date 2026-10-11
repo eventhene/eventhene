@@ -53,8 +53,8 @@ export default async function HomePage() {
           {/* Glassmorphic stat cards */}
           <div className="mt-10 sm:mt-16 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl">
             {[
-              { value: "5 min", label: "to publish" },
-              { value: "Free", label: "to list events" },
+              { value: "5 min", label: "to set up" },
+              { value: "GHS 0", label: "monthly fees" },
               { value: "8%", label: "per paid ticket" },
               { value: "24/7", label: "attendance exports" },
             ].map((s) => (
@@ -295,7 +295,7 @@ export default async function HomePage() {
             <span className="text-accent">elevated.</span>
           </h2>
           <p className="mt-6 text-white/50 text-lg max-w-xl mx-auto font-medium">
-            Free to publish. 8% per paid ticket. Zero monthly fees.
+            No monthly fees. Paid events: 8% per ticket. Free events: we agree a fee with you.
           </p>
           <div className="mt-10 flex flex-wrap justify-center gap-3">
             <Link href="/sign-up" className="btn-gold btn-xl">Create your event</Link>

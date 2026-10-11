@@ -74,9 +74,9 @@
       <div id="root" data-composition-id="s9" data-width="1920" data-height="1080">
         <div class="w" id="s9-w">
           <div id="s9-price">
-            <span class="p" id="p1">Free to publish</span>
-            <span class="p gold" id="p2">8% per paid ticket</span>
-            <span class="p" id="p3">Zero monthly fees</span>
+            <span class="p" id="p1">No monthly fees</span>
+            <span class="p gold" id="p2">Paid: 8% per ticket</span>
+            <span class="p" id="p3">Free: we agree a fee</span>
           </div>
           <div id="s9-end">
             <img id="s9-logo" src="assets/img/logo-full.png" alt="EventHene" />

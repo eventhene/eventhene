@@ -589,7 +589,7 @@ export function CreateEventForm({
       <p className="text-xs text-ink-muted text-center font-medium">
         {isEdit
           ? "Changes go live on your event page as soon as you save."
-          : type === "FREE" && !couponValid ? "Free events go live after a quick review (usually under 24 hours)." : "Your event will publish instantly."}
+          : type === "FREE" && !couponValid ? "Free events go to review first. We reach out (usually within 24 hours) to agree the platform fee for your event, then it goes live and registration opens." : "Your event will publish instantly."}
       </p>
     </form>
   );

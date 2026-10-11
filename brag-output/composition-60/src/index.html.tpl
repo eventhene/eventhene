@@ -113,6 +113,17 @@
         inset: 0;
         opacity: 0;
       }
+      /* persistent brand mark, so the video is identifiable from the first frame */
+      #mark {
+        position: absolute;
+        top: 54px;
+        right: 64px;
+        width: 188px;
+        height: auto;
+        display: block;
+        opacity: 0;
+        z-index: 20;
+      }
       /* centred scene column used by most feature scenes */
       .col {
         position: absolute;
@@ -152,6 +163,7 @@
     >
       <div id="bg-glow"></div>
       <div id="bg-vignette"></div>
+      <img id="mark" src="assets/img/logo-full.png" alt="EventHene" />
 
       <!-- Scene slots. Every boundary sits on a beat of the 110 BPM grid. -->
       <div id="slot-s1" data-composition-id="s1" data-composition-src="compositions/s1.html"
@@ -200,6 +212,11 @@
     <script>
       (function () {
         var tl = gsap.timeline({ paused: true });
+
+        /* The corner mark rides the whole tour, then clears the frame just
+           before the full logo lands in the closing scene. */
+        tl.fromTo("#mark", { opacity: 0, y: -14 }, { opacity: 0.82, y: 0, duration: 0.5, ease: "power3.out" }, 0.56);
+        tl.to("#mark", { opacity: 0, duration: 0.4, ease: "power2.inOut" }, 53.2);
 
         /* Audio-reactive: the gold warmth breathes with the music.
            Subtle and brand-specific — background glow, ticket bloom and logo
