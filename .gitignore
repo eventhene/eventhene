@@ -13,4 +13,6 @@ next-env.d.ts
 # brag video render output (keep the composition source, not the binaries)
 brag-output/brag.mp4
 brag-output/brag.jpg
+brag-output/eventhene-60s.mp4
+brag-output/eventhene-60s.jpg
 brag-output/composition/node_modules/
