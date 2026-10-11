@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        #root {
+          position: absolute;
+          inset: 0;
+        }
+        #s2-left {
+          width: 700px;
+          opacity: 0;
+        }
+        #s2-h {
+          margin-top: 26px;
+          font-size: 90px;
+          font-weight: 800;
+          line-height: 1.04;
+          letter-spacing: -0.03em;
+        }
+        #s2-p {
+          margin-top: 22px;
+          font-size: 33px;
+          font-weight: 600;
+          color: var(--muted);
+        }
+        #ticket {
+          position: absolute;
+          top: 187px;
+          right: 186px;
+          width: 520px;
+          height: 706px;
+          border-radius: 30px;
+          padding: 44px 44px 38px;
+          display: flex;
+          flex-direction: column;
+          color: var(--accent-ink);
+          background: linear-gradient(158deg, #e8c377 0%, #d4a853 42%, #b8860b 100%);
+          box-shadow:
+            0 48px 92px rgba(0, 0, 0, 0.62),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.22),
+            0 0 70px rgba(212, 168, 83, calc(0.16 + 0.22 * var(--energy)));
+          opacity: 0;
+        }
+        #ticket .t-top {
+          font-size: 19px;
+          font-weight: 800;
+          letter-spacing: 0.24em;
+          text-transform: uppercase;
+          opacity: 0.68;
+        }
+        #ticket .t-name {
+          margin-top: 20px;
+          font-size: 46px;
+          font-weight: 800;
+          line-height: 1.04;
+          letter-spacing: -0.025em;
+        }
+        #ticket .t-meta {
+          margin-top: 16px;
+          font-size: 22px;
+          font-weight: 600;
+          opacity: 0.74;
+          line-height: 1.5;
+        }
+        #ticket .t-sep {
+          opacity: 0.45;
+        }
+        #ticket .perf {
+          margin: 30px -44px 0;
+          border-top: 3px dashed rgba(26, 20, 7, 0.26);
+        }
+        #qr-box {
+          margin: 32px auto 0;
+          width: 268px;
+          height: 268px;
+          border-radius: 18px;
+          background: #fffdf6;
+          padding: 18px;
+          color: var(--accent-ink);
+          opacity: 0;
+        }
+        #qr-box svg {
+          width: 100%;
+          height: 100%;
+          display: block;
+        }
+        #ticket .t-foot {
+          margin-top: auto;
+          padding-top: 26px;
+        }
+        #ticket .t-lab {
+          font-size: 16px;
+          font-weight: 800;
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+          opacity: 0.62;
+        }
+        #t-ref {
+          margin-top: 7px;
+          font-size: 29px;
+          white-space: nowrap;
+          clip-path: inset(0 100% 0 0);
+        }
+      </style>
+
+      <div id="root" data-composition-id="s2" data-width="1920" data-height="1080">
+        <div class="w" id="s2-w">
+          <div class="pad">
+            <div id="s2-left">
+              <p class="eyebrow">Ticketing</p>
+              <h2 id="s2-h">QR-coded tickets</h2>
+              <p id="s2-p">Attendees screenshot them.</p>
+            </div>
+          </div>
+          <div id="ticket">
+            <p class="t-top">EventHene ticket</p>
+            <p class="t-name">Fire Conference 2026</p>
+            <p class="t-meta">Sat, Nov 14 2026<span class="t-sep"> &middot; </span>Christ Temple, Ghana</p>
+            <div class="perf"></div>
+            <div id="qr-box"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 25" shape-rendering="crispEdges" aria-hidden="true"><g fill="currentColor"><rect x="0" y="0" width="7" height="1"/><rect x="9" y="0" width="1" height="1"/><rect x="11" y="0" width="3" height="1"/><rect x="16" y="0" width="1" height="1"/><rect x="18" y="0" width="7" height="1"/><rect x="0" y="1" width="1" height="1"/><rect x="6" y="1" width="1" height="1"/><rect x="11" y="1" width="3" height="1"/><rect x="15" y="1" width="2" height="1"/><rect x="18" y="1" width="1" height="1"/><rect x="24" y="1" width="1" height="1"/><rect x="0" y="2" width="1" height="1"/><rect x="2" y="2" width="3" height="1"/><rect x="6" y="2" width="1" height="1"/><rect x="10" y="2" width="3" height="1"/><rect x="18" y="2" width="1" height="1"/><rect x="20" y="2" width="3" height="1"/><rect x="24" y="2" width="1" height="1"/><rect x="0" y="3" width="1" height="1"/><rect x="2" y="3" width="3" height="1"/><rect x="6" y="3" width="1" height="1"/><rect x="11" y="3" width="1" height="1"/><rect x="13" y="3" width="2" height="1"/><rect x="16" y="3" width="1" height="1"/><rect x="18" y="3" width="1" height="1"/><rect x="20" y="3" width="3" height="1"/><rect x="24" y="3" width="1" height="1"/><rect x="0" y="4" width="1" height="1"/><rect x="2" y="4" width="3" height="1"/><rect x="6" y="4" width="1" height="1"/><rect x="8" y="4" width="4" height="1"/><rect x="16" y="4" width="1" height="1"/><rect x="18" y="4" width="1" height="1"/><rect x="20" y="4" width="3" height="1"/><rect x="24" y="4" width="1" height="1"/><rect x="0" y="5" width="1" height="1"/><rect x="6" y="5" width="1" height="1"/><rect x="11" y="5" width="6" height="1"/><rect x="18" y="5" width="1" height="1"/><rect x="24" y="5" width="1" height="1"/><rect x="0" y="6" width="7" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/><rect x="12" y="6" width="1" height="1"/><rect x="14" y="6" width="1" height="1"/><rect x="16" y="6" width="1" height="1"/><rect x="18" y="6" width="7" height="1"/><rect x="8" y="7" width="3" height="1"/><rect x="12" y="7" width="2" height="1"/><rect x="1" y="8" width="2" height="1"/><rect x="4" y="8" width="1" height="1"/><rect x="6" y="8" width="1" height="1"/><rect x="9" y="8" width="4" height="1"/><rect x="18" y="8" width="1" height="1"/><rect x="20" y="8" width="2" height="1"/><rect x="23" y="8" width="2" height="1"/><rect x="2" y="9" width="2" height="1"/><rect x="8" y="9" width="1" height="1"/><rect x="10" y="9" width="1" height="1"/><rect x="12" y="9" width="2" height="1"/><rect x="15" y="9" width="3" height="1"/><rect x="20" y="9" width="2" height="1"/><rect x="23" y="9" width="1" height="1"/><rect x="0" y="10" width="1" height="1"/><rect x="6" y="10" width="6" height="1"/><rect x="14" y="10" width="1" height="1"/><rect x="16" y="10" width="2" height="1"/><rect x="21" y="10" width="1" height="1"/><rect x="23" y="10" width="1" height="1"/><rect x="3" y="11" width="1" height="1"/><rect x="5" y="11" width="1" height="1"/><rect x="7" y="11" width="3" height="1"/><rect x="11" y="11" width="2" height="1"/><rect x="17" y="11" width="1" height="1"/><rect x="19" y="11" width="1" height="1"/><rect x="21" y="11" width="1" height="1"/><rect x="24" y="11" width="1" height="1"/><rect x="0" y="12" width="3" height="1"/><rect x="4" y="12" width="1" height="1"/><rect x="6" y="12" width="1" height="1"/><rect x="8" y="12" width="2" height="1"/><rect x="11" y="12" width="4" height="1"/><rect x="17" y="12" width="1" height="1"/><rect x="19" y="12" width="1" height="1"/><rect x="22" y="12" width="1" height="1"/><rect x="24" y="12" width="1" height="1"/><rect x="3" y="13" width="3" height="1"/><rect x="10" y="13" width="1" height="1"/><rect x="12" y="13" width="2" height="1"/><rect x="17" y="13" width="4" height="1"/><rect x="22" y="13" width="2" height="1"/><rect x="0" y="14" width="4" height="1"/><rect x="6" y="14" width="1" height="1"/><rect x="8" y="14" width="3" height="1"/><rect x="13" y="14" width="1" height="1"/><rect x="16" y="14" width="1" height="1"/><rect x="20" y="14" width="1" height="1"/><rect x="22" y="14" width="2" height="1"/><rect x="1" y="15" width="4" height="1"/><rect x="8" y="15" width="3" height="1"/><rect x="13" y="15" width="2" height="1"/><rect x="16" y="15" width="3" height="1"/><rect x="20" y="15" width="1" height="1"/><rect x="22" y="15" width="3" height="1"/><rect x="5" y="16" width="2" height="1"/><rect x="8" y="16" width="3" height="1"/><rect x="12" y="16" width="1" height="1"/><rect x="14" y="16" width="1" height="1"/><rect x="16" y="16" width="5" height="1"/><rect x="22" y="16" width="1" height="1"/><rect x="8" y="17" width="1" height="1"/><rect x="10" y="17" width="4" height="1"/><rect x="15" y="17" width="2" height="1"/><rect x="20" y="17" width="1" height="1"/><rect x="22" y="17" width="3" height="1"/><rect x="0" y="18" width="7" height="1"/><rect x="8" y="18" width="1" height="1"/><rect x="11" y="18" width="6" height="1"/><rect x="18" y="18" width="1" height="1"/><rect x="20" y="18" width="2" height="1"/><rect x="24" y="18" width="1" height="1"/><rect x="0" y="19" width="1" height="1"/><rect x="6" y="19" width="1" height="1"/><rect x="12" y="19" width="2" height="1"/><rect x="16" y="19" width="1" height="1"/><rect x="20" y="19" width="2" height="1"/><rect x="0" y="20" width="1" height="1"/><rect x="2" y="20" width="3" height="1"/><rect x="6" y="20" width="1" height="1"/><rect x="10" y="20" width="1" height="1"/><rect x="12" y="20" width="2" height="1"/><rect x="16" y="20" width="5" height="1"/><rect x="0" y="21" width="1" height="1"/><rect x="2" y="21" width="3" height="1"/><rect x="6" y="21" width="1" height="1"/><rect x="9" y="21" width="1" height="1"/><rect x="11" y="21" width="1" height="1"/><rect x="13" y="21" width="1" height="1"/><rect x="16" y="21" width="1" height="1"/><rect x="18" y="21" width="2" height="1"/><rect x="21" y="21" width="1" height="1"/><rect x="0" y="22" width="1" height="1"/><rect x="2" y="22" width="3" height="1"/><rect x="6" y="22" width="1" height="1"/><rect x="9" y="22" width="1" height="1"/><rect x="18" y="22" width="1" height="1"/><rect x="20" y="22" width="1" height="1"/><rect x="22" y="22" width="3" height="1"/><rect x="0" y="23" width="1" height="1"/><rect x="6" y="23" width="1" height="1"/><rect x="12" y="23" width="1" height="1"/><rect x="15" y="23" width="1" height="1"/><rect x="17" y="23" width="2" height="1"/><rect x="21" y="23" width="1" height="1"/><rect x="24" y="23" width="1" height="1"/><rect x="0" y="24" width="7" height="1"/><rect x="8" y="24" width="2" height="1"/><rect x="11" y="24" width="1" height="1"/><rect x="15" y="24" width="2" height="1"/><rect x="19" y="24" width="1" height="1"/><rect x="22" y="24" width="1" height="1"/></g></svg></div>
+            <div class="t-foot">
+              <p class="t-lab">Ticket ID</p>
+              <p id="t-ref" class="mono">KWA-FIRE-7241089</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var tl = gsap.timeline({ paused: true });
+          var E = "power3.out";
+          tl.to("#s2-w", { opacity: 1, duration: 0.3, ease: "power2.inOut" }, 0.05);
+          // the ticket arrives like something handed over, and settles on a slight tilt
+          tl.fromTo(
+            "#ticket",
+            { opacity: 0, y: 132, rotation: 7 },
+            { opacity: 1, y: 0, rotation: 3, duration: 0.75, ease: E },
+            0.25,
+          );
+          tl.fromTo("#s2-left", { opacity: 0, x: -34 }, { opacity: 1, x: 0, duration: 0.55, ease: E }, 0.45);
+          tl.fromTo("#qr-box", { opacity: 0, scale: 0.94 }, { opacity: 1, scale: 1, duration: 0.4, ease: E }, 1.15);
+          // the ticket ref types on in mono
+          tl.fromTo(
+            "#t-ref",
+            { clipPath: "inset(0 100% 0 0)" },
+            { clipPath: "inset(0 0% 0 0)", duration: 0.6, ease: "steps(16)" },
+            1.7,
+          );
+          tl.to("#s2-w", { opacity: 0, duration: 0.3, ease: "power2.inOut" }, 4.6);
+          window.__timelines["s2"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>
