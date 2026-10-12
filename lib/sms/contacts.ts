@@ -1,9 +1,11 @@
 import { db } from "@/lib/db";
 import { normalizeGhPhone } from "./phone";
+import { normalizeGender } from "./titles";
 
 export interface RawContact {
   name?: string | null;
   phone: string;
+  gender?: string | null;
 }
 
 export interface ImportStats {
@@ -19,7 +21,7 @@ export const MAX_CONTACTS_PER_LIST = 20000;
 /** Normalizes, de-duplicates and inserts contacts into a list the caller already owns. */
 export async function importContacts(listId: string, raw: RawContact[]): Promise<ImportStats> {
   const seen = new Set<string>();
-  const rows: { listId: string; phone: string; name: string | null }[] = [];
+  const rows: { listId: string; phone: string; name: string | null; gender: string | null }[] = [];
   let invalid = 0;
   let duplicates = 0;
 
@@ -35,7 +37,8 @@ export async function importContacts(listId: string, raw: RawContact[]): Promise
     }
     seen.add(phone);
     const name = c.name?.toString().trim().slice(0, 80) || null;
-    rows.push({ listId, phone, name });
+    const g = normalizeGender(c.gender);
+    rows.push({ listId, phone, name, gender: g === "M" ? "Male" : g === "F" ? "Female" : null });
   }
 
   const existing = await db.contact.count({ where: { listId } });

@@ -50,6 +50,13 @@ export function BulkSmsComposer({ events, initialLists, initialEventId }: { even
   const [contextEventId, setContextEventId] = useState(initialEventId || events[0]?.id || "");
 
   // Preview
+  const [titles, setTitles] = useState({
+    enabled: false,
+    male: "Mr.",
+    female: "Madam",
+    unknown: "none" as "none" | "male" | "female",
+    useNameGuess: true,
+  });
   const [preview, setPreview] = useState<any>(null);
   const [previewing, setPreviewing] = useState(false);
   const [previewVersion, setPreviewVersion] = useState(0);
@@ -101,7 +108,7 @@ export function BulkSmsComposer({ events, initialLists, initialEventId }: { even
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ preview: true, audience, message }),
+          body: JSON.stringify({ preview: true, audience, message, titles }),
         });
         const data = await res.json();
         if (!cancelled) setPreview(res.ok ? data : null);
@@ -112,7 +119,7 @@ export function BulkSmsComposer({ events, initialLists, initialEventId }: { even
       }
     }, 350);
     return () => { cancelled = true; clearTimeout(timer); };
-  }, [audience, message, hasSource, previewVersion]);
+  }, [audience, message, hasSource, previewVersion, titles]);
 
   function insertTag(tag: string) {
     const el = textareaRef.current;
@@ -164,7 +171,7 @@ export function BulkSmsComposer({ events, initialLists, initialEventId }: { even
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: campaignName.trim(), message, audience }),
+        body: JSON.stringify({ name: campaignName.trim(), message, audience, titles }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Could not start the campaign.");
@@ -474,6 +481,93 @@ export function BulkSmsComposer({ events, initialLists, initialEventId }: { even
             </div>
           )}
           {notEnough && <Link href="/dashboard/sms" className="mt-3 block text-xs text-accent hover:underline">Buy more credits</Link>}
+        </div>
+
+        {/* ---------- how people are addressed ---------- */}
+        <div className="card-glass rounded-2xl p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[10px] text-white/30 uppercase tracking-wider">How to address people</p>
+              <p className="mt-1 text-xs text-white/45">
+                Titles already in a name (Apostle, Rev, Nana) are always kept as they are.
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={titles.enabled}
+              aria-label="Add Mr. and Madam titles"
+              onClick={() => setTitles((t) => ({ ...t, enabled: !t.enabled }))}
+              className={`relative h-6 w-11 shrink-0 rounded-full transition ${titles.enabled ? "bg-accent" : "bg-white/15"}`}
+            >
+              <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${titles.enabled ? "left-[22px]" : "left-0.5"}`} />
+            </button>
+          </div>
+
+          {titles.enabled && (
+            <div className="mt-4 space-y-3 border-t border-white/10 pt-4">
+              <div className="grid grid-cols-2 gap-3">
+                <label className="block">
+                  <span className="text-[10px] text-white/30 uppercase tracking-wider">Men</span>
+                  <select
+                    value={titles.male}
+                    onChange={(e) => setTitles((t) => ({ ...t, male: e.target.value }))}
+                    className="input mt-1 text-sm text-white"
+                  >
+                    {["Mr.", "Bro.", "Elder"].map((v) => <option key={v} value={v}>{v}</option>)}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="text-[10px] text-white/30 uppercase tracking-wider">Women</span>
+                  <select
+                    value={titles.female}
+                    onChange={(e) => setTitles((t) => ({ ...t, female: e.target.value }))}
+                    className="input mt-1 text-sm text-white"
+                  >
+                    {["Madam", "Mrs.", "Ms.", "Sis."].map((v) => <option key={v} value={v}>{v}</option>)}
+                  </select>
+                </label>
+              </div>
+
+              <label className="block">
+                <span className="text-[10px] text-white/30 uppercase tracking-wider">When we cannot tell</span>
+                <select
+                  value={titles.unknown}
+                  onChange={(e) => setTitles((t) => ({ ...t, unknown: e.target.value as "none" | "male" | "female" }))}
+                  className="input mt-1 text-sm text-white"
+                >
+                  <option value="none">Send the name with no title</option>
+                  <option value="male">Use {titles.male}</option>
+                  <option value="female">Use {titles.female}</option>
+                </select>
+              </label>
+
+              <label className="flex items-start gap-2 text-xs text-white/55">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={titles.useNameGuess}
+                  onChange={(e) => setTitles((t) => ({ ...t, useNameGuess: e.target.checked }))}
+                />
+                <span>
+                  Work out gender from the first name when it is not recorded. Ghanaian names like
+                  Akosua, Kwamena and Agyeiwaa are recognised; anything uncertain is left alone.
+                </span>
+              </label>
+
+              {preview?.titles && (
+                <div className="rounded-xl bg-white/5 p-3 text-[11px] text-white/50 space-y-0.5">
+                  {preview.titles.existing > 0 && <p>{preview.titles.existing} kept their own title</p>}
+                  {preview.titles.declared > 0 && <p>{preview.titles.declared} from recorded gender</p>}
+                  {preview.titles.guessed > 0 && <p>{preview.titles.guessed} worked out from the name</p>}
+                  {preview.titles.fallback > 0 && <p>{preview.titles.fallback} used your fallback title</p>}
+                  {preview.titles.none > 0 && (
+                    <p className="text-amber-400">{preview.titles.none} sent with no title</p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {preview?.sample?.length > 0 && (

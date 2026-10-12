@@ -674,6 +674,7 @@ model Contact {
   list      ContactList @relation(fields: [listId], references: [id], onDelete: Cascade)
   name      String?
   phone     String
+  gender    String?
   createdAt DateTime    @default(now())
 
   @@unique([listId, phone])

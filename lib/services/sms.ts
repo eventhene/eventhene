@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { sendSMS, renderTemplate } from "@/lib/sms/hubtel";
 import { normalizeGhPhone } from "@/lib/sms/phone";
+import { resolveName, DEFAULT_TITLE_OPTIONS, type TitleOptions, type TitleSource } from "@/lib/sms/titles";
 import { sanitizeSmsContent } from "@/lib/sms/sanitize";
 import { smsSegments } from "@/lib/sms/segments";
 import { resolveSenderId } from "@/lib/sms/sender";
@@ -28,6 +29,7 @@ export interface AudienceSpec {
 export interface ResolvedRecipient {
   phone: string; // normalized 233XXXXXXXXX
   name?: string;
+  gender?: string | null;
   attendeeId?: string;
   ref?: string;
   event?: string;
@@ -114,6 +116,7 @@ export async function resolveAudience(organizerId: string, spec: AudienceSpec): 
         add({
           phone: t.attendee.phone,
           name: t.attendee.fullName,
+          gender: t.attendee.gender,
           attendeeId: t.attendee.id,
           ref: t.visibleRef,
           ...eventInfo(ev),
@@ -130,7 +133,7 @@ export async function resolveAudience(organizerId: string, spec: AudienceSpec): 
       orderBy: { createdAt: "asc" },
     });
     for (const c of contacts) {
-      add({ phone: c.phone, name: c.name ?? undefined, ...contextInfo, source: "list" });
+      add({ phone: c.phone, name: c.name ?? undefined, gender: c.gender, ...contextInfo, source: "list" });
     }
   }
 
@@ -142,22 +145,45 @@ export async function resolveAudience(organizerId: string, spec: AudienceSpec): 
   return { recipients, invalid, duplicates, breakdown };
 }
 
-export function renderForRecipient(template: string, r: ResolvedRecipient): string {
+export function renderForRecipient(
+  template: string,
+  r: ResolvedRecipient,
+  titles: TitleOptions = DEFAULT_TITLE_OPTIONS
+): string {
+  const n = resolveName(r.name, r.gender, titles);
+  // {name} keeps its old meaning (first name) so existing drafts still read the same.
+  // With titles on it carries the courtesy title too, which is what organizers expect.
+  const name = titles.enabled || n.source === "existing" ? [n.title, n.firstName].filter(Boolean).join(" ") : n.firstName;
   return sanitizeSmsContent(
     renderTemplate(template, {
-      name: r.name?.split(" ")[0] ?? "",
+      name,
+      title: n.title,
+      firstname: n.firstName,
+      fullname: n.display,
       ref: r.ref ?? "",
       event: r.event ?? "",
       date: r.date ?? "",
       venue: r.venue ?? "",
       phone: r.phone,
     })
+      // a missing title must not leave a double space behind
+      .replace(/[ 	]{2,}/g, " ")
+      .replace(/ +([,.!?])/g, "$1")
   );
+}
+
+export type TitleBreakdown = Record<TitleSource, number>;
+
+export function summariseTitles(recipients: ResolvedRecipient[], titles: TitleOptions): TitleBreakdown {
+  const out: TitleBreakdown = { existing: 0, declared: 0, guessed: 0, fallback: 0, none: 0 };
+  for (const r of recipients) out[resolveName(r.name, r.gender, titles).source]++;
+  return out;
 }
 
 export interface PreparedCampaign {
   safeTemplate: string;
   audience: ResolvedAudience;
+  titles: TitleBreakdown;
   items: Array<{ recipient: ResolvedRecipient; content: string; segments: number }>;
   totalCredits: number;
   skippedEmpty: number;
@@ -169,7 +195,9 @@ export async function prepareCampaign(opts: {
   organizerId: string;
   message: string;
   spec: AudienceSpec;
+  titles?: TitleOptions;
 }): Promise<PreparedCampaign> {
+  const titles = opts.titles ?? DEFAULT_TITLE_OPTIONS;
   const safeTemplate = sanitizeSmsContent(opts.message);
   const audience = await resolveAudience(opts.organizerId, opts.spec);
 
@@ -177,7 +205,7 @@ export async function prepareCampaign(opts: {
   let skippedEmpty = 0;
   let totalCredits = 0;
   for (const recipient of audience.recipients) {
-    const content = renderForRecipient(safeTemplate, recipient);
+    const content = renderForRecipient(safeTemplate, recipient, titles);
     if (!content) {
       skippedEmpty++;
       continue;
@@ -189,6 +217,7 @@ export async function prepareCampaign(opts: {
   return {
     safeTemplate,
     audience,
+    titles: summariseTitles(audience.recipients, titles),
     items,
     totalCredits,
     skippedEmpty,
@@ -204,11 +233,13 @@ export async function createCampaign(input: {
   spec: AudienceSpec;
   eventId?: string | null;
   audienceLabel?: string;
+  titles?: TitleOptions;
 }) {
   const prepared = await prepareCampaign({
     organizerId: input.organizerId,
     message: input.message,
     spec: input.spec,
+    titles: input.titles,
   });
   if (!prepared.safeTemplate) throw new Error("Message is empty after cleaning.");
   if (prepared.items.length === 0) throw new Error("No valid Ghana phone numbers in that audience.");

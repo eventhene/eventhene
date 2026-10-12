@@ -31,11 +31,15 @@ export function sanitizeSmsContent(input: string): string {
   return s;
 }
 
-/** Simple personalization: swap {name}, {ref}, {event}, {date}, {venue}, {phone}. */
+/** Simple personalization: swap {name}, {title}, {firstname}, {fullname}, {ref},
+ *  {event}, {date}, {venue}, {phone}. */
 export function renderTemplate(
   template: string,
   vars: {
     name?: string;
+    title?: string;
+    firstname?: string;
+    fullname?: string;
     ref?: string;
     event?: string;
     date?: string;
@@ -44,6 +48,10 @@ export function renderTemplate(
   }
 ): string {
   return template
+    // longer tags first so {firstname} is not eaten by {name}
+    .replace(/\{firstname\}/gi, vars.firstname ?? "")
+    .replace(/\{fullname\}/gi, vars.fullname ?? "")
+    .replace(/\{title\}/gi, vars.title ?? "")
     .replace(/\{name\}/gi, vars.name ?? "")
     .replace(/\{ref\}/gi, vars.ref ?? "")
     .replace(/\{event\}/gi, vars.event ?? "")

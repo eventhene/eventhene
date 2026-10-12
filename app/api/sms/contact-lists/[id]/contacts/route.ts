@@ -6,7 +6,7 @@ import { importContacts } from "@/lib/sms/contacts";
 
 const Body = z.object({
   contacts: z
-    .array(z.object({ name: z.string().max(80).nullish(), phone: z.string().max(30) }))
+    .array(z.object({ name: z.string().max(80).nullish(), phone: z.string().max(30), gender: z.string().max(20).nullish() }))
     .min(1)
     .max(5000),
 });
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const { contacts } = Body.parse(await req.json());
     const stats = await importContacts(
       list.id,
-      contacts.map((c) => ({ name: c.name, phone: c.phone }))
+      contacts.map((c) => ({ name: c.name, phone: c.phone, gender: c.gender }))
     );
     return NextResponse.json({ ok: true, stats });
   } catch (e: any) {

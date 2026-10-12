@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import {
   Plus, Loader2, Trash2, ChevronDown, ChevronRight, Upload, UserPlus, Search, ListChecks, Check, X,
 } from "lucide-react";
-import { parseContactsText } from "@/lib/sms/parse-contacts";
 import { binDeleted, onBinRestored, rectOf, type FlyDetail } from "@/lib/recycle-bus";
 
 export interface ContactListSummary {
@@ -183,7 +182,7 @@ function ListRow({
     onToggleExpand();
   }
 
-  async function addContacts(rows: { name: string; phone: string }[], source: "manual" | "file") {
+  async function addContacts(rows: { name: string; phone: string; gender?: string }[], source: "manual" | "file") {
     if (rows.length === 0) {
       setNote({ kind: "err", text: "No phone numbers found." });
       return;
@@ -215,13 +214,36 @@ function ListRow({
     }
   }
 
-  function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+  /** Excel and CSV are both parsed server-side so a Gender column survives either way. */
+  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => addContacts(parseContactsText(String(ev.target?.result ?? "")), "file");
-    reader.readAsText(file);
+    setUploadBusy(true);
+    setNote(null);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch(`/api/sms/contact-lists/${list.id}/import`, {
+        method: "POST",
+        credentials: "include",
+        body: form,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Could not read that file.");
+      const st = data.stats;
+      const bits = [`${st.added} added`];
+      if (data.withGender) bits.push(`${data.withGender} with gender`);
+      if (st.duplicates) bits.push(`${st.duplicates} already there`);
+      if (st.invalid) bits.push(`${st.invalid} invalid skipped`);
+      setNote({ kind: st.added > 0 ? "ok" : "err", text: bits.join(", ") });
+      await load();
+      await onChanged();
+    } catch (err: any) {
+      setNote({ kind: "err", text: err.message });
+    } finally {
+      setUploadBusy(false);
+    }
   }
 
   async function removeContact(id: string, rect: FlyDetail["rect"]) {
@@ -333,8 +355,8 @@ function ListRow({
 
           <label className={`flex items-center justify-center gap-2 rounded-lg border border-dashed border-white/15 hover:border-accent/40 p-2.5 text-xs text-white/50 cursor-pointer transition ${uploadBusy ? "opacity-60 pointer-events-none" : ""}`}>
             {uploadBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-            {uploadBusy ? "Uploading contacts..." : "Upload CSV or TXT (name,phone)"}
-            <input type="file" accept=".csv,.txt,.tsv" onChange={onFile} className="hidden" />
+            {uploadBusy ? "Uploading contacts..." : "Upload Excel or CSV (Name, PhoneNumber, Gender)"}
+            <input type="file" accept=".xlsx,.csv,.txt,.tsv" onChange={onFile} className="hidden" />
           </label>
 
           {note && (
