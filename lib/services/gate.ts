@@ -2,6 +2,7 @@ import { nanoid } from "nanoid";
 import { db } from "@/lib/db";
 import { createOrder } from "@/lib/services/orders";
 import { issueTicketsForOrder } from "@/lib/services/tickets";
+import { sendTicketEmails } from "@/lib/services/notify";
 import { placeholderEmail } from "@/lib/guest-email";
 import { normalizeGhPhone } from "@/lib/sms/phone";
 import { sendSMS } from "@/lib/sms/hubtel";
@@ -122,6 +123,15 @@ async function sendGateSms(ticketId: string): Promise<void> {
   }
 }
 
+/** Runs side work without letting it hold the response open. The registration is
+ *  already committed by this point, so a slow network must never cost us the row. */
+async function capped(work: Promise<unknown>, ms: number, label: string): Promise<void> {
+  await Promise.race([
+    work.catch((e) => console.error(`[gate] ${label} failed`, e)),
+    new Promise<void>((r) => setTimeout(r, ms)),
+  ]);
+}
+
 export interface GateResult {
   ticketId: string;
   visibleRef: string;
@@ -216,9 +226,18 @@ export async function registerAtGate(opts: {
         .catch(() => {});
     }
     // One text, not two. Capped so a slow network never holds up the queue.
-    await Promise.race([sendGateSms(ticket.ticketId), new Promise<void>((r) => setTimeout(r, 2500))]);
+    await capped(sendGateSms(ticket.ticketId), 2500, "gate SMS");
   } else {
     await db.ticket.update({ where: { id: ticket.ticketId }, data: { source: "GATE" } }).catch(() => {});
+    // Registered but not admitted, so they get the ordinary confirmation with a
+    // link to their QR ticket. Without this the gate form sent nothing at all
+    // outside the event window and the person left with no record.
+    //
+    // sendTicketEmails directly rather than fulfilOrder: fulfilOrder renders the
+    // ticket PDFs first, which is slow enough to blow a serverless time limit and
+    // leave the order stranded without its tickets. This sends the SMS first and
+    // lets the email follow; the PDF is reachable from the ticket link either way.
+    await capped(sendTicketEmails(order.orderId), 8000, "confirmation");
   }
 
   return {
@@ -230,7 +249,7 @@ export async function registerAtGate(opts: {
     note: shouldCheckIn
       ? undefined
       : windowOpen
-        ? "Registered. Not checked in."
-        : "Registered. The event is not on today, so they were not checked in.",
+        ? "Registered. Not checked in. Their ticket has been sent."
+        : "Registered for the event. Check-in happens on the day; their QR ticket has been sent.",
   };
 }
