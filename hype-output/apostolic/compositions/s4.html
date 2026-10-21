@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+  <style>
+    #root { position: absolute; inset: 0; }
+    /* crop sits on the faces and pushes the flyer's own printed names out of
+       frame, so only the animated list below names anyone (1.2x of the 2x asset) */
+    #s4-img { width: 4013px; left: -1680px; top: -696px; }
+    #s4-scrim {
+      background: linear-gradient(90deg, rgba(6, 3, 4, 0.95) 0%, rgba(6, 3, 4, 0.78) 34%, rgba(6, 3, 4, 0.1) 62%, transparent 100%);
+    }
+    #s4-list {
+      position: absolute; left: 130px; top: 50%; transform: translateY(-50%);
+      width: 820px; z-index: 2;
+    }
+    #s4-list .p { opacity: 0; }
+    #s4-list .p + .p { margin-top: 44px; }
+    #s4-list .role {
+      font-size: 19px; font-weight: 800; letter-spacing: 0.3em;
+      text-transform: uppercase; color: var(--fire);
+    }
+    #s4-list .nm {
+      margin-top: 10px; font-size: 62px; font-weight: 800;
+      letter-spacing: -0.028em; line-height: 1.04; color: var(--ink);
+    }
+    #s4-list .sub { margin-top: 8px; font-size: 24px; font-weight: 600; color: var(--muted); }
+  </style>
+
+  <div id="root" data-composition-id="s4" data-width="1920" data-height="1080">
+    <div class="w" id="s4-w">
+      <div class="fill">
+        <img id="s4-img" src="assets/img/flyer.jpg" alt="" />
+        <div class="scrim" id="s4-scrim"></div>
+      </div>
+      <div id="s4-list">
+        <div class="p" id="s4-p1">
+          <p class="role">Host</p>
+          <p class="nm">Apostle Anthony Baah</p>
+        </div>
+        <div class="p" id="s4-p2">
+          <p class="role">Guest</p>
+          <p class="nm">Daniel Kwame Osae Djan</p>
+          <p class="sub">Global Lead Pastor, TGCC Worldwide</p>
+        </div>
+        <div class="p" id="s4-p3">
+          <p class="role">Ministering</p>
+          <p class="nm">Minister Yefter Nkansah</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var tl = gsap.timeline({ paused: true });
+      var E = "power3.out";
+      tl.to("#s4-w", { opacity: 1, duration: 0.3, ease: "power2.inOut" }, 0);
+      tl.fromTo("#s4-img", { scale: 1.0 }, { scale: 1.07, duration: 7.01, ease: "none" }, 0);
+      // beat-grid: names at 14.52s, 16.02s, 17.52s global (slot starts at 13.01s),
+      // 1.5s apart so each one can be read, then all three hold together
+      var ids = ["#s4-p1", "#s4-p2", "#s4-p3"];
+      var at = [1.51, 3.01, 4.51];
+      for (var i = 0; i < ids.length; i++) {
+        tl.fromTo(ids[i], { opacity: 0, x: -36 }, { opacity: 1, x: 0, duration: 0.45, ease: E }, at[i]);
+      }
+      tl.to("#s4-w", { opacity: 0, duration: 0.3, ease: "power2.inOut" }, 6.71);
+      window.__timelines["s4"] = tl;
+    })();
+  </script>
+</template>
+</body></html>

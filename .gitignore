@@ -16,3 +16,9 @@ brag-output/brag.jpg
 brag-output/eventhene-60s.mp4
 brag-output/eventhene-60s.jpg
 brag-output/composition/node_modules/
+
+# hype video renders (keep the composition source, not the binaries)
+hype-output/*.mp4
+hype-output/*.jpg
+hype-output/**/.hyperframes/
+hype-output/**/node_modules/

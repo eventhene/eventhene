@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+  <style>
+    #root { position: absolute; inset: 0; }
+    #s2-bg { width: 1920px; left: 0; top: 0; }
+    #s2-l1 {
+      font-size: 118px; font-weight: 800; letter-spacing: -0.02em; line-height: 1;
+      color: var(--ink); opacity: 0;
+    }
+    #s2-l2 {
+      margin-top: 10px; font-size: 150px; font-weight: 800; letter-spacing: -0.03em; line-height: 1;
+      color: var(--gold); opacity: 0;
+      text-shadow: 0 0 calc(30px + 50px * var(--energy)) rgba(255, 107, 26, 0.55);
+    }
+    #s2-rule { width: 0; height: 3px; margin: 34px auto 0; background: var(--fire); }
+    #s2-sub {
+      margin-top: 26px; font-size: 30px; font-weight: 800;
+      letter-spacing: 0.44em; text-transform: uppercase; color: var(--muted); opacity: 0;
+    }
+  </style>
+
+  <div id="root" data-composition-id="s2" data-width="1920" data-height="1080">
+    <div class="w" id="s2-w">
+      <div class="fill"><img id="s2-bg" src="assets/img/flyer-blur.jpg" alt="" /></div>
+      <div class="col">
+        <h1 id="s2-l1">APOSTOLIC FIRE</h1>
+        <h1 id="s2-l2">CONFERENCE 2026</h1>
+        <div id="s2-rule"></div>
+        <p id="s2-sub">The Maiden Edition</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var tl = gsap.timeline({ paused: true });
+      var E = "power3.out";
+      tl.to("#s2-w", { opacity: 1, duration: 0.28, ease: "power2.inOut" }, 0);
+      tl.fromTo("#s2-bg", { scale: 1.0 }, { scale: 1.06, duration: 4.99, ease: "none" }, 0);
+      // beat-grid: 5.03s, 5.53s, 6.03s global (slot starts at 4.53s)
+      tl.fromTo("#s2-l1", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.45, ease: E }, 0.5);
+      tl.fromTo("#s2-l2", { opacity: 0, y: 54, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: E }, 1.0);
+      tl.fromTo("#s2-rule", { width: 0 }, { width: 420, duration: 0.5, ease: E }, 1.5);
+      tl.fromTo("#s2-sub", { opacity: 0 }, { opacity: 1, duration: 0.45 }, 1.5);
+      tl.to("#s2-w", { opacity: 0, duration: 0.3, ease: "power2.inOut" }, 4.69);
+      window.__timelines["s2"] = tl;
+    })();
+  </script>
+</template>
+</body></html>

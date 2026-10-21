@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+  <style>
+    #root { position: absolute; inset: 0; }
+    #s3-bg { width: 1920px; left: 0; top: 0; }
+    #s3-eye { opacity: 0; }
+    #s3-theme {
+      margin-top: 30px; font-size: 128px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.02;
+      color: var(--ink); opacity: 0;
+    }
+    #s3-ref {
+      margin-top: 30px; font-size: 34px; font-weight: 600; color: var(--gold); opacity: 0;
+    }
+  </style>
+
+  <div id="root" data-composition-id="s3" data-width="1920" data-height="1080">
+    <div class="w" id="s3-w">
+      <div class="fill"><img id="s3-bg" src="assets/img/flyer-blur.jpg" alt="" /></div>
+      <div class="col">
+        <p id="s3-eye" class="eyebrow">Theme</p>
+        <h2 id="s3-theme">The Apostolic Mandate</h2>
+        <p id="s3-ref">Matthew 28:19-20 (KJV)</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var tl = gsap.timeline({ paused: true });
+      var E = "power3.out";
+      tl.to("#s3-w", { opacity: 1, duration: 0.28, ease: "power2.inOut" }, 0);
+      tl.fromTo("#s3-bg", { scale: 1.06 }, { scale: 1.0, duration: 4.49, ease: "none" }, 0);
+      // beat-grid: 9.52s, 10.02s, 10.77s global (slot starts at 9.02s)
+      tl.fromTo("#s3-eye", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: E }, 0.5);
+      tl.fromTo("#s3-theme", { opacity: 0, y: 36 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, 1.0);
+      tl.fromTo("#s3-ref", { opacity: 0 }, { opacity: 1, duration: 0.45 }, 1.75);
+      tl.to("#s3-w", { opacity: 0, duration: 0.3, ease: "power2.inOut" }, 4.19);
+      window.__timelines["s3"] = tl;
+    })();
+  </script>
+</template>
+</body></html>

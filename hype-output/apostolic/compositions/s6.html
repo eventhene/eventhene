@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+        #root { position: absolute; inset: 0; background: #060304; }
+        #s6-row {
+          position: absolute; inset: 0; z-index: 2;
+          display: flex; align-items: center; justify-content: center; gap: 110px;
+        }
+
+        /* phone showing the real registration form */
+        #phone {
+          position: relative; width: 404px; height: 760px; flex: none;
+          border-radius: 46px; padding: 16px;
+          background: #16110f;
+          box-shadow: 0 0 0 2px rgba(255, 194, 74, 0.22), 0 40px 90px rgba(0, 0, 0, 0.7);
+          opacity: 0;
+        }
+        #screen {
+          position: relative; width: 100%; height: 100%; overflow: hidden;
+          border-radius: 32px; background: #0a0a0c; padding: 30px 26px;
+        }
+        #screen .ev { font-size: 15px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); }
+        #screen .ttl { margin-top: 10px; font-size: 30px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; color: #f0ede8; }
+        .fld { margin-top: 22px; opacity: 0; }
+        .fld .lab { font-size: 14px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.58); }
+        .fld .box {
+          margin-top: 8px; height: 56px; border-radius: 13px; padding: 0 16px;
+          background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+          display: flex; align-items: center; font-size: 21px; font-weight: 600; color: #e8e4dc;
+        }
+        #btn {
+          margin-top: 30px; height: 62px; border-radius: 14px;
+          background: linear-gradient(180deg, #ffc24a, #e09a1e);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 22px; font-weight: 800; color: #221603; opacity: 0;
+        }
+        /* the confirmation that replaces the form */
+        #form { position: relative; }
+        #ok {
+          position: absolute; inset: 0; border-radius: 32px; background: #0a0a0c;
+          display: flex; flex-direction: column; align-items: center; justify-content: center;
+          gap: 18px; padding: 0 34px; text-align: center; opacity: 0;
+        }
+        #ok .tick {
+          width: 96px; height: 96px; border-radius: 50%; background: #2fbf82; color: #04291b;
+          display: flex; align-items: center; justify-content: center; font-size: 54px; font-weight: 800;
+        }
+        #ok .h { font-size: 30px; font-weight: 800; color: #f0ede8; letter-spacing: -0.02em; }
+        #ok .p { font-size: 19px; font-weight: 600; color: rgba(255,255,255,0.5); line-height: 1.45; }
+
+        /* right hand call to action */
+        #s6-copy { width: 740px; flex: none; text-align: left; }
+        #s6-cta {
+          font-size: 90px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.04;
+          color: var(--ink); opacity: 0;
+        }
+        #s6-cta em { font-style: normal; color: var(--gold); }
+        #s6-sub { margin-top: 20px; font-size: 30px; font-weight: 600; color: var(--muted); opacity: 0; }
+        #s6-foot { margin-top: 40px; display: flex; align-items: center; gap: 26px; opacity: 0; }
+        #s6-qr { width: 158px; height: 158px; padding: 10px; border-radius: 16px; background: #fff; flex: none; }
+        #s6-qr img { display: block; width: 100%; height: 100%; }
+        #s6-dom { font-size: 32px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fire); }
+        #s6-tel { margin-top: 10px; font-size: 22px; font-weight: 600; color: var(--muted); }
+
+        #s6-logo { position: absolute; left: 0; right: 0; bottom: 56px; text-align: center; opacity: 0; z-index: 3; }
+        #s6-logo img { width: 180px; height: auto; display: inline-block; opacity: 0.85; }
+      </style>
+
+      <div id="root" data-composition-id="s6" data-width="1920" data-height="1080">
+        <div class="w" id="s6-w">
+          <div id="s6-row">
+            <div id="phone">
+              <div id="screen">
+                <p class="ev">Apostolic Fire Conference</p>
+                <p class="ttl">Register for this event</p>
+                <div id="form">
+                <div class="fld" id="f1">
+                  <p class="lab">Full name</p>
+                  <div class="box">Kwame Mensah</div>
+                </div>
+                <div class="fld" id="f2">
+                  <p class="lab">Phone number</p>
+                  <div class="box">024 123 4567</div>
+                </div>
+                <div id="btn">Register free</div>
+                </div>
+                <div id="ok">
+                  <span class="tick">&#10003;</span>
+                  <p class="h">You are registered</p>
+                  <p class="p">Your QR ticket has been sent by SMS. Show it at the gate.</p>
+                </div>
+              </div>
+            </div>
+
+            <div id="s6-copy">
+              <h2 id="s6-cta">Register <em>free</em><br />before you come</h2>
+              <p id="s6-sub">Takes 20 seconds. Skip the queue at the gate.</p>
+              <div id="s6-foot">
+                <div id="s6-qr"><img src="assets/img/qr.png" alt="" /></div>
+                <div>
+                  <p id="s6-dom">eventhene.com</p>
+                  <p id="s6-tel">0545100556 &middot; 055 581 0946</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="s6-logo"><img src="assets/img/logo-full.png" alt="EventHene" /></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var tl = gsap.timeline({ paused: true });
+          var E = "power3.out";
+          tl.to("#s6-w", { opacity: 1, duration: 0.28, ease: "power2.inOut" }, 0);
+
+          // beat-locked: 25.02s and 26.02s strong cues (slot starts at 24.52s)
+          tl.fromTo("#phone", { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, 0.3);
+          tl.fromTo("#s6-cta", { opacity: 0, y: 36 }, { opacity: 1, y: 0, duration: 0.45, ease: E }, 0.5);
+          tl.fromTo("#s6-sub", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0.9);
+
+          // the form fills itself in, then submits
+          tl.fromTo("#f1", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.3, ease: E }, 0.95);
+          tl.fromTo("#f2", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.3, ease: E }, 1.35);
+          tl.fromTo("#btn", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.3, ease: E }, 1.75);
+          tl.to("#btn", { scale: 0.95, duration: 0.12, ease: "power2.inOut" }, 2.25);
+          tl.to("#btn", { scale: 1, duration: 0.18, ease: "power2.out" }, 2.37);
+          tl.fromTo("#ok", { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "power2.out" }, 2.55);
+          // clear the form out from under the confirmation so nothing shows through
+          tl.to("#form", { opacity: 0, duration: 0.25, ease: "power2.inOut" }, 2.55);
+
+          tl.fromTo("#s6-foot", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.45, ease: E }, 2.5);
+          tl.fromTo("#s6-logo", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, 3.5);
+          window.__timelines["s6"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

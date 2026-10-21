@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+  <style>
+    #root { position: absolute; inset: 0; }
+    #s5-bg { width: 1920px; left: 0; top: 0; }
+    #s5-date {
+      font-size: 104px; font-weight: 800; letter-spacing: -0.03em; line-height: 1;
+      color: var(--ink); opacity: 0;
+    }
+    #s5-time {
+      margin-top: 18px; font-size: 76px; font-weight: 800; letter-spacing: 0.02em;
+      color: var(--gold); opacity: 0;
+      text-shadow: 0 0 calc(24px + 40px * var(--energy)) rgba(255, 107, 26, 0.5);
+    }
+    #s5-venue { margin-top: 46px; opacity: 0; }
+    #s5-venue .v1 { font-size: 52px; font-weight: 800; letter-spacing: -0.02em; color: var(--ink); }
+    #s5-venue .v2 { margin-top: 8px; font-size: 30px; font-weight: 600; color: var(--muted); }
+  </style>
+
+  <div id="root" data-composition-id="s5" data-width="1920" data-height="1080">
+    <div class="w" id="s5-w">
+      <div class="fill"><img id="s5-bg" src="assets/img/flyer-blur.jpg" alt="" /></div>
+      <div class="col">
+        <h2 id="s5-date">Saturday 7th November</h2>
+        <p id="s5-time">9:00 AM</p>
+        <div id="s5-venue">
+          <p class="v1">Lancaster Hotel</p>
+          <p class="v2">Golden Tulip, Kumasi</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var tl = gsap.timeline({ paused: true });
+      var E = "power3.out";
+      tl.to("#s5-w", { opacity: 1, duration: 0.3, ease: "power2.inOut" }, 0);
+      tl.fromTo("#s5-bg", { scale: 1.0 }, { scale: 1.05, duration: 5.5, ease: "none" }, 0);
+      // beat-locked: 20.02s, 21.01s, 22.01s global strong cues (slot starts at 19.52s)
+      tl.fromTo("#s5-date", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.45, ease: E }, 0.5);
+      tl.fromTo("#s5-time", { opacity: 0, scale: 0.94 }, { opacity: 1, scale: 1, duration: 0.45, ease: E }, 1.49);
+      tl.fromTo("#s5-venue", { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.45, ease: E }, 2.49);
+      tl.to("#s5-w", { opacity: 0, duration: 0.3, ease: "power2.inOut" }, 5.2);
+      window.__timelines["s5"] = tl;
+    })();
+  </script>
+</template>
+</body></html>

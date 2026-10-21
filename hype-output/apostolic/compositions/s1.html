@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+  <style>
+    #root { position: absolute; inset: 0; }
+    #s1-img { width: 1920px; left: 0; top: 0; }
+    #s1-dark { background: rgba(4, 2, 3, 0.92); }
+    #s1-sweep {
+      position: absolute; top: 0; bottom: 0; width: 42%;
+      background: linear-gradient(100deg, transparent, rgba(255, 194, 74, 0.3), transparent);
+      opacity: 0; z-index: 2;
+    }
+  </style>
+
+  <div id="root" data-composition-id="s1" data-width="1920" data-height="1080">
+    <div class="w" id="s1-w">
+      <div class="fill">
+        <img id="s1-img" src="assets/img/flyer.jpg" alt="" />
+        <div class="scrim" id="s1-dark"></div>
+        <div id="s1-sweep"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var tl = gsap.timeline({ paused: true });
+      var E = "power3.out";
+      tl.to("#s1-w", { opacity: 1, duration: 0.01 }, 0);
+      // slow push in across the whole scene
+      tl.fromTo("#s1-img", { scale: 1.0 }, { scale: 1.09, duration: 5.03, ease: "none" }, 0);
+      // the frame lifts out of black
+      tl.to("#s1-dark", { opacity: 0.28, duration: 1.7, ease: "power2.out" }, 0.15);
+      // beat drops at 3.02: a light sweep across the flyer and a push of brightness
+      tl.fromTo("#s1-sweep", { opacity: 0, x: -900 }, { opacity: 1, duration: 0.18 }, 3.02);
+      tl.to("#s1-sweep", { x: 2100, duration: 0.75, ease: "power2.inOut" }, 3.02);
+      tl.to("#s1-sweep", { opacity: 0, duration: 0.2 }, 3.6);
+      tl.to("#s1-dark", { opacity: 0.16, duration: 0.3, ease: "power2.out" }, 3.02);
+      tl.to("#s1-w", { opacity: 0, duration: 0.3, ease: "power2.inOut" }, 4.73);
+      window.__timelines["s1"] = tl;
+    })();
+  </script>
+</template>
+</body></html>
