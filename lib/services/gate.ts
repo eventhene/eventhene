@@ -6,6 +6,7 @@ import { sendTicketEmails } from "@/lib/services/notify";
 import { placeholderEmail } from "@/lib/guest-email";
 import { normalizeGhPhone } from "@/lib/sms/phone";
 import { sendSMS } from "@/lib/sms/hubtel";
+import { resolveSenderId } from "@/lib/sms/sender";
 import { smsSegments } from "@/lib/sms/segments";
 import { chargeCredits, refundCredits } from "@/lib/sms/credits";
 
@@ -105,7 +106,8 @@ async function sendGateSms(ticketId: string): Promise<void> {
       }
     }
 
-    const sms = await sendSMS(phone, msg);
+    const senderId = await resolveSenderId(ticket.event.organizerId);
+    const sms = await sendSMS(phone, msg, senderId);
     if (sms.ok) {
       await db.ticket.update({ where: { id: ticketId }, data: { welcomedAt: new Date() } }).catch(() => {});
     } else {

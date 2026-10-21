@@ -54,6 +54,7 @@ export default async function AttendeesPage({
       name: a.fullName,
       typeName: t.ticketType.name,
       status: t.status,
+      pricePaidMinor: t.ticketType.priceMinor,
       registeredAt: t.createdAt.toISOString(),
       checkedInAt: t.usedAt ? t.usedAt.toISOString() : null,
       values,
@@ -97,7 +98,7 @@ export default async function AttendeesPage({
         ))}
       </div>
 
-      <AttendeesTable eventId={params.id} eventType={event.type as "PAID" | "FREE"} timezone={event.timezone} cols={cols} rows={rows} />
+      <AttendeesTable eventId={params.id} eventType={event.type as "PAID" | "FREE"} currency={event.currency} timezone={event.timezone} cols={cols} rows={rows} />
     </div>
   );
 }

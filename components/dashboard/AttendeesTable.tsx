@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Trash2, Loader2, UndoDot, AlertTriangle } from "lucide-react";
 import { binDeleted, onBinRestored, rectOf } from "@/lib/recycle-bus";
+import { formatMinorAmount } from "@/lib/utils";
 
 export interface AttendeeRow {
   id: string;
@@ -12,6 +13,8 @@ export interface AttendeeRow {
   name: string;
   typeName: string;
   status: string;
+  /** Face value of this seat, so the delete dialog can be specific about money. */
+  pricePaidMinor?: number;
   registeredAt: string;
   checkedInAt: string | null;
   values: Record<string, string>;
@@ -37,12 +40,14 @@ function stamp(iso: string | null, tz: string): string {
 export function AttendeesTable({
   eventId,
   eventType,
+  currency,
   timezone,
   cols,
   rows: initialRows,
 }: {
   eventId: string;
   eventType: "PAID" | "FREE";
+  currency: string;
   timezone: string;
   cols: AttendeeCol[];
   rows: AttendeeRow[];
@@ -122,8 +127,18 @@ export function AttendeesTable({
         <p className="text-xs text-white/40">
           They go to the recycle bin, where you can restore them. Who deleted them, and when, is saved in the activity log.
         </p>
-        {eventType === "PAID" && (
-          <p className="text-xs text-amber-400">This does not refund any payment. Handle refunds separately.</p>
+        <p className="text-xs text-white/40">
+          Their seat goes back into <strong className="text-white/60">{target.typeName}</strong>, so someone else can take it.
+        </p>
+        {eventType === "PAID" && (target.pricePaidMinor ?? 0) > 0 && (
+          <div className="rounded-xl border border-amber-500/25 bg-amber-500/10 p-3">
+            <p className="text-xs font-semibold text-amber-300">
+              This seat was {formatMinorAmount(target.pricePaidMinor ?? 0, currency)}.
+            </p>
+            <p className="mt-1 text-xs text-amber-300/70">
+              Deleting frees the seat. It does not refund them. Refund from your payment provider if they are owed one.
+            </p>
+          </div>
         )}
         <div className="flex gap-2 pt-1">
           <button onClick={() => setTarget(null)} disabled={deleting} className="flex-1 rounded-xl border border-white/15 px-4 py-2.5 text-sm font-semibold text-white/70 hover:bg-white/5 disabled:opacity-50">

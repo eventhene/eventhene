@@ -5,6 +5,7 @@ import { sendEmailDetailed, ticketIssuedEmail } from "@/lib/email";
 import { formatDate } from "@/lib/utils";
 import { renderTicketPdfBuffer } from "@/lib/services/render";
 import { sendSMS } from "@/lib/sms/hubtel";
+import { resolveSenderId } from "@/lib/sms/sender";
 import { smsSegments } from "@/lib/sms/segments";
 import { chargeCredits, refundCredits } from "@/lib/sms/credits";
 
@@ -71,7 +72,10 @@ export async function sendWelcomeSms(ticketId: string): Promise<void> {
         return;
       }
     }
-    const sms = await sendSMS(phone, msg);
+    // Under the organizer's own Sender ID when they have an approved one, so the
+    // attendee sees the brand they registered with rather than the platform.
+    const senderId = await resolveSenderId(ticket.event.organizerId);
+    const sms = await sendSMS(phone, msg, senderId);
     if (sms.ok) {
       await db.ticket.update({ where: { id: ticketId }, data: { welcomedAt: new Date() } }).catch(() => {});
     }
@@ -157,9 +161,12 @@ export async function sendTicketEmails(orderId: string, pdfBuffers?: Map<string,
       }
     }
     if (canSend) {
+      // The organizer's own Sender ID when approved, so the attendee sees the
+      // brand they registered with rather than the platform default.
+      const senderId = await resolveSenderId(order.event.organizerId);
       let failedCredits = 0;
       for (const p of smsPlan) {
-        const sms = await sendSMS(p.phone, p.msg);
+        const sms = await sendSMS(p.phone, p.msg, senderId);
         if (sms.ok) smsSent.add(p.ticketId);
         else {
           failedCredits += smsSegments(p.msg).segments;
