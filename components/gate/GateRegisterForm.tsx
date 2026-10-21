@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, CheckCircle2, UserPlus } from "lucide-react";
+import { CheckCircle2, UserPlus } from "lucide-react";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 
 export interface GateField {
   key: string;
@@ -56,6 +57,7 @@ export function GateRegisterForm({
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [done, setDone] = useState<null | { name: string; ref: string; checkedIn: boolean; note?: string }>(null);
+  const [justDone, setJustDone] = useState(false);
 
   function set(key: string, v: string) {
     setValues((s) => ({ ...s, [key]: v }));
@@ -64,6 +66,7 @@ export function GateRegisterForm({
   function reset() {
     setValues({});
     setDone(null);
+    setJustDone(false);
     setErr(null);
   }
 
@@ -89,6 +92,9 @@ export function GateRegisterForm({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Could not register you.");
+      // let the button finish its lap and flip before the confirmation replaces it
+      setJustDone(true);
+      await new Promise((r) => setTimeout(r, 620));
       setDone({ name: data.attendeeName, ref: data.visibleRef, checkedIn: data.checkedIn, note: data.note });
       onRegistered?.();
       if (adminMode) setValues({});
@@ -181,19 +187,18 @@ export function GateRegisterForm({
         </div>
       )}
 
-      <button type="submit" disabled={busy} className="btn-gold btn-xl flex w-full items-center justify-center gap-2">
-        {busy ? (
-          <>
-            <Loader2 className="h-5 w-5 animate-spin" />
-            Registering...
-          </>
-        ) : (
-          <>
-            <UserPlus className="h-5 w-5" />
-            Register and check in
-          </>
-        )}
-      </button>
+      <SubmitButton
+        type="submit"
+        loading={busy}
+        success={justDone}
+        doneLabel="You are in"
+        loadingLabel="Registering..."
+        className="btn-gold btn-xl w-full"
+        wrapClassName="w-full"
+      >
+        <UserPlus className="h-5 w-5" />
+        Register and check in
+      </SubmitButton>
     </form>
   );
 }

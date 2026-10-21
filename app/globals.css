@@ -304,3 +304,98 @@
   .eh-loader-crown { animation-duration: 5s; }
   .eh-loader { animation-duration: 4s; }
 }
+
+/* ---------------------------------------------------------------
+   Submit button: an accent edge that travels the border while the
+   request is in flight, then completes and pops into a confirmation.
+   Used by <SubmitButton>. Keep it to real submits so it stays special.
+
+   No masks here on purpose. The halo is a conic gradient sitting just
+   behind and slightly outside the button; the button's own opaque fill
+   covers the middle, so only a rim shows. Autoprefixer mangles
+   mask-composite, and this needs none of it.
+   Outside @layer because Tailwind does not carry @keyframes through it.
+   --------------------------------------------------------------- */
+.eh-submit-wrap {
+  position: relative;
+  display: block;
+  --eh-ring: var(--accent);
+}
+.eh-submit-wrap > .eh-submit {
+  position: relative;
+  z-index: 1;
+}
+.eh-submit-halo {
+  position: absolute;
+  inset: -4px;
+  z-index: 0;
+  border-radius: 999px;
+  overflow: hidden;
+  pointer-events: none;
+}
+.eh-submit-halo::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 260%;
+  aspect-ratio: 1;
+  /* 0deg is 12 o'clock, so the head of the sweep starts at the top centre */
+  background: conic-gradient(
+    from 0deg,
+    rgba(255, 255, 255, 0) 0deg,
+    rgba(255, 255, 255, 0) 232deg,
+    color-mix(in oklab, var(--eh-ring) 45%, transparent) 330deg,
+    var(--eh-ring) 357deg,
+    rgba(255, 255, 255, 0) 360deg
+  );
+  animation: eh-submit-orbit 1.05s linear infinite;
+}
+
+/* On success the whole rim lights, the button pops once, the label flips. */
+.eh-submit-wrap[data-phase="done"] .eh-submit-halo {
+  background: var(--eh-ring);
+  box-shadow: 0 0 18px color-mix(in oklab, var(--eh-ring) 55%, transparent);
+}
+.eh-submit-wrap[data-phase="done"] .eh-submit-halo::before {
+  content: none;
+}
+.eh-submit-wrap[data-phase="done"] > .eh-submit {
+  animation: eh-submit-pop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.eh-submit .eh-submit-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.eh-submit-wrap[data-phase="done"] .eh-submit-label {
+  animation: eh-submit-flip 0.42s ease-out;
+}
+
+@keyframes eh-submit-orbit {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+@keyframes eh-submit-pop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.045); }
+  100% { transform: scale(1); }
+}
+@keyframes eh-submit-flip {
+  0% { opacity: 0; transform: rotateX(-80deg); }
+  100% { opacity: 1; transform: rotateX(0deg); }
+}
+
+/* Honour a reduced-motion preference: keep the state change, drop the travel. */
+@media (prefers-reduced-motion: reduce) {
+  .eh-submit-halo::before,
+  .eh-submit-wrap[data-phase="done"] > .eh-submit,
+  .eh-submit-wrap[data-phase="done"] .eh-submit-label {
+    animation: none;
+  }
+  .eh-submit-halo::before {
+    background: var(--eh-ring);
+    opacity: 0.8;
+  }
+}
