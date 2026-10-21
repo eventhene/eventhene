@@ -54,6 +54,7 @@ export async function exportAttendees(opts: {
     ...customKeysArr.map((k) => ({ header: k, key: `c_${k}`, width: 20 })),
     { header: "Order Status", key: "orderStatus", width: 14 },
     { header: "Ticket Status", key: "status", width: 14 },
+    { header: "Registered Via", key: "source", width: 16 },
     { header: "Booked At", key: "booked", width: 22 },
     { header: "Scanned At", key: "scanned", width: 22 }
   ];
@@ -88,6 +89,7 @@ export async function exportAttendees(opts: {
       ...customCols,
       orderStatus: t.order?.status ?? "",
       status: t.status,
+      source: t.source === "GATE" ? "At the gate" : "Online",
       booked: t.createdAt,
       scanned: t.usedAt ?? ""
     });

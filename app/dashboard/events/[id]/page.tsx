@@ -44,6 +44,7 @@ export default async function EventOverviewPage({ params }: { params: { id: stri
         <Link href={`/events/${event.slug}`} target="_blank" className="btn-ghost btn-md">View public page</Link>
         <Link href={`/dashboard/events/${event.id}/attendees`} className="btn-ghost btn-md">Attendees</Link>
         <Link href={`/dashboard/sms/compose?event=${event.id}`} className="btn-ghost btn-md">Bulk SMS</Link>
+        <Link href={`/dashboard/events/${event.id}/gate`} className="btn-ghost btn-md">Register at gate</Link>
         <Link href={`/scan/${event.id}`} className="btn-primary btn-md">Open scanner</Link>
       </div>
 

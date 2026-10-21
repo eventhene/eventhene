@@ -276,6 +276,8 @@ model Event {
   bannerUrl       String?
   type            EventType   @default(PAID)
   status          EventStatus @default(DRAFT)
+  gateToken       String?     @unique
+  gateEnabled     Boolean     @default(true)
   buyerPaysFee    Boolean     @default(true)
   welcomeSms      Boolean     @default(true)
   collectBuyerInfo Boolean    @default(true)
@@ -400,6 +402,7 @@ model Ticket {
   qrToken         String       @unique
   qrTokenHash     String       @unique
   status          TicketStatus @default(PENDING_PAYMENT)
+  source          String?      // "GATE" when registered on the spot at the door
   issuedAt        DateTime?
   usedAt          DateTime?
   scannedByUserId String?
