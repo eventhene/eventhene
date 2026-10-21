@@ -35,7 +35,7 @@ export default function TicketLookupPage() {
         </div>
         <h1 className="h-section text-white">Find my ticket</h1>
         <p className="text-white/40 mt-3 text-lg">
-          Enter your ticket reference code to view or download your ticket.
+          Enter your full ticket reference to view or download your ticket. It is on your confirmation SMS and on the ticket itself.
         </p>
       </div>
 
