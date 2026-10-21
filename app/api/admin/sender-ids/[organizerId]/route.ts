@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
+import { notifySenderIdDecided } from "@/lib/services/sender-id-notify";
 
 const Body = z.object({
   action: z.enum(["APPROVE", "REJECT"]),
@@ -48,6 +49,14 @@ export async function POST(req: NextRequest, { params }: { params: { organizerId
         target: org.id,
         meta: { senderId: org.senderId, note: data.note },
       },
+    });
+
+    // Let the organizer know either way, by email and SMS.
+    await notifySenderIdDecided({
+      organizerId: org.id,
+      senderId: org.senderId ?? "",
+      approved: data.action === "APPROVE",
+      note: data.note,
     });
 
     return NextResponse.json({ ok: true });

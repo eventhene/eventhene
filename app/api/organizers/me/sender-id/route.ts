@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireOrganizerOwner } from "@/lib/auth";
 import { sanitizeSenderId, validateSenderIdFormat } from "@/lib/sms/sender";
+import { notifySenderIdRequested } from "@/lib/services/sender-id-notify";
 
 const Body = z.object({
   senderId: z.string().min(1).max(32),
@@ -36,6 +37,14 @@ export async function POST(req: NextRequest) {
         target: organizer.id,
         meta: { senderId: sender },
       },
+    });
+
+    // Tell the platform admins straight away; a request used to sit unseen.
+    await notifySenderIdRequested({
+      organizerId: organizer.id,
+      organizerName: organizer.displayName,
+      senderId: sender,
+      requestedBy: user.fullName || user.email,
     });
 
     return NextResponse.json({ senderId: updated.senderId, status: updated.senderIdStatus });

@@ -181,9 +181,11 @@ export function AttendeesTable({
       {/* larger screens: a table that scrolls sideways so no column is ever lost */}
       <div className="hidden md:block">
         <p className="mb-2 text-xs text-ink-muted">Scroll sideways to see every column.</p>
-        <div className="card overflow-x-auto">
+        {/* Bounded box so the horizontal scrollbar stays on screen instead of
+            sitting below a long list, and the header stays put while scrolling. */}
+        <div className="card max-h-[70vh] overflow-auto">
           <table className="min-w-max text-sm">
-            <thead className="bg-surface-2 text-left">
+            <thead className="sticky top-0 z-10 text-left">
               <tr>
                 <Th>Reference</Th>
                 <Th>Name</Th>
@@ -236,7 +238,7 @@ export function AttendeesTable({
 }
 
 function Th({ children }: { children: React.ReactNode }) {
-  return <th className="whitespace-nowrap px-4 py-3.5">{children}</th>;
+  return <th className="whitespace-nowrap bg-[#17171b] px-4 py-3.5">{children}</th>;
 }
 function Td({ children, mono, strong }: { children: React.ReactNode; mono?: boolean; strong?: boolean }) {
   return <td className={`whitespace-nowrap px-4 py-3 ${mono ? "font-mono text-xs" : ""} ${strong ? "font-medium" : "text-ink-muted"}`}>{children}</td>;

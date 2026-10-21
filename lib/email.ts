@@ -275,3 +275,36 @@ export function testEmailHtml(info: string): string {
     <p style="${PANEL}font-family:monospace;font-size:13px;">${info}</p>
   `);
 }
+
+export function senderIdRequestedEmail(opts: {
+  organizer: string;
+  senderId: string;
+  requestedBy: string;
+  adminUrl: string;
+}): string {
+  return wrap(`
+    <h1 style="font-size:22px;margin:0 0 8px;color:#fff;">New Sender ID request</h1>
+    <p><strong>${opts.organizer}</strong> has asked for a Sender ID.</p>
+    <p style="${PANEL}"><strong>Sender ID:</strong> ${opts.senderId}<br/><strong>Requested by:</strong> ${opts.requestedBy}</p>
+    <p>Their bulk SMS goes out under the shared default until this is approved.</p>
+    <p><a href="${opts.adminUrl}" style="color:#D4A853;font-weight:600;">Review it now</a></p>
+  `);
+}
+
+export function senderIdApprovedEmail(opts: { senderId: string; smsUrl: string }): string {
+  return wrap(`
+    <h1 style="font-size:24px;margin:0 0 8px;color:#fff;">Your Sender ID is approved</h1>
+    <p>Messages you send now arrive from <strong>${opts.senderId}</strong> instead of the shared default, so your crowd knows it is you.</p>
+    <p><a href="${opts.smsUrl}" style="color:#D4A853;font-weight:600;">Send a broadcast</a></p>
+  `);
+}
+
+export function senderIdRejectedEmail(opts: { senderId: string; reason: string; smsUrl: string }): string {
+  return wrap(`
+    <h1 style="font-size:22px;margin:0 0 8px;color:#fff;">About your Sender ID</h1>
+    <p>We were not able to approve <strong>${opts.senderId}</strong>.</p>
+    <p style="${PANEL}"><strong>Reason:</strong> ${opts.reason}</p>
+    <p>Your messages keep going out under the shared default in the meantime. You can request a different one any time.</p>
+    <p><a href="${opts.smsUrl}" style="color:#D4A853;font-weight:600;">Try another Sender ID</a></p>
+  `);
+}
