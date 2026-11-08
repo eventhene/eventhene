@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "invalid_input", details: e.errors }, { status: 400 });
     }
     const msg = e?.message || "internal_error";
-    const status = ["sold_out", "booking_closed", "booking_not_open_yet", "event_not_open"].includes(msg)
+    const status = ["sold_out", "booking_closed", "booking_not_open_yet", "event_not_open", "event_finished"].includes(msg)
       ? 409
       : 500;
     return NextResponse.json({ error: msg }, { status });

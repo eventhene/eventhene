@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { qrToDataUrl } from "@/lib/qr";
 import { getAppUrl } from "@/lib/app-url";
 import { ensureGateToken, isGateWindowOpen } from "@/lib/services/gate";
+import { isClosed } from "@/lib/events/lifecycle";
 import { GatePanel } from "@/components/gate/GatePanel";
 import { ArrowLeft } from "lucide-react";
 
@@ -23,6 +24,27 @@ export default async function EventGatePage({ params }: { params: { id: string }
     },
   });
   if (!event) redirect("/dashboard");
+
+  if (isClosed(event)) {
+    return (
+      <div className="space-y-6">
+        <Link
+          href={`/dashboard/events/${event.id}`}
+          className="inline-flex items-center gap-1.5 text-sm text-white/50 hover:text-white"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to event
+        </Link>
+        <div className="card-glass rounded-2xl p-7">
+          <h1 className="h-section text-white">Gate registration is closed</h1>
+          <p className="mt-3 max-w-xl text-white/45">
+            {event.title} has finished, so the poster no longer accepts registrations. Your attendee
+            list and exports are still available.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const token = await ensureGateToken(event.id);
   const url = `${getAppUrl()}/g/${token}`;

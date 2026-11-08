@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { Logo } from "@/components/Logo";
 import { GateRegisterForm } from "@/components/gate/GateRegisterForm";
 import { isGateWindowOpen } from "@/lib/services/gate";
+import { isClosed } from "@/lib/events/lifecycle";
 import { formatDateShort } from "@/lib/utils";
 import { MapPin, Calendar } from "lucide-react";
 
@@ -18,6 +19,8 @@ export default async function GatePage({ params }: { params: { token: string } }
     },
   });
   if (!event || !event.gateEnabled || event.status !== "PUBLISHED") notFound();
+  // A finished event's poster must not keep taking registrations.
+  if (isClosed(event)) notFound();
 
   const open = isGateWindowOpen(event.startsAt, event.endsAt);
 

@@ -1,5 +1,6 @@
 import { getAppUrl } from "@/lib/app-url";
 import { db } from "@/lib/db";
+import { isClosed } from "@/lib/events/lifecycle";
 import { computeOrderTotals } from "@/lib/fees";
 import { paystack } from "@/lib/payments/paystack";
 
@@ -44,6 +45,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     });
     if (!event) throw new Error("event_not_found");
     if (event.status !== "PUBLISHED") throw new Error("event_not_open");
+    if (isClosed(event)) throw new Error("event_finished");
 
     const now = new Date();
     if (now < event.bookingOpensAt) throw new Error("booking_not_open_yet");

@@ -1,5 +1,6 @@
 import { getAppUrl } from "@/lib/app-url";
 import Link from "next/link";
+import { isClosed, isFreeEventLocked } from "@/lib/events/lifecycle";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireEventOwner } from "@/lib/auth";
@@ -25,6 +26,8 @@ export default async function EventOverviewPage({ params }: { params: { id: stri
   const revenue = event.ticketTypes.reduce((s, t) => s + t.sold * t.priceMinor, 0);
   const total = event.ticketTypes.reduce((s, t) => s + t.quantity, 0);
   const attended = event.tickets.filter((t) => t.status === "ATTENDED").length;
+  const finished = isClosed(event);
+  const locked = isFreeEventLocked(event);
   const publicUrl = `${getAppUrl()}/events/${event.slug}`;
 
   return (
@@ -38,13 +41,28 @@ export default async function EventOverviewPage({ params }: { params: { id: stri
         </div>
       </div>
 
+      {finished && (
+        <div className="rounded-xl border border-white/12 bg-white/[0.04] px-4 py-3">
+          <p className="text-sm font-semibold text-white">This event has finished.</p>
+          <p className="mt-1 text-xs text-white/50">
+            {locked
+              ? "Registration is closed and the details are locked. Free events are approved one at a time, so create a new event when you are ready and we will review it."
+              : "Registration is closed. Your attendee list and exports stay available."}
+          </p>
+        </div>
+      )}
+
       {/* Action bar */}
       <div className="flex flex-wrap gap-2">
-        <Link href={`/dashboard/events/${event.id}/edit`} className="btn-primary btn-md">Edit event</Link>
+        {!locked && (
+          <Link href={`/dashboard/events/${event.id}/edit`} className="btn-primary btn-md">Edit event</Link>
+        )}
         <Link href={`/events/${event.slug}`} target="_blank" className="btn-ghost btn-md">View public page</Link>
         <Link href={`/dashboard/events/${event.id}/attendees`} className="btn-ghost btn-md">Attendees</Link>
         <Link href={`/dashboard/sms/compose?event=${event.id}`} className="btn-ghost btn-md">Bulk SMS</Link>
-        <Link href={`/dashboard/events/${event.id}/gate`} className="btn-ghost btn-md">Register at gate</Link>
+        {!finished && (
+          <Link href={`/dashboard/events/${event.id}/gate`} className="btn-ghost btn-md">Register at gate</Link>
+        )}
         <Link href={`/scan/${event.id}`} className="btn-primary btn-md">Open scanner</Link>
       </div>
 

@@ -5,6 +5,7 @@ import { issueTicketsForOrder } from "@/lib/services/tickets";
 import { sendTicketEmails } from "@/lib/services/notify";
 import { placeholderEmail } from "@/lib/guest-email";
 import { normalizeGhPhone } from "@/lib/sms/phone";
+import { isClosed } from "@/lib/events/lifecycle";
 import { sendSMS } from "@/lib/sms/hubtel";
 import { resolveSenderId } from "@/lib/sms/sender";
 import { smsSegments } from "@/lib/sms/segments";
@@ -165,6 +166,7 @@ export async function registerAtGate(opts: {
   });
   if (!event) throw new GateError("Event not found.", 404);
   if (event.status !== "PUBLISHED") throw new GateError("This event is not open for registration.", 409);
+  if (isClosed(event)) throw new GateError("This event has finished. Registration is closed.", 409);
   if (event.type !== "FREE") {
     throw new GateError("Gate registration is only available for free events right now.", 409);
   }
