@@ -3,7 +3,8 @@ import Link from "next/link";
 import { isClosed, isFreeEventLocked } from "@/lib/events/lifecycle";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
-import { requireEventOwner } from "@/lib/auth";
+import { requireEventOwner, isAdmin } from "@/lib/auth";
+import { EventAccessControls } from "@/components/admin/EventAccessControls";
 import { formatMinorAmount, formatDate } from "@/lib/utils";
 import { StatusChip } from "@/components/dashboard/StatusChip";
 import { CopyLinkButton } from "@/components/dashboard/CopyLinkButton";
@@ -11,7 +12,7 @@ import { CopyLinkButton } from "@/components/dashboard/CopyLinkButton";
 export const dynamic = "force-dynamic";
 
 export default async function EventOverviewPage({ params }: { params: { id: string } }) {
-  await requireEventOwner(params.id);
+  const { user: viewer } = await requireEventOwner(params.id);
   const event = await db.event.findUnique({
     where: { id: params.id },
     include: {
@@ -28,6 +29,7 @@ export default async function EventOverviewPage({ params }: { params: { id: stri
   const attended = event.tickets.filter((t) => t.status === "ATTENDED").length;
   const finished = isClosed(event);
   const locked = isFreeEventLocked(event);
+  const viewerIsAdmin = isAdmin(viewer.role);
   const publicUrl = `${getAppUrl()}/events/${event.slug}`;
 
   return (
@@ -40,6 +42,15 @@ export default async function EventOverviewPage({ params }: { params: { id: stri
           <div className="mt-3"><StatusChip status={event.status} /></div>
         </div>
       </div>
+
+      {viewerIsAdmin && (
+        <EventAccessControls
+          eventId={event.id}
+          reopenedUntil={event.reopenedUntil ? event.reopenedUntil.toISOString() : null}
+          forceClosed={event.forceClosed}
+          finished={finished}
+        />
+      )}
 
       {finished && (
         <div className="rounded-xl border border-white/12 bg-white/[0.04] px-4 py-3">
@@ -54,13 +65,13 @@ export default async function EventOverviewPage({ params }: { params: { id: stri
 
       {/* Action bar */}
       <div className="flex flex-wrap gap-2">
-        {!locked && (
+        {(!locked || viewerIsAdmin) && (
           <Link href={`/dashboard/events/${event.id}/edit`} className="btn-primary btn-md">Edit event</Link>
         )}
         <Link href={`/events/${event.slug}`} target="_blank" className="btn-ghost btn-md">View public page</Link>
         <Link href={`/dashboard/events/${event.id}/attendees`} className="btn-ghost btn-md">Attendees</Link>
         <Link href={`/dashboard/sms/compose?event=${event.id}`} className="btn-ghost btn-md">Bulk SMS</Link>
-        {!finished && (
+        {(!finished || viewerIsAdmin) && (
           <Link href={`/dashboard/events/${event.id}/gate`} className="btn-ghost btn-md">Register at gate</Link>
         )}
         <Link href={`/scan/${event.id}`} className="btn-primary btn-md">Open scanner</Link>

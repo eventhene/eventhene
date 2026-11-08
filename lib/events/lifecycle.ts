@@ -14,6 +14,10 @@ export interface EventLike {
   type: "PAID" | "FREE" | string;
   status: string;
   endsAt: Date;
+  /** Superadmin reopened it until this moment, to fix something or let a late guest in. */
+  reopenedUntil?: Date | null;
+  /** Superadmin shut it early, before the end date. */
+  forceClosed?: boolean | null;
 }
 
 /** Grace after the end time before we treat an event as history. */
@@ -23,10 +27,27 @@ export function isEventOver(event: Pick<EventLike, "endsAt">, now = new Date()):
   return now.getTime() > event.endsAt.getTime() + GRACE_MS;
 }
 
-/** Cancelled and ended events are closed too, whatever the clock says. */
-export function isClosed(event: Pick<EventLike, "status" | "endsAt">, now = new Date()): boolean {
+/**
+ * Cancelled and ended events are closed too, whatever the clock says, and a
+ * superadmin can override in either direction: shut one early, or reopen a
+ * finished one for a while.
+ */
+export function isClosed(
+  event: Pick<EventLike, "status" | "endsAt" | "reopenedUntil" | "forceClosed">,
+  now = new Date()
+): boolean {
+  if (event.forceClosed) return true;
+  if (event.reopenedUntil && now.getTime() < event.reopenedUntil.getTime()) return false;
   if (event.status === "ENDED" || event.status === "CANCELLED") return true;
   return isEventOver(event, now);
+}
+
+/** True while a superadmin's reopen window is still running. */
+export function isReopened(
+  event: Pick<EventLike, "reopenedUntil" | "forceClosed">,
+  now = new Date()
+): boolean {
+  return !event.forceClosed && !!event.reopenedUntil && now.getTime() < event.reopenedUntil.getTime();
 }
 
 /**
@@ -35,7 +56,7 @@ export function isClosed(event: Pick<EventLike, "status" | "endsAt">, now = new 
  * pays per ticket and there is nothing to game.
  */
 export function isFreeEventLocked(
-  event: Pick<EventLike, "type" | "status" | "endsAt">,
+  event: Pick<EventLike, "type" | "status" | "endsAt" | "reopenedUntil" | "forceClosed">,
   now = new Date()
 ): boolean {
   return event.type === "FREE" && isClosed(event, now);

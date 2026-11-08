@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireOrganizerOwner } from "@/lib/auth";
+import { requireTeamManager } from "@/lib/auth";
 import { resendTeamInvite } from "@/lib/services/team";
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { organizer } = await requireOrganizerOwner(req);
+    const { organizer } = await requireTeamManager(req);
     const result = await resendTeamInvite(params.id, organizer.id, organizer.displayName);
     return NextResponse.json({ ok: true, ...result });
   } catch (e: any) {

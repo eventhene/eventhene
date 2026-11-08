@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { requireEventOwner } from "@/lib/auth";
+import { requireEventOwner, isAdmin } from "@/lib/auth";
 import { isFreeEventLocked, FREE_EVENT_LOCKED_MESSAGE } from "@/lib/events/lifecycle";
 
 const TicketTypeSchema = z.object({
@@ -44,11 +44,12 @@ const EditEventBody = z.object({
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { event } = await requireEventOwner(params.id, req);
+    const { user, event } = await requireEventOwner(params.id, req);
 
     // A finished free event is frozen, so one approval cannot be edited into
-    // a second free event under a new name, flyer and date.
-    if (isFreeEventLocked(event)) {
+    // a second free event under a new name, flyer and date. Platform admins are
+    // exempt: they are the ones who reopen an event to fix something.
+    if (isFreeEventLocked(event) && !isAdmin(user.role)) {
       return NextResponse.json({ error: FREE_EVENT_LOCKED_MESSAGE }, { status: 409 });
     }
 

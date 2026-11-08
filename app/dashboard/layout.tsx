@@ -68,6 +68,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const accessible = access === "ADMIN" ? [] : await listAccessibleOrganizers(user.id);
   const switcherOrgs = accessible.map((a) => ({ id: a.organizer.id, name: a.organizer.displayName, access: a.access }));
   const isOwner = access === "OWNER";
+  const canManageTeam = access === "OWNER" || access === "MANAGER";
   const isAdminView = access === "ADMIN";
 
   return (
@@ -105,7 +106,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
               <SideSection label="Tools" />
               <NavLink href="/dashboard/sms" icon={<MessageSquare className="w-[18px] h-[18px]" />}>SMS</NavLink>
               <NavLink href="/scan" icon={<ScanLine className="w-[18px] h-[18px]" />}>Scanner</NavLink>
-              {isOwner && (
+              {canManageTeam && (
                 <NavLink href="/dashboard/team" icon={<Users className="w-[18px] h-[18px]" />}>Team</NavLink>
               )}
               <NavLink href="/dashboard/services" icon={<Briefcase className="w-[18px] h-[18px]" />}>Services</NavLink>
@@ -179,7 +180,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <MobileTab href="/dashboard/events" icon={<CalendarDays className="w-4 h-4" />} label="Events" />
           <MobileTab href="/dashboard/sms" icon={<MessageSquare className="w-4 h-4" />} label="SMS" />
           <MobileTab href="/scan" icon={<ScanLine className="w-4 h-4" />} label="Scan" />
-          <MobileMoreMenu isOwner={isOwner} />
+          <MobileMoreMenu isOwner={isOwner} canManageTeam={canManageTeam} />
         </nav>
       )}
     </div>

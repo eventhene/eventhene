@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireOrganizerOwner } from "@/lib/auth";
+import { requireTeamManager } from "@/lib/auth";
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { organizer } = await requireOrganizerOwner(req);
+    const { organizer } = await requireTeamManager(req);
     const invite = await db.teamInvite.findUnique({ where: { id: params.id } });
     if (!invite || invite.organizerId !== organizer.id) {
       return NextResponse.json({ error: "Invite not found." }, { status: 404 });

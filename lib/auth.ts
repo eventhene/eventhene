@@ -116,7 +116,19 @@ export async function requireOrganizer(req?: ReqWithCookies) {
   return { user, organizer: resolved.organizer, access: resolved.access };
 }
 
-/** Owner-only actions (payout details, team management). Managers are rejected. */
+/**
+ * Team management: the owner and their managers. A manager runs the event on
+ * the ground, so they can bring on scanners and other managers themselves
+ * rather than waiting on the owner. Platform admins pass too.
+ */
+export async function requireTeamManager(req?: ReqWithCookies) {
+  const ctx = await requireOrganizer(req);
+  if (ctx.access === "OWNER" || ctx.access === "MANAGER") return ctx;
+  if (isAdmin(ctx.user.role)) return ctx;
+  throw new ForbiddenError("Only the owner or a manager can manage the team");
+}
+
+/** Owner-only actions (payout details, the organizer profile). Managers are rejected. */
 export async function requireOrganizerOwner(req?: ReqWithCookies) {
   const ctx = await requireOrganizer(req);
   if (ctx.access !== "OWNER") throw new ForbiddenError("Only the account owner can do this");

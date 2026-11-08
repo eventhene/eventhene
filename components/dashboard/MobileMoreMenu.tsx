@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { MoreHorizontal, PlusCircle, Users, Briefcase, Settings, X, ScrollText, UserCircle, Contact } from "lucide-react";
 import { SignOutButton } from "@/components/SignOutButton";
 
-export function MobileMoreMenu({ isOwner }: { isOwner: boolean }) {
+export function MobileMoreMenu({ isOwner, canManageTeam = false }: { isOwner: boolean; canManageTeam?: boolean }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -49,7 +49,7 @@ export function MobileMoreMenu({ isOwner }: { isOwner: boolean }) {
               <PlusCircle className="w-5 h-5" />
               Create event
             </Link>
-            {isOwner && (
+            {canManageTeam && (
               <Link href="/dashboard/team" className={item}>
                 <Users className="w-5 h-5" />
                 Team

@@ -278,6 +278,9 @@ model Event {
   status          EventStatus @default(DRAFT)
   gateToken       String?     @unique
   gateEnabled     Boolean     @default(true)
+  // Superadmin overrides on the finished-event lock.
+  reopenedUntil   DateTime?
+  forceClosed     Boolean     @default(false)
   buyerPaysFee    Boolean     @default(true)
   welcomeSms      Boolean     @default(true)
   collectBuyerInfo Boolean    @default(true)

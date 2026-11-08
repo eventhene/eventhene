@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { requireOrganizerOwner } from "@/lib/auth";
+import { requireTeamManager } from "@/lib/auth";
 import { createTeamInvite, inviteLink } from "@/lib/services/team";
 
 const Body = z.object({
@@ -11,7 +11,7 @@ const Body = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const { user, organizer } = await requireOrganizerOwner(req);
+    const { user, organizer } = await requireTeamManager(req);
     const body = Body.parse(await req.json());
     const { invite, smsSent, smsError } = await createTeamInvite({
       organizerId: organizer.id,

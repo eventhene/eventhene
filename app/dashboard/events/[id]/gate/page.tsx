@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { requireEventOwner } from "@/lib/auth";
+import { requireEventOwner, isAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { qrToDataUrl } from "@/lib/qr";
 import { getAppUrl } from "@/lib/app-url";
@@ -25,7 +25,8 @@ export default async function EventGatePage({ params }: { params: { id: string }
   });
   if (!event) redirect("/dashboard");
 
-  if (isClosed(event)) {
+  // Platform admins still get the poster, since they are the ones reopening events.
+  if (isClosed(event) && !isAdmin(ctx.user.role)) {
     return (
       <div className="space-y-6">
         <Link

@@ -9,7 +9,8 @@ export const dynamic = "force-dynamic";
 export default async function TeamPage() {
   const user = await requireUserOrRedirect("/dashboard/team");
   const ctx = await resolveOrganizerAccess(user.id);
-  if (!ctx || ctx.access !== "OWNER") redirect("/dashboard");
+  // Managers run the event on the ground, so they manage the team as well.
+  if (!ctx || (ctx.access !== "OWNER" && ctx.access !== "MANAGER")) redirect("/dashboard");
   const organizer = ctx.organizer;
 
   const [members, invites, events] = await Promise.all([

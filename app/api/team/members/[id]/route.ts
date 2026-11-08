@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireOrganizerOwner } from "@/lib/auth";
+import { requireTeamManager } from "@/lib/auth";
 import { actorFor, logAudit } from "@/lib/audit";
 import { snapshotDeleted } from "@/lib/recycle";
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { user, organizer } = await requireOrganizerOwner(req);
+    const { user, organizer } = await requireTeamManager(req);
     const member = await db.teamMember.findUnique({ where: { id: params.id }, include: { user: { select: { fullName: true, email: true } } } });
     if (!member || member.organizerId !== organizer.id) {
       return NextResponse.json({ error: "Team member not found." }, { status: 404 });
